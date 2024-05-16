@@ -17,6 +17,8 @@ class InGameState {
     players = []
     extra_turns = []
     extra_phasesteps = []
+    skip_turns = []
+    skip_phasesteps = []
     // 誘発してまだスタックに置かれていない能力
     triggered_abilities = []
     // 遅延誘発型能力
@@ -26,7 +28,11 @@ class InGameState {
     // ゲームの履歴
     game_history = new InGameHistory()
     // 優先権を連続でパスしたプレイヤーの数
-    pass_count
+    pass_count;
+    /** クリンナップをもう一度行うかどうか。
+     * クリンナップの間に状況起因処理か能力の誘発があった場合、
+     * そのクリンナップでは優先権が発生するとともに、追加のクリンナップが発生する。 */
+    cleanup_again = false
 
     get current_turn() {
         return this.turns.length == 0 ? undefined : this.turns[this.turns.length - 1]
@@ -49,14 +55,20 @@ class InGameState {
     }
 
     get_next_player_of(player) {
+        for (let i = 0; i < this.players.length; i++) {
+            if (this.players[i] == player) {
+                return (i == this.players.length - 1) ?
+                    this.players[0] : this.players[i + 1]
+            }
+        }
+        return undefined
     }
 
     /** メインループ */
     run() {
         let flag_goto_next = true  // 次のターン・フェイズ・ステップに移行するかどうか
-        let flag_cleanup_again = false  // もう一度クリンナップを行うかどうか
-        let state_based_action_is_performed_or_ability_triggered_during_cleanup = false
         while (true) {
+            /* ターン、フェイズ、ステップの移行処理 */
             if (flag_goto_next) {
                 flag_goto_next = false
 
@@ -67,23 +79,30 @@ class InGameState {
                 this.turn_based_action()
 
                 /* アクティブプレイヤーが優先権を得る */
-                state_based_action_is_performed_or_ability_triggered_during_cleanup
-                    = this.set_priority_to(this.active_player)
+                if (this.current_step.is_cleanup_step) {
+                    this.cleanup_again = this.set_priority_to(this.active_player)
+                } else {
+                    this.set_priority_to(this.active_player)
+                }
+            } else {
+                /* 行動後、優先権を得る */
+                this.set_priority_to(this.player_with_priority)
             }
 
             /* 優先権を持つプレイヤーの行動 */
-            // アンタップ・ステップでは優先権は発生しない。
-            // クリンナップ・ステップではターン起因処理のあと、
-            // 状況起因処理か能力の誘発があった場合のみ優先権が発生する。
             switch (this.current_step) {
                 case Step.untap_step:
+                    // アンタップ・ステップでは優先権は発生しない。
                     break;
                 case Step.cleanup_step:
-                    if (state_based_action_is_performed_or_ability_triggered_during_cleanup) {
+                    // クリンナップ・ステップでは、
+                    // 状況起因処理か能力の誘発があった場合のみ優先権が発生する。
+                    if (this.cleanup_again) {
                         this.perform_priority_action()
                     }
                     break;
                 default:
+                    // 優先権により行動する
                     this.perform_priority_action()
                     break;
             }
@@ -92,85 +111,86 @@ class InGameState {
                 /* 全員が連続でパスした */
                 this.pass_count = 0
                 if (this.stack.length > 0) {
-                    /* スタックに何かある場合 */
-                    /* スタック上のものを1つ解決する */
-                    resolve_stack()
+                    /* スタックに何かある場合、スタック上のものを1つ解決する */
+                    this.resolve_stack()
                     /* アクティブプレイヤーが優先権を得る */
                     this.set_priority_to(this.active_player)
-                    flag_goto_next = false
                 } else {
-                    /* スタックが空の場合 */
-                    /* 次のフェイズ・ステップに移る */
+                    /* スタックが空の場合、次のフェイズ・ステップに移る */
                     flag_goto_next = true
                 }
-            } else {
-                /* まだ全員が連続でパスしていない場合 */
-                /* 次のプレイヤーが優先権を得る */
-                this.set_priority_to(this.get_next_player_of(this.player_with_priority))
-                flag_goto_next = false
             }
         }
     }
 
-    /** 次のターン、フェイズ、ステップに移る。
+    /** 現在のステップを終了し、次のターンかフェイズかステップに移る。
+     * メイン・フェイズである場合は、ステップがないのでフェイズを終了する。
      * 新しいターンが追加されるか、新しいフェイズが追加されるか、
      * 新しいステップが追加される */
     goto_next() {
         if (this.current_step.is_cleanup_step) {
             /* 現在クリンナップ・ステップの場合 */
-            if (state_based_action_is_performed_or_ability_triggered_during_cleanup) {
-                /* 状況起因処理か誘発があった場合はもう一度クリンナップ・ステップが発生する */
-                this.add_turn(new CleanupStep())
-                state_based_action_is_performed_or_ability_triggered_during_cleanup = false
+            if (this.cleanup_again) {
+                /* フラグが立っているなら再度クリンナップ・ステップを行う */
+                this.goto_new_phase_or_step(new CleanupStep())
             } else {
-                /* 新しいターンを始める */
-                let turn = this.get_next_turn()
-                // TODO ターンを開始するに際して機能する効果
-                //   - ターンを追加またスキップする効果
-                this.add_turn(turn)
+                /* フラグが立っていないなら新しいターンを始める */
+                let turn;
+                /** --> ループ */
+                /** 次に始まるターンを決定する。
+                 * 追加ターンがあれば、最後に発生した追加ターンを取り出す。
+                 * その追加ターン効果が消滅するなら消滅する。
+                 * 追加ターンがなければ通常のターンとなる。
+                */
+                if (this.extra_turns.length > 0) {
+                    turn =  // FIXME ?
+                } else {
+                    turn = new Turn(
+                        this.current_turn.count++,
+                        this.get_next_player_of(this.current_turn.player)
+                    )
+                }
+
+                /** ターンスキップのチェック。複数ある場合はどれを適用するか選択。
+                 * スキップ効果が消滅するなら消滅する */
+                // Time Vault
+                if (this.skip_turns.length > 0) {
+                    // TODO 適用するスキップを選択
+                } else {
+                    // TODO
+                }
+
+                /** <-- ターンが消滅したならループの先頭に戻る */
+
+                /** 決定したターンを開始する */
+                this.goto_new_turn(turn)
             }
         } else {
             /* クリンナップ・ステップでない場合は、次のフェイズまたはステップへ移行する */
-            let phasestep = this.get_next_phase_or_step()
+            let phase_or_step =   // TODO 移行先のフェイズやステップを確認する
             // TODO フェイズ、ステップを追加またスキップする効果
-            this.add_phase_or_step()
+            this.goto_new_phase_or_step(phase_or_step)
         }
+        this.cleanup_again = false
     }
 
-    /** 次のターンに移る */
-    get_next_turn() {
+    /** ターン起因処理 */
+    turn_based_action() {
+        this.turns.at(-1).turn_based_action()  // TODO Turn.turn_based_action()
     }
 
-    /** 次のステップまたはフェイズに移る */
-    get_next_phase_or_step() {
+    /** 状況起因処理 */
+    state_based_action() {
     }
 
-    /** 優先権を持っているプレイヤーの行動ループ */  // TODO 行動後に優先権処理を行う必要あり
-    perform_priority_action() {
-        while (true) {
-            let action = ask_action_to_player()
-            // 呪文を唱える
-            if (action == cast_spell) {
-                this.pass_count = 0
-            }
-            // 能力を起動する
-            if (action == activate_ability) {
-                this.pass_count = 0
-            }
-            // 特別な処理を行う
-            if (action == do_special_action) {
-                this.pass_count = 0
-            }
-            // 優先権をパスする
-            if (action == pass_priority) {
-                this.pass_count++
-            }
-        }
+    /** 誘発した能力をスタックに置く */
+    put_triggered_abilities_on_stack() {
     }
 
-    /* プレイヤーが優先権を得る */
+    /** プレイヤーが優先権を得る */
     set_priority_to(player) {
         /* 状況起因処理と誘発 */
+        let ret = false
         let flag_sba = true
         let flag_trigger = true
         while (flag_sba || flag_trigger) {  // 何もなくなるまで繰り返す
@@ -178,27 +198,62 @@ class InGameState {
             /* 状況起因処理 */
             while (this.state_based_action()) {  // なにかあったらtrue
                 flag_sba = true
+                ret = true
             }
             /* 誘発していた能力をスタックに置く */
             flag_trigger = this.put_triggered_abilities_on_stack()
+            if (flag_trigger) {
+                ret = true
+            }
         }
         /* プレイヤーが優先権を得る */
         this.player_with_priority = player
+
+        return ret
     }
 
-    /* 状況誘発のチェック */
+    /** 優先権による行動。呪文を唱える、能力を起動する、特別な処理を行う、優先権をパスする */
+    perform_priority_action() {
+        let action = ask_action_to_player()  // TODO ask_action_to_player()
+        // 呪文を唱える
+        if (action == cast_spell) {
+            this.pass_count = 0
+        }
+        // 能力を起動する
+        if (action == activate_ability) {
+            this.pass_count = 0
+        }
+        // 特別な処理を行う
+        if (action == do_special_action) {
+            this.pass_count = 0
+        }
+        // 優先権をパスする
+        if (action == pass_priority) {
+            this.set_priority_to(this.get_next_player_of(this.player_with_priority)) // TODO
+            this.pass_count++
+        }
+    }
+
+    /** スタックを1つ解決する */
+    resolve_stack() {}
+
+    /** 状況誘発をチェックする */
     check_state_triggers() {
     }
-    /* 誘発した能力をスタックに置く */
-    put_triggered_abilities_on_stack() {
+
+    /** 新しいターンに入る */
+    goto_new_turn(turn) {
+        this.turns.push(turn)
     }
-    /* 状況起因処理 */
-    state_based_action() {
+    /** 新しいフェイズまたはステップに入る */
+    goto_new_phase_or_step(phase_or_step) {
+        this.turns[-1].push_phase_or_step(phase_or_step)
     }
 }
 
 class InGameHistory {
     /** ゲーム内の履歴 */
+    game_states = []
 }
 
 class InGameObject {
@@ -224,6 +279,47 @@ class InGameObject {
     loyalty
 }
 
+class ExtraOrSkip {
+    static counter = 0
+    constructor(condition) {
+        this.id = ++ExtraTurn.counter  // InGameObjectとは別のIDを振る
+        this.condition = condition  // 追加やスキップを行うかどうかの判定条件
+    }
+    // TODO
+}
+
+
+/** ターンやフェイズ・ステップの追加orスキップは継続的効果の一種でしかない？
+ * - begin_turn()のような処理を作って置換処理を適用する？
+*/
+class ExtraSpec {
+    static counter = 0
+    id = 0
+    spec
+    constructor(spec) {
+        this.id = ++ExtraSpec.counter
+        this.spec = spec
+    }
+    // TODO
+}
+
+/** スキップは置換効果の一種である */
+// class SkipSpec {
+//     static counter = 0
+//     id = 0
+//     spec
+//     constructor(spec) {
+//         this.id = ++ExtraSpec.counter
+//         this.spec = spec
+//     }
+//     // TODO
+// }
+class ReplacementEffect {
+    // TODO
+}
+/** 置換効果を実装するならイベントの実装が必須・・・ */
+
+
 class Player {
     /** プレイヤー */
     id;
@@ -235,88 +331,140 @@ class Turn {
      * ターン > フェイズ > ステップ の木構造を持つ
      * ターン、フェイズ、ステップは実際に開始するときに初めて生成される
     */
-    constructor(count, player, phases = []) {
+    count;
+    player;
+    phases = [];
+    is_extra = false;
+
+    constructor(count, player, is_extra = false, phases = []) {
         this.count = count
         this.player = player
         this.phases = phases  // フェイズ
+        this.is_extra = is_extra
     }
 
+    /** フェイズオブジェクトを追加する */
+    push_phase(phase) {
+        this.phases.push(phase)
+    }
+    /** ステップオブジェクトを追加する */
+    push_step(step) {
+        this.phases[-1].push_step(step)
+    }
+    /** フェイズオブジェクト、またはステップオブジェクトを追加する */
+    push_phase_or_step(phase_or_step) {
+        if (Phase.is_phase(phase_or_step)) {
+            this.push_phase(phase_or_step)
+        }
+        if (Step.is_step(phase_or_step)) {
+            this.push_step(phase_or_step)
+        }
+    }
+
+    static turn_def = new Turn(
+        count = 0,
+        player = undefined,
+        phases = [
+            new BeginningPhase(steps = [
+                new UntapStep(),
+                new UpkeepStep(),
+                new DrawStep(),
+            ]),
+            new PrecombatMainPhase(),
+            new CombatPhase(steps = [
+                new BeginningOfCombatStep(),
+                new DeclareAttackersStep(),
+                new DeclareBlockersStep(),
+                new CombatDamageStep(),
+                new EndOfCombatStep(),
+            ]),
+            new PostcombatMainPhase(),
+            new EndingPhase(steps = [
+                new EndStep(),
+                new CleanupStep(),
+            ])
+        ]
+    )
+
+    // TODO 次のフェイズ・ステップを返す　ジェネレータ？
+
+    // /** ターン起因処理 */
+    // turn_based_action() {
+    // }
 }
 
 class Phase {
     /** フェイズ */
-    constructor(player, phasetype, steps = []) {
+    name
+    player
+    steps = []
+    turn_based_action
+    constructor(name, player, steps = []) {
+        this.name = name
         this.player = player
-        this.phasetype = phasetype  // フェイズ種別
         this.steps = steps  // ステップ
     }
 
-    static beginning_phase = {
-        name: "Beginning Phase",
-        steps: [
-            Step.untap_step,
-            Step.upkeep_step,
-            Step.draw_step,
-        ],
+    static is_phase(obj) {
+        return obj instanceof Phase
     }
-    static precombat_main_phase = {
-        name: "Precombat Main Phase",
-        steps: [],
-        /* 計略を実行中にする */
-        set_scheme_in_motion() {},
-        /* 英雄譚に伝承カウンターを置く */
-        put_counter_on_saga() {},
-        /* アトラクションを観覧するためのサイコロを振る */
-        roll_to_visit_attractions() {},
+    push_step(step) {
+        this.steps.push(step)
     }
-    static combat_phase = {
-        name: "Combat Phase",
-        steps: [
-            Step.beginning_of_combat_step,
-            Step.declare_attackers_step,
-            Step.declare_blockers_step,
-            Step.combat_damage_step,
-            Step.end_of_combat_step,
-        ]
+
+    get is_beginning_phase() {
+        return this instanceof BeginningPhase
     }
-    static postcombat_main_phase = {
-        name: "Postcombat Main Phase",
-        steps: [],
+    get is_precombat_main_phase() {
+        return this instanceof PrecombatMainPhase
     }
-    static ending_phase = {
-        name: "Ending Phase",
-        steps: [
-            Step.end_step,
-            Step.cleanup_step,
-        ]
+    get is_combat_phase() {
+        return this instanceof CombatPhase
+    }
+    get is_postcombat_main_phase() {
+        return this instanceof PostcombatMainPhase
+    }
+    get is_ending_phase() {
+        return this instanceof EndingPhase
     }
 }
 class BeginningPhase extends Phase {
-    constructor() {
+    constructor(name, player, steps) {
         super()
         this.name = "Beginning Phase"
     }
 }
 class PrecombatMainPhase extends Phase {
-    constructor() {
+    constructor(name, player, steps) {
         super()
         this.name = "Precombat Main Phase"
+        this.turn_based_action = (game_state) => {
+            this.set_scheme_in_motion()
+            this.put_counter_on_saga()
+            this.roll_to_visit_attractions()
+        }
     }
+    /* 計略を実行中にする */
+    set_scheme_in_motion() {}
+    /* 英雄譚に伝承カウンターを置く */
+    put_counter_on_saga() {}
+    /* アトラクションを観覧するためのサイコロを振る */
+    roll_to_visit_attractions() {}
 }
 class CombatPhase extends Phase {
-    constructor() {
+    constructor(name, player, steps) {
         super()
         this.name = "Combat Phase"
     }
 }
 class PostcombatMainPhase extends Phase {
-    constructor() {
+    constructor(name, player, steps) {
         super()
         this.name = "Postcombat Main Phase"
     }
 }
 class EndingPhase extends Phase {
-    constructor() {
+    constructor(name, player, steps) {
         super()
         this.name = "Ending Phase"
     }
@@ -325,92 +473,137 @@ class EndingPhase extends Phase {
 
 class Step {
     /** ステップ */
-
-    get is_untap_step() {}
-    get is_upkeep_step() {}
-    get is_draw_step() {}
-    get is_beginning_of_combat_step() {}
-    get is_declare_attackers_step() {}
-    get is_declare_blockers_step() {}
-    get is_combat_damage_step() {}
-    get is_end_of_combat_step() {}
-    get is_end_step() {}
-    get is_cleanup_step() {}
-
-    // アンタップ・ステップ
-    static untap_step = {
-        name: "Untap Step",
-        /* フェイズイン、フェイズアウト */
-        phasing(game_state) {},
-        /* 昼夜が入れ替わる */
-        switchDayNight(game_state) {},
-        /* アンタップする */
-        untap(game_state) {},
+    name
+    player
+    turn_based_action
+    constructor(name, player) {
+        this.name = name
+        this.player = player
     }
 
-    // アップキープ・ステップ
-    static upkeep_step = {
-        name: "Upkeep Step",
+    static is_step(obj) {
+        return obj instanceof Step
     }
 
-    // ドロー・ステップ
-    static draw_step = {
-        name: "Draw Step",
-        /* カードを引く */
-        draw() {},
+    get is_untap_step() {
+        return this instanceof UntapStep
     }
+    get is_upkeep_step() {
+        return this instanceof UpkeepStep
+    }
+    get is_draw_step() {
+        return this instanceof DrawStep
+    }
+    get is_beginning_of_combat_step() {
+        return this instanceof BeginningOfCombatStep
+    }
+    get is_declare_attackers_step() {
+        return this instanceof DeclareAttackersStep
+    }
+    get is_declare_blockers_step() {
+        return this instanceof DeclareBlockersStep
+    }
+    get is_combat_damage_step() {
+        return this instanceof CombatDamageStep
+    }
+    get is_end_of_combat_step() {
+        return this instanceof EndOfCombatStep
+    }
+    get is_end_step() {
+        return this instanceof EndStep
+    }
+    get is_cleanup_step() {
+        return this instanceof CleanupStep
+    }
+}
 
-    // 戦闘開始ステップ
-    static beginning_of_combat_step = {
-        name: "Beginning of Combat Step",
-        /* 防御プレイヤーを1人選ぶ */
-        select_defending_player() {},
+class UntapStep {
+    constructor(name) {
+        this.name = " Step"
+        this.turn_based_action = (game_state) => {
+            this.phasing(game_state)
+            this.switchDayNight(game_state)
+            this.untap(game_state)
+        }
     }
-
-    // 攻撃クリーチャー指定ステップ
-    static declare_attackers_step = {
-        name: "Declare Attackers Step",
-        /* 攻撃クリーチャーを指定する */
-        declare_attackers() {},
+    phasing(game_state) {}
+    switchDayNight(game_state) {}
+    untap(game_state) {}
+}
+class UpkeepStep {
+    constructor(name) {
+        this.name = "Upkeep Step"
     }
-
-    // ブロック・クリーチャー指定ステップ
-    static declare_blockers_step = {
-        name: "Declare Blockers Step",
-        // ブロッククリーチャーを指定する
-        declare_blockers() {},
-        // 攻撃側のダメージ割り振り順を指定する
-        declare_attackers_dealing_damage_order() {},
-        // ブロック側のダメージ割り振り順を指定する
-        declare_blockers_dealing_damage_order() {},
+}
+class DrawStep {
+    constructor(name) {
+        this.name = "Draw Step"
+        this.turn_based_action = (game_state) => {
+            this.draw(game_state)
+        }
     }
-
-    // 戦闘ダメージ・ステップ
-    static combat_damage_step = {
-        name: "Combat Damage Step",
-        /* 戦闘ダメージの割り振りを指定する */
-        declare_damage() {},
-        /* 戦闘ダメージを割り振る */
-        deal_damage() {},
+    draw(game_state) {}
+}
+class BeginningOfCombatStep {
+    constructor(name) {
+        this.name = "Beginning of Combat Step"
+        this.turn_based_action = (game_state) => {
+            this.select_defending_player(game_state)
+        }
     }
-
-    // 戦闘終了ステップ
-    static end_of_combat_step = {
-        name: "End of Combat Step",
+    select_defending_player(game_state) {}
+}
+class DeclareAttackersStep {
+    constructor(name) {
+        this.name = "Declare Attackers Step"
+        this.turn_based_action = (game_state) => {
+            this.declare_attackers(game_state)
+        }
     }
-
-    // 終了ステップ
-    static end_step = {
-        name: "End Step",
+    declare_attackers(game_state) {}
+}
+class DeclareBlockersStep {
+    constructor(name) {
+        this.name = "Declare Blockers Step"
+        this.turn_based_action = (game_state) => {
+            this.declare_blockers(game_state)
+            this.declare_order_attackers_dealing_damage(game_state)
+            this.declare_order_blockers_dealing_damage(game_state)
+        }
     }
-
-    // クリンナップ・ステップ
-    static cleanup_step = {
-        name: "Cleanup Step",
-        /* 上限を超えた手札を捨てる */
-        discard() {},
-        /* パーマネントからダメージが取り除かれると同時に、
-        ターン終了時までの効果が終了する */
-        remove_damage_and_end_effects() {},
+    declare_blockers(game_state) {}
+    declare_order_attackers_dealing_damage(game_state) {}
+    declare_order_blockers_dealing_damage(game_state) {}
+}
+class CombatDamageStep {
+    constructor(name) {
+        this.name = "Combat Damage Step"
+        this.turn_based_action = (game_state) => {
+            this.declare_damage(game_state)
+            this.deal_damage(game_state)
+        }
     }
+    declare_damage(game_state) {}
+    deal_damage(game_state) {}
+}
+class EndOfCombatStep {
+    constructor(name) {
+        this.name = "End of Combat Step"
+    }
+}
+class EndStep {
+    constructor(name) {
+        this.name = "End Step"
+    }
+}
+class CleanupStep {
+    constructor(name) {
+        this.name = "Cleanup Step"
+        this.turn_based_action = (game_state) => {
+            this.discard(game_state)
+            this.remove_damage_and_end_effects(game_state)
+        }
+    }
+    discard(game_state) {}
+    remove_damage_and_end_effects(game_state) {}
 }
