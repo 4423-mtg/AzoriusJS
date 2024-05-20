@@ -1,3 +1,8 @@
+'use strict';
+/** ターン、フェイズ、ステップを表すオブジェクト
+ *
+ */
+
 export {
     Turn,
     Phase,

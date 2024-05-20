@@ -1,5 +1,9 @@
 'use strict';
-import * as Turn from "Turn.js"
+import * as Turn from "./Turn"
+export {
+    Game, InGameState, InGameHistory, GameObject, Card, StackedAbility,
+    Characteristics
+}
 
 class Game {
     /** ゲームを表すオブジェクト */
@@ -249,6 +253,9 @@ class InGameState {
     goto_new_phase_or_step(phase_or_step) {
         this.turns[-1].push_phase_or_step(phase_or_step)
     }
+
+    /** 条件を満たすオブジェクトを取得 */
+    get_objects(query) { return [] }
 }
 
 class InGameHistory {
@@ -256,28 +263,9 @@ class InGameHistory {
     game_states = []
 }
 
-class InGameObject {
-    /** ゲーム内のオブジェクト */
-    id
-    object_type = ["card"]
-    // カード
-    // トークン
-    // カードやトークンのコピー
 
-    // 呪文であるもの：
-    //      カード、カードのコピー、
-    // (card | token | copy), (spell | ability)
-    zone
-    owner
-    controller
-    name
-    card_type
-    text
-    mana_cost
-    power
-    toughness
-    loyalty
-}
+// =====================================================
+
 
 class ExtraOrSkip {
     static counter = 0
@@ -320,9 +308,4 @@ class ReplacementEffect {
 /** 置換効果を実装するならイベントの実装が必須・・・ */
 
 
-class Player {
-    /** プレイヤー */
-    id;
-    name;
-}
 
