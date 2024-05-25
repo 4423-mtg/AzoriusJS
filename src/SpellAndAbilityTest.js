@@ -15,11 +15,11 @@ const card_sleep = new Card(new Characteristics({
     card_type: "Sorcery",
     text: "Tap all creatures target player controls. Those creatures don’t untap during that player’s next untap step.",
     ability: new SpellAbility(() => {
-        const creatures = creatures_controlled_by(Target)  // FIXME
+        const creatures = creatures_controlled_by(Target)
         return [
             new Ins.Tapping({permanent: creatures}),
             new Ins.GeneratingContinuousEffect(
-                new ContinuousEffect()
+                new ContinuousEffect()  // FIXME
             )
         ]
     }),
@@ -28,4 +28,11 @@ const card_sleep = new Card(new Characteristics({
 
 
 // TODO よく使う効果を使い回せるようにしたい
+
+// 可能な限り、カードに書かれているとおりに実装する。ルール変更によって挙動・解釈が変わることがあるため
+
+// 砕ける波/Breaking Wave
+// ソーサリー
+// あなたが砕ける波を唱えるためにさらに(２)を支払うなら、あなたは砕ける波を、瞬速を持っているかのように唱えてもよい。（あなたはこれを、あなたがインスタントを唱えられるときならいつでも唱えてよい。）
+// **同時に**、すべてのタップ状態のクリーチャーをアンタップし、すべてのアンタップ状態のクリーチャーをタップする。
 

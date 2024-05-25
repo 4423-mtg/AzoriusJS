@@ -5,10 +5,12 @@
 
 import * as main from "main.js"
 export {
+    Ability,
     ActivatedAbility,
     TriggeredAbility,
     SpellAbility,
     StaticAbility,
+    KeywordAbility,
 }
 
 
@@ -56,7 +58,14 @@ class SpellAbility extends Ability {
 
 /** 常在型能力 */
 class StaticAbility extends Ability {
+    /** 効果。単一の能力が複数の継続的効果を持つこともある（キーワード能力など） */
     effects = []  // ContinuousEffect[]
 }
 
-
+/** キーワード能力 */
+class KeywordAbility extends Ability {
+    /** 能力名 */
+    name
+    /** 含まれる能力 */
+    abilities = []
+}

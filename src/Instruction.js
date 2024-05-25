@@ -6,8 +6,10 @@ import {
     ObjectReference,
     PlayerReference,
     ValueReference,
-} from "Reference.js"
-
+} from "./Reference"
+import {
+    GameState
+} from "./Game"
 
 /** 処理指示を表すクラス。効果やターン起因処理、状況起因処理などの行う指示
  * ゲーム中に実行されるときにInGameReferenceを通じて実際のゲーム内の情報を注入される
@@ -15,8 +17,28 @@ import {
 class Instruction {
     id
     performer  // 指示を行うプレイヤー（またはゲーム）
-    perform(game_state, game_history, self, source) {}
+    instructions = []  // Instructionは木構造を成す
+    perform(game_state, game_history, self, source) {
+        /** 影響する継続的効果を確認する */
+    }
 }
+// カードを引く：
+//   - 
+
+class InstructionArray {
+    instructions = []
+
+    perform(gamestate) {
+        /** instruction列全体のチェック */
+        for (const ce of gamestate.continious_effects) {
+            
+        }
+        /** 各instructionを順に実行 */
+
+        /**     各instruction単体のチェック */
+    }
+}
+
 
 // システム処理 ************************************************
 /** 継続的効果の生成 */
@@ -36,6 +58,10 @@ export class ChoosingValue extends Instruction {}
 /** 選択肢を選ぶ */
 export class Selecting extends Instruction {}
 
+/** 同時に行う */
+export class PerformSimultaneously extends Instruction {
+    instructions = []
+}
 
 // ゲーム的な行動 ***********************************************
 /**カードを引く */

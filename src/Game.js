@@ -1,7 +1,7 @@
 'use strict';
 import * as Turn from "./Turn"
 export {
-    Game, InGameState, InGameHistory, GameObject, Card, StackedAbility,
+    Game, GameState as InGameState, GameHistory as InGameHistory, GameObject, Card, StackedAbility,
     Characteristics
 }
 
@@ -10,10 +10,10 @@ class Game {
     id = 0
     players = []
     decks = []
-    game_state = new InGameState()
+    game_state = new GameState()
 }
 
-class InGameState {
+class GameState {
     /** ゲームの状態 */
     game_meta
     turns = []
@@ -30,7 +30,7 @@ class InGameState {
     // 継続的効果
     continuous_effects = []
     // ゲームの履歴
-    game_history = new InGameHistory()
+    game_history = new GameHistory()
     // 優先権を連続でパスしたプレイヤーの数
     pass_count;
     /** クリンナップをもう一度行うかどうか。
@@ -256,56 +256,12 @@ class InGameState {
 
     /** 条件を満たすオブジェクトを取得 */
     get_objects(query) { return [] }
+
 }
 
-class InGameHistory {
+/** ゲームの履歴。実装は隠蔽する */
+class GameHistory {
     /** ゲーム内の履歴 */
     game_states = []
 }
-
-
-// =====================================================
-
-
-class ExtraOrSkip {
-    static counter = 0
-    constructor(condition) {
-        this.id = ++ExtraTurn.counter  // InGameObjectとは別のIDを振る
-        this.condition = condition  // 追加やスキップを行うかどうかの判定条件
-    }
-    // TODO
-}
-
-
-/** ターンやフェイズ・ステップの追加orスキップは継続的効果の一種でしかない？
- * - begin_turn()のような処理を作って置換処理を適用する？
-*/
-class ExtraSpec {
-    static counter = 0
-    id = 0
-    spec
-    constructor(spec) {
-        this.id = ++ExtraSpec.counter
-        this.spec = spec
-    }
-    // TODO
-}
-
-/** スキップは置換効果の一種である */
-// class SkipSpec {
-//     static counter = 0
-//     id = 0
-//     spec
-//     constructor(spec) {
-//         this.id = ++ExtraSpec.counter
-//         this.spec = spec
-//     }
-//     // TODO
-// }
-class ReplacementEffect {
-    // TODO
-}
-/** 置換効果を実装するならイベントの実装が必須・・・ */
-
-
 

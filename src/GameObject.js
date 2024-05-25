@@ -14,7 +14,7 @@ export {
     ReplacementEffect,
 }
 
-
+// ==== ゲーム内オブジェクト ======================================
 /** ゲーム内のオブジェクト。
  * ルール上の「オブジェクト」の他に、継続的効果や遅延誘発型能力など、
  * 「ゲームの状態」に含まれるもの全般。 */
@@ -93,11 +93,30 @@ class StackedAbility extends GameObject {
     source
 }
 
-/** 継続的効果 */
+/** 継続的効果
+ * 1. 特性や値を変更する効果
+ * 2. 手続きを修整する効果
+ */
 class ContinuousEffect extends GameObject {
     continuous_effect = undefined
     // 1. 期間
-    // 2. 影響を及ぼすオブジェクト
+    /** 影響を及ぼすオブジェクト */
+    effected_objects = []
+}
+
+/** 値や特性を変更する継続的効果 */
+class ValueAlteringContinousEffect extends ContinuousEffect {
+    altered_objects  /** 固定のこともあれば条件にあてはまるものすべてのこともある */
+}
+
+/** 手続きを変更する継続的効果 */
+class ProcessAlteringContinousEffect extends ContinuousEffect {
+    altered_process
+}
+
+/** 処理を禁止する継続的効果 */
+class ForbidingContinousEffect extends ContinuousEffect {
+    forbidden_event
 }
 
 /** 遅延誘発型能力 */
@@ -106,8 +125,24 @@ class DelayedTriggeredAbility extends GameObject {
 }
 
 /** 置換効果 */
-class ReplacementEffect extends ContinuousEffect {}
+class ReplacementEffect extends GameObject {}
 
+/** 追加のターン、フェイズ、ステップ */
+class Additional extends GameObject {
+    /** 開始する条件 */
+    condition
+}
+
+class AdditionalTurn extends Additional {
+}
+
+class AdditionalPhase extends Additional {
+}
+
+class AdditionalStep extends Additional {
+}
+
+// ==========================================
 /** 特性 */
 class Characteristics {
     constructor({
