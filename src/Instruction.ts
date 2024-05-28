@@ -3,34 +3,33 @@
  */
 
 import {
-    ObjectReference,
-    PlayerReference,
-    ValueReference,
+    Reference,
 } from "./Reference"
 import {
+    GameHistory,
     GameState
 } from "./Game"
+import { Player } from "./GameObject"
 
 /** 処理指示を表すクラス。効果やターン起因処理、状況起因処理などの行う指示
  * ゲーム中に実行されるときにInGameReferenceを通じて実際のゲーム内の情報を注入される
  */
 class Instruction {
-    id
-    performer  // 指示を行うプレイヤー（またはゲーム）
-    instructions = []  // Instructionは木構造を成す
-    perform(game_state, game_history, self, source) {
+    id: number
+    performer: Player  // 指示の内容を実行するプレイヤー（またはゲーム）
+    perform(game_state: GameState, game_history: GameHistory, self: any, source: any): void {
         /** 影響する継続的効果を確認する */
     }
 }
 // カードを引く：
 //   - 
 
-class InstructionArray {
-    instructions = []
+export class InstructionArray {
+    instructions: Instruction[]
 
-    perform(gamestate) {
+    perform(gamestate: GameState, game_history: GameHistory, self: any): void {
         /** instruction列全体のチェック */
-        for (const ce of gamestate.continious_effects) {
+        for (const ce of gamestate.continuous_effects) {
             
         }
         /** 各instructionを順に実行 */
@@ -87,14 +86,15 @@ export class DealDamageInstruction extends Instruction {
 // キーワード処理 1日目 *****************************************
 /** タップ */
 export class Tapping extends Instruction {
-    constructor({permanent}){
-        this.tapped_permanents = permanent
+    permanents: Reference[]
+    constructor(...permanents: Reference[]){  // これなに？
+        super()
+        this.permanents = permanents
     }
-    permanents = []
 }
 /** アンタップ */
 export class Untapping extends Instruction {
-    untapped_permanents = []
+    permanents: Reference[]
 }
 /** 唱える */
 export class Casting extends Instruction {

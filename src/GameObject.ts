@@ -1,6 +1,7 @@
 'use strict';
 
-import { SpellAbility } from "./Ability";
+import { Ability, SpellAbility } from "./Ability";
+import { GameHistory, GameState } from "./Game";
 
 /** ゲーム内のオブジェクト
  * カード、スタック上の能力、継続的効果、遅延誘発型能力、置換効果
@@ -12,6 +13,7 @@ export {
     ContinuousEffect,
     DelayedTriggeredAbility,
     ReplacementEffect,
+    Player,
 }
 
 // ==== ゲーム内オブジェクト ======================================
@@ -25,15 +27,15 @@ export {
 //   - 継続的効果
 //   - 遅延誘発型能力
 class GameObject {
-    id
+    id: number
     zone
-    owner
-    controller
+    owner: Player
+    controller: Player
 
     // ----スタック上で取る特性----
     chosen_mode
-    x
-    target
+    x: number
+    target: GameObject
     distributing
     paid_cost
     // どんな効果によって唱えたかは記憶する？
@@ -44,7 +46,8 @@ class GameObject {
 
 /** カード */
 class Card extends GameObject {
-    constructor(characteristics) {
+    constructor(characteristics: Characteristics) {
+        super()
         if (Array.isArray(characteristics)) {
             this.characteristics_sets = characteristics
         } else {
@@ -53,7 +56,7 @@ class Card extends GameObject {
     }
     // ====印刷されている値 ====
     /** 印刷されている特性の組（分割や出来事などを含む） */
-    characteristics_sets = []
+    characteristics_sets: Characteristics[] = []
     /** レイアウト */  // TODO 必要？
     layout
     /** その時取っている特性組 */
@@ -61,9 +64,9 @@ class Card extends GameObject {
 
     // ==== ゲーム中に取る値 ====
     /** 位相 */
-    status
+    status: Status
     /** トークンやコピーであるか */
-    is_copy
+    is_copy: boolean
     /** 乗っているカウンター */
     counters
     /** 貼られているステッカー */
@@ -72,17 +75,17 @@ class Card extends GameObject {
     level
     // ----マーカー類----
     /** 怪物的 */
-    is_monstrous
-    is_renowned
-    is_goaded
-    is_suspected
+    is_monstrous: boolean
+    is_renowned: boolean
+    is_goaded: boolean
+    is_suspected: boolean
 
     // 解決
-    resolve_as_spell(game_state, game_history) {
+    resolve_as_spell(game_state: GameState, game_history: GameHistory): void {
         for (const spell_ability of this.characteristics.abilities.filter(
-                a => a instanceof SpellAbility
+                (a: Ability) => a instanceof SpellAbility
             )) {
-            spell_ability.perform(game_state, game_history, this)
+            (spell_ability as SpellAbility).perform(game_state, game_history, this)
         }
     }
 }
@@ -90,7 +93,7 @@ class Card extends GameObject {
 /** スタック上の能力 */
 class StackedAbility extends GameObject {
     /** 能力の発生源 */
-    source
+    source: GameObject
 }
 
 /** 継続的効果
@@ -176,32 +179,32 @@ class Characteristics {
         this.hand_modifier = hand_modifier
         this.life_modifier = life_modifier
     }
-    name
+    name: string
     mana_cost
     color_indicator
     card_types
     subtypes
     supertypes
-    abilities
-    text
-    power
-    toughness
-    loyalty
-    defense
-    hand_modifier
-    life_modifier
+    abilities: Ability[]
+    text: string
+    power: number | string
+    toughness: number | string
+    loyalty: number | string
+    defense: number
+    hand_modifier: number
+    life_modifier: number
 }
 
 /** 位相 */
 class Status {
-    tapped
-    flipped
-    is_face_down
-    is_phase_out
+    tapped: boolean
+    flipped: boolean
+    is_face_down: boolean
+    is_phase_out: boolean
 }
 
 /** プレイヤー */
 class Player {
-    id;
-    name;
+    id: number
+    name: string
 }

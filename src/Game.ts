@@ -1,64 +1,64 @@
 'use strict';
-import * as Turn from "./Turn"
+import { GameObject, Player } from "./GameObject"
+import { Phase, Turn } from "./Turn"
 export {
-    Game, GameState as InGameState, GameHistory as InGameHistory, GameObject, Card, StackedAbility,
-    Characteristics
+    Game, GameState, GameHistory
 }
 
 class Game {
     /** ゲームを表すオブジェクト */
-    id = 0
-    players = []
+    id: number = 0
+    players: Player[] = []
     decks = []
-    game_state = new GameState()
+    game_state: GameState = new GameState()
 }
 
 class GameState {
     /** ゲームの状態 */
     game_meta
-    turns = []
-    objects = []
-    players = []
+    turns: Turn[] = []
+    objects: GameObject[] = []
+    players: Player[] = []
     extra_turns = []
     extra_phasesteps = []
     skip_turns = []
     skip_phasesteps = []
-    // 誘発してまだスタックに置かれていない能力
+    // 誘発してまだスタックに置かれていない能力 FIXME
     triggered_abilities = []
-    // 遅延誘発型能力
+    // 遅延誘発型能力 FIXME
     delayed_triggered_abilities = []
-    // 継続的効果
+    // 継続的効果 FIXME
     continuous_effects = []
     // ゲームの履歴
-    game_history = new GameHistory()
+    game_history: GameHistory = new GameHistory()
     // 優先権を連続でパスしたプレイヤーの数
-    pass_count;
+    pass_count: number
     /** クリンナップをもう一度行うかどうか。
      * クリンナップの間に状況起因処理か能力の誘発があった場合、
      * そのクリンナップでは優先権が発生するとともに、追加のクリンナップが発生する。 */
     cleanup_again = false
 
-    get current_turn() {
+    get current_turn(): Turn | undefined {
         return this.turns.length == 0 ? undefined : this.turns[this.turns.length - 1]
     }
-    get current_phase() {
+    get current_phase(): Phase | undefined {
     }
-    get current_step() {
+    get current_step(): Step | undefined {
     }
-    get current_phasestep() {
+    get current_phasestep(): Phase | Step | undefined {
     }
-    get active_player() {
+    get active_player(): Player | undefined {
     }
-    get player_with_priority() {
+    get player_with_priority(): Player | undefined {
     }
-    set player_with_priority(player) {
+    set player_with_priority(player: Player) {
     }
     get players_from_active_player() {
     }
-    get stack() {
+    get stack(): GameObject[] {
     }
 
-    get_next_player_of(player) {
+    get_next_player_of(player: Player): Player | undefined {
         for (let i = 0; i < this.players.length; i++) {
             if (this.players[i] == player) {
                 return (i == this.players.length - 1) ?
@@ -188,11 +188,11 @@ class GameState {
     }
 
     /** 誘発した能力をスタックに置く */
-    put_triggered_abilities_on_stack() {
+    put_triggered_abilities_on_stack(): boolean {
     }
 
     /** プレイヤーが優先権を得る */
-    set_priority_to(player) {
+    set_priority_to(player: Player) {
         /* 状況起因処理と誘発 */
         let ret = false
         let flag_sba = true
@@ -255,7 +255,7 @@ class GameState {
     }
 
     /** 条件を満たすオブジェクトを取得 */
-    get_objects(query) { return [] }
+    get_objects(query: any): GameObject[] { return [] }
 
 }
 

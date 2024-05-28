@@ -1,4 +1,7 @@
 'use strict';
+
+import { Player } from "./GameObject";
+
 /** ターン、フェイズ、ステップを表すオブジェクト
  *
  */
@@ -29,12 +32,12 @@ class Turn {
      * ターン > フェイズ > ステップ の木構造を持つ
      * ターン、フェイズ、ステップは実際に開始するときに初めて生成される
     */
-    count;
-    player;
-    phases = [];
-    is_extra = false;
+    count: number
+    player: Player
+    phases: Phase[]
+    is_extra: boolean = false
 
-    constructor(count, player, is_extra = false, phases = []) {
+    constructor(count, player, phases = [], is_extra = false) {
         this.count = count
         this.player = player
         this.phases = phases  // フェイズ
@@ -42,27 +45,27 @@ class Turn {
     }
 
     /** フェイズオブジェクトを追加する */
-    push_phase(phase) {
+    push_phase(phase: Phase) {
         this.phases.push(phase)
     }
     /** ステップオブジェクトを追加する */
-    push_step(step) {
+    push_step(step: Step) {
         this.phases[-1].push_step(step)
     }
     /** フェイズオブジェクト、またはステップオブジェクトを追加する */
-    push_phase_or_step(phase_or_step) {
-        if (Phase.is_phase(phase_or_step)) {
-            this.push_phase(phase_or_step)
-        }
-        if (Step.is_step(phase_or_step)) {
-            this.push_step(phase_or_step)
-        }
+    push_phase_or_step(phase_or_step: Phase | Step) {
+        // if (Phase.is_phase(phase_or_step)) {
+        //     this.push_phase(phase_or_step)
+        // }
+        // if (Step.is_step(phase_or_step)) {
+        //     this.push_step(phase_or_step)
+        // }
     }
 
     static turn_def = new Turn(
-        count = 0,
-        player = undefined,
-        phases = [
+        0,
+        undefined,
+        [
             new BeginningPhase(steps = [
                 new UntapStep(),
                 new UpkeepStep(),
@@ -93,20 +96,20 @@ class Turn {
 
 class Phase {
     /** フェイズ */
-    name
-    player
-    steps = []
+    name: string
+    player: Player
+    steps: Step[] = []
     turn_based_action
-    constructor(name, player, steps = []) {
+    constructor(name: string, player: Player, steps = []) {
         this.name = name
         this.player = player
         this.steps = steps  // ステップ
     }
 
-    static is_phase(obj) {
+    static is_phase(obj: any) {
         return obj instanceof Phase
     }
-    push_step(step) {
+    push_step(step: Step) {
         this.steps.push(step)
     }
 
@@ -179,7 +182,7 @@ class Step {
         this.player = player
     }
 
-    static is_step(obj) {
+    static is_step(obj: any) {
         return obj instanceof Step
     }
 
@@ -215,7 +218,7 @@ class Step {
     }
 }
 
-class UntapStep {
+class UntapStep extends Step {
     constructor(name) {
         this.name = " Step"
         this.turn_based_action = (game_state) => {
@@ -228,12 +231,12 @@ class UntapStep {
     switchDayNight(game_state) {}
     untap(game_state) {}
 }
-class UpkeepStep {
+class UpkeepStep extends Step {
     constructor(name) {
         this.name = "Upkeep Step"
     }
 }
-class DrawStep {
+class DrawStep extends Step {
     constructor(name) {
         this.name = "Draw Step"
         this.turn_based_action = (game_state) => {
@@ -242,7 +245,7 @@ class DrawStep {
     }
     draw(game_state) {}
 }
-class BeginningOfCombatStep {
+class BeginningOfCombatStep extends Step {
     constructor(name) {
         this.name = "Beginning of Combat Step"
         this.turn_based_action = (game_state) => {
@@ -251,7 +254,7 @@ class BeginningOfCombatStep {
     }
     select_defending_player(game_state) {}
 }
-class DeclareAttackersStep {
+class DeclareAttackersStep extends Step {
     constructor(name) {
         this.name = "Declare Attackers Step"
         this.turn_based_action = (game_state) => {
@@ -260,7 +263,7 @@ class DeclareAttackersStep {
     }
     declare_attackers(game_state) {}
 }
-class DeclareBlockersStep {
+class DeclareBlockersStep extends Step {
     constructor(name) {
         this.name = "Declare Blockers Step"
         this.turn_based_action = (game_state) => {
@@ -273,7 +276,7 @@ class DeclareBlockersStep {
     declare_order_attackers_dealing_damage(game_state) {}
     declare_order_blockers_dealing_damage(game_state) {}
 }
-class CombatDamageStep {
+class CombatDamageStep extends Step {
     constructor(name) {
         this.name = "Combat Damage Step"
         this.turn_based_action = (game_state) => {
@@ -284,17 +287,17 @@ class CombatDamageStep {
     declare_damage(game_state) {}
     deal_damage(game_state) {}
 }
-class EndOfCombatStep {
+class EndOfCombatStep extends Step {
     constructor(name) {
         this.name = "End of Combat Step"
     }
 }
-class EndStep {
+class EndStep extends Step {
     constructor(name) {
         this.name = "End Step"
     }
 }
-class CleanupStep {
+class CleanupStep extends Step {
     constructor(name) {
         this.name = "Cleanup Step"
         this.turn_based_action = (game_state) => {

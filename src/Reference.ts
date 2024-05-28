@@ -13,25 +13,27 @@
 //         controller: this.target,
 //     });
 // })
+import { GameState, GameHistory } from './Game'
 
+type query = (game_state: GameState, game_history: GameHistory, self: any, source?: any) => any
 export class Reference {
     /** game_state: ゲームの状態 \
      * game_history: ゲームの履歴 \
      * self: この参照を含むゲーム内オブジェクト
      */
-    query_function = ((game_state, game_history, self) => {})
-    constructor(func) {
+    query_function: query
+    constructor(func: query) {
         this.query_function = func
     }
     /** なんでも返ってくる InGameObject[], int, string, ... */
-    execute(game_state, game_history, self) {
+    execute(game_state: GameState, game_history: GameHistory, self: any): any {
         return this.query_function(game_state, game_history, self)
     }
 }
 
 // よく使う参照は使いまわしたい
 /** 指定プレイヤーのコントロールしているクリーチャー */
-export function creatures_controlled_by(player) {
+export function creatures_controlled_by(player: any) {
     return new Reference((state, history, self, source) => {  // TODO 発生源も必要？
         return state.get_objects({ // TODO GameState.get_objects()
             is_permanent: true,
@@ -42,6 +44,8 @@ export function creatures_controlled_by(player) {
 }
 
 /** 対象 */
-export const Target = new Reference((state, history, self, source) => {
-    return self.target
-})
+export const Target = new Reference(
+    (state, history, self, source: any) => {
+        return self.target
+    }
+)
