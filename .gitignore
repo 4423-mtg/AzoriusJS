@@ -1,3 +1,4 @@
-.vscode
+.vscode/
 test/
 doc/
+node_modules/

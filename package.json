@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/4423-mtg/AzoriusJS/issues"
   },
-  "homepage": "https://github.com/4423-mtg/AzoriusJS#readme"
+  "homepage": "https://github.com/4423-mtg/AzoriusJS#readme",
+  "devDependencies": {
+    "prettier": "2"
+  }
 }
