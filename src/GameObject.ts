@@ -2,7 +2,7 @@
 
 import { Ability, SpellAbility, TriggeredAbility } from "./Ability";
 import { GameHistory, GameState } from "./Game";
-import { CheckingStateTriggers, Instruction } from "./Instruction";
+import { Instruction } from "./Instruction";
 import { Reference } from "./Reference";
 import { Zone } from "./Zone";
 
