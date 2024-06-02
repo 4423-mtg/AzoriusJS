@@ -1,10 +1,16 @@
 "use strict";
 
 import { Ability, SpellAbility, TriggeredAbility } from "./Ability";
+import {
+    CardType,
+    ColorIndicator,
+    ManaSymbol,
+    Subtype,
+    Supertype,
+} from "./Characteristic";
 import { GameHistory, GameState } from "./Game";
 import { Instruction } from "./Instruction";
 import { Reference } from "./Reference";
-import { Zone } from "./Zone";
 
 /** ゲーム内のオブジェクト
  * カード、スタック上の能力、継続的効果、遅延誘発型能力、置換効果
@@ -20,7 +26,7 @@ import { Zone } from "./Zone";
 //   - スタック上の能力
 //   - 継続的効果
 //   - 遅延誘発型能力
-export class GameObject {
+export abstract class GameObject {
     id: number;
     zone: Zone;
     owner: Player;
@@ -41,14 +47,9 @@ export class GameObject {
 
 /** カード */
 export class Card extends GameObject {
-    constructor(characteristics: Characteristics) {
-        // FIXME
+    constructor(spec: CharacteristicsSpec) {
         super();
-        if (Array.isArray(characteristics)) {
-            this.characteristics_sets = characteristics;
-        } else {
-            this.characteristics_sets.push(characteristics);
-        }
+        this.characteristics_sets.push(new Characteristics(spec));
     }
 
     // ====印刷されている値 ====
@@ -58,8 +59,8 @@ export class Card extends GameObject {
     layout;
     /** その時取っている特性組 */
     get characteristics() {
-        return this.characteristics_sets[0];
-    } // FIXME
+        return this.characteristics_sets[0]; // FIXME
+    }
 
     // ==== ゲーム中に取る値 ====
     /** 位相 */
@@ -96,96 +97,107 @@ export class Card extends GameObject {
 /** スタック上の能力 */
 export class StackedAbility extends GameObject {
     /** 能力の種類。起動型、誘発型、遅延誘発型、再帰誘発型 */
-    ability_type;
+    ability_type; // TODO どう表現する？
     /** 能力の発生源 */
-    source: GameObject;
+    source?: GameObject;
 }
 
+// ==================================================================
 /** 継続的効果
  * 1. 特性や値を変更する効果
  * 2. 手続きを修整する効果
  */
+export class ContinousEffectType {
+    type: "AltarValue" | "AlterProcess" | "ForbidProcess";
+}
+
 export class ContinuousEffect extends GameObject {
+    // TODO
     // 1. 期間
 }
 
-type Checker = ({
-    instruction,
-    state,
-    history,
-    performer,
-}: {
-    instruction?: Instruction;
-    state?: GameState;
-    history?: GameHistory;
-    performer?: GameObject | Player | undefined;
+/** Instructionの実行が特定の条件を満たすかどうかを判定する関数を表す型 */
+export type InstructionChecker = (args: {
+    instruction: Instruction;
+    state: GameState;
+    history: GameHistory;
+    performer: GameObject | Player;
 }) => boolean;
 
-type x = ({ a }: { a: number }) => boolean;
+/** Instructionを別の1つ以上のInstructionに置き換える関数を表す型 */
+export type InstructionReplacer = (instruction: Instruction) => Instruction[];
 
-type Replacer<T> = (arg0: T) => T[];
-
+// TODO
 /** 値や特性を変更する継続的効果 */
 export class ValueAlteringContinousEffect extends ContinuousEffect {
     /** 影響を及ぼすオブジェクト */
     affected_objects: GameObject[] | Reference[];
 }
 
+// OK
 /** 手続きを変更する継続的効果 */
 export class ProcessAlteringContinousEffect extends ContinuousEffect {
     /** 変更対象の手続きに該当するかどうかをチェックする関数 */
-    check: Checker;
+    check: InstructionChecker;
     /** 変更後の処理 */
-    replace: Replacer<Instruction>;
+    replace: InstructionReplacer;
 
     constructor(
-        check: Checker,
-        replace: Instruction | Instruction[] | Replacer<Instruction>
+        /** 変更判定関数 */
+        check: InstructionChecker,
+        /** 変更後の処理 */
+        replace: Instruction | Instruction[] | InstructionReplacer
     ) {
         super();
         this.check = check;
-        if (replace instanceof Instruction) {
-            this.replace = (arg0) => {
-                return [replace];
-            };
-        } else if (
-            Array.isArray(replace) &&
-            replace.every((e) => e instanceof Instruction)
-        ) {
-            this.replace = (arg0) => {
-                return replace;
-            };
-        } else if (typeof replace === "function") {
+        if (typeof replace === "function") {
             this.replace = replace;
+        } else if (Array.isArray(replace)) {
+            this.replace = (instruction) => replace;
+        } else {
+            this.replace = (instruction) => [replace];
         }
     }
 }
 
+// OK
 /** 処理を禁止する継続的効果 */
-export class ForbidingContinousEffect extends ContinuousEffect {
+export class ProcessForbiddingContinousEffect extends ContinuousEffect {
     /** 禁止対象の手続きに該当するかどうかをチェックする関数 */
-    check: Checker;
+    check: InstructionChecker;
 
-    constructor(check: Checker) {
+    constructor(check: InstructionChecker) {
         super();
         this.check = check;
     }
 }
 
+// ==================================================================
+// OK
 /** 置換効果 */
 export class ReplacementEffect extends GameObject {
     /** 置換対象の手続きに該当するかどうかをチェックする関数 */
-    check: Checker;
+    check: InstructionChecker;
     /** 置換後の処理 */
-    replace: Replacer<Instruction>;
+    replace: InstructionReplacer;
 
-    constructor(check: Checker, replace: Replacer<Instruction>) {
+    constructor(
+        check: InstructionChecker,
+        replace: Instruction | Instruction[] | InstructionReplacer
+    ) {
         super();
         this.check = check;
-        this.replace = replace;
+        if (typeof replace === "function") {
+            this.replace = replace;
+        } else if (Array.isArray(replace)) {
+            this.replace = (instruction) => replace;
+        } else {
+            this.replace = (instruction) => [replace];
+        }
     }
 }
 
+// OK 多分
 /** 遅延誘発型能力 */
 export class DelayedTriggeredAbility extends GameObject {
     // 誘発型能力のラップ
@@ -194,6 +206,8 @@ export class DelayedTriggeredAbility extends GameObject {
     ability: TriggeredAbility;
 }
 
+// ==================================================================
+// TODO
 /** 追加のターン、フェイズ、ステップ */
 class Additional extends GameObject {
     /** 開始する条件 */
@@ -206,73 +220,60 @@ class AdditionalPhase extends Additional {}
 
 class AdditionalStep extends Additional {}
 
-// ==========================================
+// ==================================================================
+/** 特性の指定 */
 type CharacteristicsSpec = {
-    name?: string;
-    mana_cost?;
-    color_indicator?;
-    card_types?;
-    subtypes?;
-    supertypes?;
-    abilities?: Ability | Ability[];
+    name?: string[];
+    mana_cost?: ManaSymbol[];
+    color_indicator?: ColorIndicator;
+    card_types?: CardType[];
+    subtypes?: Subtype[];
+    supertypes?: Supertype[];
+    abilities?: Ability[];
     text?: string;
-    power?;
-    toughness?;
-    loyalty?;
-    defense?;
-    hand_modifier?;
-    life_modifier?;
+    power?: number | string;
+    toughness?: number | string;
+    loyalty?: number | string;
+    defense?: number | string;
+    hand_modifier?: number | string;
+    life_modifier?: number | string;
 };
 
 /** 特性 */
 export class Characteristics {
-    constructor({
-        name,
-        mana_cost,
-        color_indicator,
-        card_types,
-        subtypes,
-        supertypes,
-        abilities,
-        text,
-        power,
-        toughness,
-        loyalty,
-        defense,
-        hand_modifier,
-        life_modifier,
-    }: CharacteristicsSpec) {
-        this.name = name;
-        this.mana_cost = mana_cost;
-        this.color_indicator = color_indicator;
-        this.card_types = card_types;
-        this.subtypes = subtypes;
-        this.supertypes = supertypes;
-        this.abilities = abilities;
-        this.text = text;
-        this.power = power;
-        this.toughness = toughness;
-        this.loyalty = loyalty;
-        this.defense = defense;
-        this.hand_modifier = hand_modifier;
-        this.life_modifier = life_modifier;
+    name?: string;
+    mana_cost?: ManaSymbol[];
+    color_indicator?: ColorIndicator;
+    card_types?: CardType[];
+    subtypes?: Subtype[];
+    supertypes?: Supertype[];
+    abilities?: Ability[];
+    text?: string;
+    power?: number | string;
+    toughness?: number | string;
+    loyalty?: number | string;
+    defense?: number | string;
+    hand_modifier?: number | string;
+    life_modifier?: number | string;
+    constructor(characteristicsSpec: CharacteristicsSpec) {
+        this.name = characteristicsSpec.name;
+        this.mana_cost = characteristicsSpec.mana_cost;
+        this.color_indicator = characteristicsSpec.color_indicator;
+        this.card_types = characteristicsSpec.card_types;
+        this.subtypes = characteristicsSpec.subtypes;
+        this.supertypes = characteristicsSpec.supertypes;
+        this.abilities = characteristicsSpec.abilities;
+        this.text = characteristicsSpec.text;
+        this.power = characteristicsSpec.power;
+        this.toughness = characteristicsSpec.toughness;
+        this.loyalty = characteristicsSpec.loyalty;
+        this.defense = characteristicsSpec.defense;
+        this.hand_modifier = characteristicsSpec.hand_modifier;
+        this.life_modifier = characteristicsSpec.life_modifier;
     }
-    name: string;
-    mana_cost;
-    color_indicator;
-    card_types;
-    subtypes;
-    supertypes;
-    abilities: Ability[];
-    text: string;
-    power: number | string;
-    toughness: number | string;
-    loyalty: number | string;
-    defense: number;
-    hand_modifier: number;
-    life_modifier: number;
 }
 
+// ==================================================================
 /** 位相 */
 export class Status {
     tapped: boolean;
@@ -284,5 +285,38 @@ export class Status {
 /** プレイヤー */
 export class Player {
     id: number;
+    name?: string;
+}
+
+/** 領域 */
+export class Zone {
+    zonetype: ZoneType;
+    owner?: Player;
+
+    constructor(zonetype: ZoneType, owner?: Player) {
+        this.zonetype = zonetype;
+        this.owner = owner;
+    }
+}
+
+export class ZoneType {
     name: string;
+
+    /** - Don't use. Use static fields instead. */
+    constructor(name: string) {
+        this.name = name;
+    }
+
+    /** 戦場 */
+    static Battlefield = new ZoneType("battlefield");
+    /** 手札 */
+    static Hand = new ZoneType("hand");
+    /** ライブラリー */
+    static Library = new ZoneType("library");
+    /** 墓地 */
+    static Graveyard = new ZoneType("graveyard");
+    /** 追放領域 */
+    static Exile = new ZoneType("exile");
+    /** 統率領域 */
+    static Command = new ZoneType("command");
 }

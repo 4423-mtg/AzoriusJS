@@ -3,7 +3,7 @@ import {
     Card,
     Characteristics,
     ContinuousEffect,
-    ForbidingContinousEffect,
+    ProcessForbiddingContinousEffect,
     ProcessAlteringContinousEffect,
 } from "./GameObject";
 import {
@@ -15,43 +15,40 @@ import {
 import { Reference, creatures_controlled_by, Target } from "./Reference";
 import {
     GeneratingContinuousEffect,
+    GeneratingProcessAlteringEffect,
     Instruction,
     Tapping,
     Untapping,
     VoidInstruction,
 } from "./Instruction";
 import { UntapStep } from "./Turn";
+import { CardType, ManaSymbol, ManaSymbols } from "./Characteristic";
 
 // 呪文 > 呪文能力 > 指示
 
 // 睡眠
 // プレイヤー１人を対象とする。そのプレイヤーがコントロールするすべてのクリーチャーをタップする。
 // それらのクリーチャーは、そのプレイヤーの次のアンタップ・ステップの間にアンタップしない。
-const card_sleep = new Card(
-    new Characteristics({
-        name: "sleep",
-        mana_cost: "2UU",
-        card_types: "Sorcery",
-        text: "Tap all creatures target player controls. Those creatures don’t untap during that player’s next untap step.",
-        abilities: new SpellAbility(() => {
+const card_sleep = new Card({
+    name: ["Sleep"],
+    mana_cost: ManaSymbols("2UU"),
+    card_types: [CardType.Sorcery],
+    text: "Tap all creatures target player controls. Those creatures don’t untap during that player’s next untap step.",
+    abilities: [
+        new SpellAbility(() => {
             const creatures = creatures_controlled_by(Target);
             return [
                 new Tapping([creatures]),
-                new GeneratingContinuousEffect(
-                    new ProcessAlteringContinousEffect(
-                        ({ instruction, state }) => {
-                            return (
-                                instruction instanceof Tapping && // FIXME instanceofを使いたくない
-                                state?.current_step === UntapStep
-                            );
-                        },
-                        new VoidInstruction()
-                    )
+                new GeneratingProcessAlteringEffect(
+                    ({ instruction, state }) =>
+                        instruction.isInstanceOf(Untapping) &&
+                        state.current_step === UntapStep,
+                    new VoidInstruction()
                 ),
             ];
         }),
-    })
-);
+    ],
+});
 
 // TODO よく使う効果を使い回せるようにしたい
 

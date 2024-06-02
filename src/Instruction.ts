@@ -5,23 +5,28 @@
 import { Reference } from "./Reference";
 import { GameHistory, GameState } from "./Game";
 import {
+    ContinousEffectType,
     ContinuousEffect,
     DelayedTriggeredAbility,
+    ProcessForbiddingContinousEffect,
+    InstructionChecker,
+    InstructionReplacer,
     Player,
+    ProcessAlteringContinousEffect,
     ReplacementEffect,
 } from "./GameObject";
 
-type PerformFunc = (
-    game_state?: GameState,
-    game_history?: GameHistory,
-    self?: any,
-    source?: any
-) => void;
+type PerformArgs = {
+    state: GameState;
+    history: GameHistory;
+    self: any;
+    source: any;
+};
 
 /** 処理指示を表すクラス。効果やターン起因処理、状況起因処理などの行う指示
  * ゲーム中に実行されるときにInGameReferenceを通じて実際のゲーム内の情報を注入される
  */
-export class Instruction {
+export abstract class Instruction {
     /** 指示を実行するプレイヤー（あるいはゲーム） */
     performer: Player | undefined;
 
@@ -29,13 +34,12 @@ export class Instruction {
         this.performer = performer;
     }
 
+    isInstanceOf(x: any): boolean {
+        return this instanceof x;
+    }
+
     /** 指示を実行する */
-    perform(
-        game_state?: GameState,
-        game_history?: GameHistory,
-        self?: any,
-        source?: any
-    ) {}
+    abstract perform(args: PerformArgs): void;
 }
 // カードを引く：
 //   -
@@ -63,10 +67,53 @@ export class Instruction {
 // システム処理 ************************************************
 /** 継続的効果の生成 */
 export class GeneratingContinuousEffect extends Instruction {
-    continuous_effect: ContinuousEffect;
+    type: ContinousEffectType;
+    effect: ContinuousEffect;
+
     constructor(continuous_effect: ContinuousEffect) {
         super();
-        this.continuous_effect = continuous_effect;
+        this.effect = continuous_effect;
+    }
+}
+
+// TODO 途中
+/** 値を変更する効果の生成 */
+export class GeneratingValueAlteringEffect extends Instruction {}
+
+// OK
+/** 手続きを変更する効果の生成 */
+export class GeneratingProcessAlteringEffect extends Instruction {
+    check: InstructionChecker;
+    replace: InstructionReplacer;
+
+    constructor(
+        check: InstructionChecker,
+        replace: Instruction | Instruction[] | InstructionReplacer
+    ) {
+        super();
+        this.check = check;
+        this.replace = CastAsInstructionReplacer(replace);
+    }
+
+    perform({ state }: PerformArgs) {
+        const ce = new ProcessAlteringContinousEffect(this.check, this.replace);
+        state.continuous_effects.push(ce);
+    }
+}
+
+// OK
+/** 処理を禁止する効果の生成 */
+export class GeneratingProcessForbiddingEffect extends Instruction {
+    check: InstructionChecker;
+
+    constructor(check: InstructionChecker) {
+        super();
+        this.check = check;
+    }
+
+    perform({ state }: PerformArgs): void {
+        const ce = new ProcessForbiddingContinousEffect(this.check);
+        state.continuous_effects.push(ce);
     }
 }
 
@@ -108,7 +155,7 @@ export class PerformSimultaneously extends Instruction {
 
 /** 何もしない */
 export class VoidInstruction extends Instruction {
-    perform(): void {}
+    perform(args: PerformArgs): void {}
 }
 
 // ゲーム的な行動で、キーワードでないもの ***********************************************
@@ -200,3 +247,16 @@ export class Milling extends Instruction {}
 
 // キーワード処理 3日目
 export class Transforming extends Instruction {}
+
+// ================================================
+function CastAsInstructionReplacer(
+    arg: Instruction | Instruction[] | InstructionReplacer
+) {
+    if (typeof arg === "function") {
+        return arg;
+    } else if (Array.isArray(arg)) {
+        return () => arg;
+    } else {
+        return () => [arg];
+    }
+}

@@ -1,5 +1,13 @@
 "use strict";
-import { GameObject, Player } from "./GameObject";
+import {
+    ContinuousEffect,
+    DelayedTriggeredAbility,
+    GameObject,
+    Player,
+    StackedAbility,
+    Zone,
+    ZoneType,
+} from "./GameObject";
 import { Phase, Turn } from "./Turn";
 export { Game, GameState, GameHistory };
 
@@ -7,30 +15,59 @@ class Game {
     /** ゲームを表すオブジェクト */
     id: number = 0;
     players: Player[] = [];
-    decks = [];
+    decks = []; // FIXME サイドボード
     game_state: GameState = new GameState();
+
+    initGame(): void {
+        // プレイヤーの初期化
+        this.game_state.players = this.players;
+        // 領域の初期化
+        this.game_state.zones.push(
+            ...this.game_state.players.flatMap((pl) =>
+                [
+                    ZoneType.Library,
+                    ZoneType.Hand,
+                    ZoneType.Graveyard,
+                    ZoneType.Command,
+                ].map((zt) => new Zone(zt, pl))
+            )
+        );
+        this.game_state.zones.push(new Zone(ZoneType.Battlefield));
+        this.game_state.zones.push(new Zone(ZoneType.Exile));
+        // TODO ライブラリーとサイドボード
+    }
 }
 
+/** ゲームの状態 */
 class GameState {
-    /** ゲームの状態 */
-    game_meta;
+    /** ゲームのメタ情報 */
+    game_meta; // TODO
+    /** プレイヤー */
+    players: Player[];
+    /** 領域 */
+    zones: Zone[];
+    /** 生成済みのターン */
     turns: Turn[] = [];
+    /** 生成されたオブジェクト */
     objects: GameObject[] = [];
-    players: Player[] = [];
+
+    // FIXME
     extra_turns = [];
     extra_phasesteps = [];
     skip_turns = [];
     skip_phasesteps = [];
-    // 誘発してまだスタックに置かれていない能力 FIXME
-    triggered_abilities = [];
-    // 遅延誘発型能力 FIXME
-    delayed_triggered_abilities = [];
-    // 継続的効果 FIXME
-    continuous_effects = [];
-    // ゲームの履歴
+
+    /** 誘発してまだスタックに置かれていない能力 */
+    unstacked_abilities: StackedAbility[] = [];
+    /** 継続的効果 */
+    continuous_effects: ContinuousEffect[] = [];
+    /** 生成された遅延誘発型能力 */
+    delayed_triggered_abilities: DelayedTriggeredAbility[] = [];
+
+    /** ゲームの履歴 */
     game_history: GameHistory = new GameHistory();
-    // 優先権を連続でパスしたプレイヤーの数
-    pass_count: number;
+    /** 優先権を連続でパスしたプレイヤーの数 */
+    pass_count: number = 0;
     /** クリンナップをもう一度行うかどうか。
      * クリンナップの間に状況起因処理か能力の誘発があった場合、
      * そのクリンナップでは優先権が発生するとともに、追加のクリンナップが発生する。 */
