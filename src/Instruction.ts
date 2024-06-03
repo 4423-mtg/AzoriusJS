@@ -16,7 +16,8 @@ import {
     ReplacementEffect,
 } from "./GameObject";
 
-type PerformArgs = {
+/** `Instruction`の実行関数`perform()`の引数 */
+export type PerformArgs = {
     state: GameState;
     history: GameHistory;
     self: any;
@@ -24,7 +25,7 @@ type PerformArgs = {
 };
 
 /** 処理指示を表すクラス。効果やターン起因処理、状況起因処理などの行う指示
- * ゲーム中に実行されるときにInGameReferenceを通じて実際のゲーム内の情報を注入される
+ * ゲーム中に実行されるときに`Reference`を通じて実際のゲーム内の情報を注入される
  */
 export abstract class Instruction {
     /** 指示を実行するプレイヤー（あるいはゲーム） */
@@ -40,6 +41,12 @@ export abstract class Instruction {
 
     /** 指示を実行する */
     abstract perform(args: PerformArgs): void;
+    /** 複数の指示を順に実行する */
+    static performArray(instructions: Instruction[], args: PerformArgs) {
+        // TODO
+        // 複数の連続処理を置換する効果の確認
+        // 指示を１つ実行
+    }
 }
 // カードを引く：
 //   -
@@ -119,10 +126,15 @@ export class GeneratingProcessForbiddingEffect extends Instruction {
 
 /** 遅延誘発型能力の生成 */
 export class GeneratingDelayedTriggeredAbility extends Instruction {
-    delayed_triggered_ability: DelayedTriggeredAbility;
+    ability: DelayedTriggeredAbility;
+
     constructor(delayed_triggered_ability: DelayedTriggeredAbility) {
         super();
-        this.delayed_triggered_ability = delayed_triggered_ability;
+        this.ability = delayed_triggered_ability;
+    }
+
+    perform({ state, source }: PerformArgs): void {
+        state.delayed_triggered_abilities.push(this.ability.copy()); // FIXME 発生源
     }
 }
 

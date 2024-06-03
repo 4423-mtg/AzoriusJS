@@ -13,6 +13,7 @@
 //         controller: this.target,
 //     });
 // })
+import { CardType } from "./Characteristic";
 import { GameState, GameHistory } from "./Game";
 
 type GameQuery = (
@@ -45,7 +46,7 @@ export function creatures_controlled_by(player: any): Reference {
         return state.get_objects({
             // TODO GameState.get_objects()
             is_permanent: true,
-            type: Type.Creature, // TODO Type
+            type: CardType.Creature, // TODO Type
             controller: player,
         });
     });

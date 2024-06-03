@@ -29,6 +29,7 @@ import { CardType, ManaSymbol, ManaSymbols } from "./Characteristic";
 // 睡眠
 // プレイヤー１人を対象とする。そのプレイヤーがコントロールするすべてのクリーチャーをタップする。
 // それらのクリーチャーは、そのプレイヤーの次のアンタップ・ステップの間にアンタップしない。
+// OK
 const card_sleep = new Card({
     name: ["Sleep"],
     mana_cost: ManaSymbols("2UU"),

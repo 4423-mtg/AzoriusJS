@@ -94,12 +94,41 @@ export class Card extends GameObject {
     }
 }
 
+export class StackedAbilityType {
+    name: string;
+    constructor(name: string) {
+        this.name = name;
+    }
+
+    static Activated = new StackedAbilityType("activated");
+    static Triggered = new StackedAbilityType("triggered");
+    static DelayedTriggered = new StackedAbilityType("delayedTriggered");
+    static ReflexiveTriggered = new StackedAbilityType("reflexiveTriggered");
+}
+
 /** スタック上の能力 */
 export class StackedAbility extends GameObject {
     /** 能力の種類。起動型、誘発型、遅延誘発型、再帰誘発型 */
-    ability_type; // TODO どう表現する？
+    type: StackedAbilityType;
+    /** 中身の能力 */
+    ability: Ability;
+    /** コントローラー */
+    controller: Player;
     /** 能力の発生源 */
     source?: GameObject;
+
+    constructor(
+        type: StackedAbilityType,
+        ability: Ability,
+        controller: Player,
+        source?: GameObject
+    ) {
+        super();
+        this.type = type;
+        this.ability = ability;
+        this.controller = controller;
+        this.source = source;
+    }
 }
 
 // ==================================================================
@@ -201,9 +230,17 @@ export class ReplacementEffect extends GameObject {
 /** 遅延誘発型能力 */
 export class DelayedTriggeredAbility extends GameObject {
     // 誘発型能力のラップ
-
     /** 誘発する能力 */
     ability: TriggeredAbility;
+
+    constructor(triggered_ability: TriggeredAbility) {
+        super();
+        this.ability = triggered_ability;
+    }
+
+    copy() {
+        return new DelayedTriggeredAbility(this.ability);
+    }
 }
 
 // ==================================================================

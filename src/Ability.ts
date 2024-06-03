@@ -4,8 +4,15 @@ import { GameHistory, GameState } from "./Game";
  * 起動型能力、誘発型能力、呪文能力、常在型能力
  */
 
-import { GameObject, InstructionChecker, Player } from "./GameObject";
-import { Instruction } from "./Instruction";
+import {
+    ContinuousEffect,
+    GameObject,
+    InstructionChecker,
+    Player,
+    StackedAbility,
+    StackedAbilityType,
+} from "./GameObject";
+import { Instruction, PerformArgs } from "./Instruction";
 export {
     Ability,
     ActivatedAbility,
@@ -17,74 +24,134 @@ export {
 
 /** オブジェクトが持っている能力。スタックに乗る方ではない。抽象クラス */
 abstract class Ability {
-    controller: Player;
     text: string;
+    instructions: Instruction[];
+
+    constructor(args: { text: string }) {
+        this.text = args.text;
+    }
 }
+
+// ==============================================================================
+type Constraint = any; // FIXME
 
 /** 起動型能力 */
 class ActivatedAbility extends Ability {
-    costs: any[] = [];
-    constraints: any[] = []; // 起動に関する制限  実行に関する制限は？=>発生源で記憶
-    instructions: Instruction[];
-    // resolve(game_state, game_history, source) {
-    //     for (const ins of this.instructions) {
-    //         ins.perform(game_state, game_history, this, source)
-    //     }
-    // }
-    constructor() {
-        super();
-    }
-}
-
-/** 誘発型能力 */
-class TriggeredAbility extends Ability {
-    /** 誘発制限 */
-    constraints: any[] = []; // TODO 「1回しか誘発しない」 「1回のみ行える」は効果？
+    /** 起動コスト */
+    costs: Instruction[] = [];
     /** 効果 */
     instructions: Instruction[];
+    /** 起動制限 */
+    constraints?: Constraint[] = [];
 
-    constructor() {
-        super();
+    constructor(args: {
+        text: string;
+        costs: Instruction[];
+        instructions: Instruction[];
+        constraints?: Constraint[];
+    }) {
+        super(args);
+        this.costs = args.costs;
+        this.instructions = args.instructions;
+        this.constraints = args.constraints;
     }
-    /** イベントをチェックし、誘発判定を行う */
-    check: InstructionChecker;
-    /** 誘発 */
-    trigger(instruction: Instruction[]): void {
-        // TODO ALL
+
+    /** 起動する */
+    activate(state: GameState, controller: Player, source?: GameObject) {
+        // TODO ALL 「唱える」とほぼ同じでは？
+        // state.stack.push(
+        //     new StackedAbility(
+        //         StackedAbilityType.Activated,
+        //         this,
+        //         controller,
+        //         source
+        //     )
+        // );
     }
 }
+
+// ==============================================================================
+/** 誘発型能力 */
+class TriggeredAbility extends Ability {
+    /** 誘発判定処理 */
+    #checker: InstructionChecker;
+    /** 効果 */
+    instructions: Instruction[];
+    /** 誘発制限 */
+    constraints?: Constraint[] = []; // FIXME 制限型
+    // 「1回しか誘発しない」は制限、「1回のみ行える」は効果？
+
+    constructor(args: {
+        text: string;
+        checker: InstructionChecker;
+        instructions: Instruction[];
+        constraints?: Constraint[];
+    }) {
+        super(args);
+        this.#checker = args.checker;
+        this.instructions = args.instructions;
+        this.constraints = args.constraints;
+    }
+
+    /** 誘発するかどうかを判定する */
+    check(args: {
+        instruction: Instruction;
+        state: GameState;
+        history: GameHistory;
+        performer: GameObject | Player;
+    }): boolean {
+        return this.#checker(args); // FIXME 誘発制限
+    }
+    /** 誘発する */
+    trigger(state: GameState, controller: Player, source?: GameObject): void {
+        state.unstacked_abilities.push(
+            new StackedAbility(
+                StackedAbilityType.Triggered,
+                this,
+                controller,
+                source
+            )
+        );
+    }
+}
+
+// ==============================================================================
 /** 呪文能力 */
 class SpellAbility extends Ability {
     /** 効果処理 */
     instructions: Instruction[];
 
     /** コンストラクタ。
-     * Instruction間の任意の関係を呼び出し側で記述できるようにするため、関数を引数とする */
-    constructor(initializer: () => Instruction[]) {
-        super();
-        this.instructions = initializer();
+     * Instruction間の任意の関係を呼び出し側で記述できるようにするため、関数を引数にとる */
+    constructor(args: { text: string; initializer: () => Instruction[] }) {
+        super(args);
+        this.instructions = args.initializer();
     }
 
     /** 効果処理の実行 */
-    perform(
-        game_state: GameState,
-        game_history: GameHistory,
-        spell: GameObject
-    ) {
-        this.instructions.perform(game_state, game_history, spell); // FIXME
+    perform(args: PerformArgs) {
+        Instruction.performArray(this.instructions, args);
     }
 }
 
+// ==============================================================================
 /** 常在型能力 */
 class StaticAbility extends Ability {
     /** 効果。単一の能力が複数の継続的効果を持つこともある（キーワード能力など） */
-    effects = []; // ContinuousEffect[]
+    effects: ContinuousEffect[] = [];
 }
 
+// ==============================================================================
 /** キーワード能力 */
 class KeywordAbility extends Ability {
-    /** 能力名 */
+    /** 修飾語などを除いた、キーワード能力名。能力のテキスト全体は`text`。 */
     name: string;
     /** 含まれる能力 */ // TODO 起動型能力を含む複数の能力をもつキーワードってある？
     abilities: Ability[] = [];
+
+    constructor(args: { text: string; name: string; abilities: Ability[] }) {
+        super(args);
+        this.name = args.name;
+        this.abilities = args.abilities;
+    }
 }
