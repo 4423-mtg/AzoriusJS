@@ -24,8 +24,8 @@ export {
 
 /** オブジェクトが持っている能力。スタックに乗る方ではない。抽象クラス */
 abstract class Ability {
+    /** テキスト */
     text: string;
-    instructions: Instruction[];
 
     constructor(args: { text: string }) {
         this.text = args.text;
@@ -47,12 +47,12 @@ class ActivatedAbility extends Ability {
     constructor(args: {
         text: string;
         costs: Instruction[];
-        instructions: Instruction[];
+        initializer: () => Instruction[];
         constraints?: Constraint[];
     }) {
         super(args);
         this.costs = args.costs;
-        this.instructions = args.instructions;
+        this.instructions = args.initializer();
         this.constraints = args.constraints;
     }
 
@@ -78,18 +78,18 @@ class TriggeredAbility extends Ability {
     /** 効果 */
     instructions: Instruction[];
     /** 誘発制限 */
-    constraints?: Constraint[] = []; // FIXME 制限型
+    constraints?: Constraint[] = [];
     // 「1回しか誘発しない」は制限、「1回のみ行える」は効果？
 
     constructor(args: {
         text: string;
         checker: InstructionChecker;
-        instructions: Instruction[];
+        initializer: () => Instruction[];
         constraints?: Constraint[];
     }) {
         super(args);
         this.#checker = args.checker;
-        this.instructions = args.instructions;
+        this.instructions = args.initializer();
         this.constraints = args.constraints;
     }
 
@@ -100,7 +100,7 @@ class TriggeredAbility extends Ability {
         history: GameHistory;
         performer: GameObject | Player;
     }): boolean {
-        return this.#checker(args); // FIXME 誘発制限
+        return this.#checker(args); // TODO 誘発制限
     }
     /** 誘発する */
     trigger(state: GameState, controller: Player, source?: GameObject): void {

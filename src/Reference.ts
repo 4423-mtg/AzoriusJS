@@ -16,6 +16,7 @@
 import { CardType } from "./Characteristic";
 import { GameState, GameHistory } from "./Game";
 
+// FIXME これくらいは書き下しては？
 type GameQuery = (
     game_state: GameState,
     game_history: GameHistory,

@@ -14,26 +14,24 @@ import {
     Player,
     ProcessAlteringContinousEffect,
     ReplacementEffect,
+    GameObject,
 } from "./GameObject";
 
 /** `Instruction`の実行関数`perform()`の引数 */
 export type PerformArgs = {
     state: GameState;
     history: GameHistory;
-    self: any;
-    source: any;
+    /** 指示者 */
+    instructor: GameObject | any;
+    /** 実行者 */
+    performer: Player | any;
 };
 
 /** 処理指示を表すクラス。効果やターン起因処理、状況起因処理などの行う指示
  * ゲーム中に実行されるときに`Reference`を通じて実際のゲーム内の情報を注入される
  */
 export abstract class Instruction {
-    /** 指示を実行するプレイヤー（あるいはゲーム） */
-    performer: Player | undefined;
-
-    constructor(performer?: Player) {
-        this.performer = performer;
-    }
+    //FIXME 追加あるかも
 
     isInstanceOf(x: any): boolean {
         return this instanceof x;
@@ -41,11 +39,13 @@ export abstract class Instruction {
 
     /** 指示を実行する */
     abstract perform(args: PerformArgs): void;
+
     /** 複数の指示を順に実行する */
     static performArray(instructions: Instruction[], args: PerformArgs) {
         // TODO
         // 複数の連続処理を置換する効果の確認
         // 指示を１つ実行
+        // 以下ループ
     }
 }
 // カードを引く：
@@ -81,6 +81,8 @@ export class GeneratingContinuousEffect extends Instruction {
         super();
         this.effect = continuous_effect;
     }
+
+    perform(args: PerformArgs): void {}
 }
 
 // TODO 途中
