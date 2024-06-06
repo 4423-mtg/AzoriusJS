@@ -56,7 +56,7 @@ class ActivatedAbility extends Ability {
         this.constraints = args.constraints;
     }
 
-    /** 起動する */
+    /** 起動する */ // FIXME これはInstructionで実装する
     activate(state: GameState, controller: Player, source?: GameObject) {
         // TODO ALL 「唱える」とほぼ同じでは？
         // state.stack.push(
@@ -95,23 +95,49 @@ class TriggeredAbility extends Ability {
 
     /** 誘発するかどうかを判定する */
     check(args: {
+        /** 実行されたInstruction */
         instruction: Instruction;
         state: GameState;
         history: GameHistory;
         performer: GameObject | Player;
     }): boolean {
         return this.#checker(args); // TODO 誘発制限
+        // アップキープの開始時（特定のタイミング）
+        // ～とき、たび（イベント
+        // - 通常はイベントの直後の状態を見る
+        // - 戦場・墓地を離れる誘発は直前の状態を見る
+        //   - 他に、公開から非公開に移動する・コントロールを失う・オブジェクトからはずれる・
+        //     フェイズアウトする・なども
+        // 既定の実装では直後を見るようにしておいて、領域変更は直前を見るように上書きする
+        // 直前の状態は history から InstructionID で引っ張るようにする
+        // TODO 遅延誘発型・再帰誘発型はどうする？
     }
-    /** 誘発する */
-    trigger(state: GameState, controller: Player, source?: GameObject): void {
-        state.unstacked_abilities.push(
-            new StackedAbility(
-                StackedAbilityType.Triggered,
-                this,
-                controller,
-                source
-            )
-        );
+    /** 誘発する */ // FIXME <-- これもInstruction！？
+    trigger(
+        instruction: Instruction,
+        state: GameState,
+        controller: Player,
+        source?: GameObject
+    ): void {
+        // state.unstacked_abilities.push(
+        //     new StackedAbility(
+        //         StackedAbilityType.Triggered,
+        //         this,
+        //         controller,
+        //         source
+        //     )
+        // );
+    }
+    check_and_trigger(args: {
+        /** 実行されたInstruction */
+        instruction: Instruction;
+        state: GameState;
+        history: GameHistory;
+        performer: GameObject | Player;
+    }) {
+        // if (this.check(args)) {
+        //     this.trigger(Instruction);
+        // }
     }
 }
 

@@ -19,26 +19,40 @@ import {
 
 /** `Instruction`の実行関数`perform()`の引数 */
 export type PerformArgs = {
+    /** 実行前の状態 */
     state: GameState;
-    history: GameHistory;
-    /** 指示者 */
-    instructor: GameObject | any;
-    /** 実行者 */
-    performer: Player | any;
+    // history: GameHistory;
+    /** 指示しているオブジェクトまたはルール */
+    instructor?: GameObject;
+    /** 実行するプレイヤー */
+    performer?: Player;
+    /** 対象物 */
+    objective?: GameObject[];
 };
 
 /** 処理指示を表すクラス。効果やターン起因処理、状況起因処理などの行う指示
  * ゲーム中に実行されるときに`Reference`を通じて実際のゲーム内の情報を注入される
  */
 export abstract class Instruction {
+    /** 生成済みのインスタンスの数 */
+    static instance_count = 0;
+
+    /** InstructionのID */
+    readonly id: number;
     //FIXME 追加あるかも
 
+    constructor() {
+        this.id = Instruction.instance_count + 1;
+        Instruction.instance_count += 1;
+    }
+
+    /** Instructionの種別の判定 */
     isInstanceOf(x: any): boolean {
         return this instanceof x;
     }
 
-    /** 指示を実行する */
-    abstract perform(args: PerformArgs): void;
+    /** 指示を実行する TODO 現在のstateから、処理を実行した新しいstateを生成する */
+    abstract perform(args: PerformArgs): GameState;
 
     /** 複数の指示を順に実行する */
     static performArray(instructions: Instruction[], args: PerformArgs) {
@@ -48,6 +62,7 @@ export abstract class Instruction {
         // 以下ループ
     }
 }
+
 // カードを引く：
 //   -
 
@@ -148,6 +163,10 @@ export class GeneratingReplacementEffect extends Instruction {
         this.replacement_effect = replacement_effect;
     }
 }
+
+/** 誘発する */
+export class Triggering extends Instruction {}
+/** 起動する */
 
 /** 呪文や能力の解決。
  * 解決というイベントを参照する効果用で、これ自体を解決中の指示として使うものではない
