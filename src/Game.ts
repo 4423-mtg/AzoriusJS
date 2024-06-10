@@ -86,6 +86,11 @@ class GameState {
     set player_with_priority(player: Player) {}
     get players_from_active_player() {}
     get stack(): GameObject[] {}
+    getZone(zonetype: ZoneType, owner?: Player): Zone {
+        return this.zones.filter(
+            (z) => z.zonetype === zonetype && z.owner === owner
+        )[0];
+    }
 
     get_next_player_of(player: Player): Player | undefined {
         for (let i = 0; i < this.players.length; i++) {

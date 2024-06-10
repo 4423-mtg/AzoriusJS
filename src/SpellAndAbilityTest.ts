@@ -12,7 +12,7 @@ import {
     SpellAbility,
     StaticAbility,
 } from "./Ability";
-import { Reference, creatures_controlled_by, Target } from "./Reference";
+import { Reference, creatures_controlled_by, TargetOfThis } from "./Reference";
 import {
     GeneratingContinuousEffect,
     GeneratingProcessAlteringEffect,
@@ -37,7 +37,7 @@ const card_sleep = new Card({
     text: "Tap all creatures target player controls. Those creatures don’t untap during that player’s next untap step.",
     abilities: [
         new SpellAbility(() => {
-            const creatures = creatures_controlled_by(Target);
+            const creatures = creatures_controlled_by(TargetOfThis);
             return [
                 new Tapping([creatures]),
                 new GeneratingProcessAlteringEffect(

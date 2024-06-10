@@ -24,11 +24,16 @@ export {
 
 /** オブジェクトが持っている能力。スタックに乗る方ではない。抽象クラス */
 abstract class Ability {
+    static id = 0;
+    id: number;
+
     /** テキスト */
     text: string;
 
     constructor(args: { text: string }) {
         this.text = args.text;
+        this.id = Ability.id;
+        Ability.id += 1;
     }
 }
 

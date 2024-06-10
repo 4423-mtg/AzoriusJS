@@ -325,35 +325,34 @@ export class Player {
     name?: string;
 }
 
+type ZoneType =
+    | "Battlefield"
+    | "Hand"
+    | "Library"
+    | "Graveyard"
+    | "Exile"
+    | "Command";
+
 /** 領域 */
 export class Zone {
     zonetype: ZoneType;
     owner?: Player;
 
     constructor(zonetype: ZoneType, owner?: Player) {
-        this.zonetype = zonetype;
-        this.owner = owner;
+        if (
+            zonetype === "Hand" ||
+            zonetype === "Library" ||
+            zonetype === "Graveyard" ||
+            zonetype === "Command"
+        ) {
+            if (owner !== undefined) {
+                this.zonetype = zonetype;
+                this.owner = owner;
+            } else {
+                throw new Error("invalid zone spec");
+            }
+        } else if (zonetype === "Battlefield" || zonetype === "Exile") {
+            this.zonetype = zonetype;
+        }
     }
-}
-
-export class ZoneType {
-    name: string;
-
-    /** - Don't use. Use static fields instead. */
-    constructor(name: string) {
-        this.name = name;
-    }
-
-    /** 戦場 */
-    static Battlefield = new ZoneType("battlefield");
-    /** 手札 */
-    static Hand = new ZoneType("hand");
-    /** ライブラリー */
-    static Library = new ZoneType("library");
-    /** 墓地 */
-    static Graveyard = new ZoneType("graveyard");
-    /** 追放領域 */
-    static Exile = new ZoneType("exile");
-    /** 統率領域 */
-    static Command = new ZoneType("command");
 }
