@@ -22,6 +22,7 @@ import {
     ReplacementEffect,
     GameObject,
     Zone,
+    Counter,
 } from "./GameObject";
 
 /** `Instruction`の実行関数`perform()`の引数 */
@@ -110,7 +111,7 @@ export class ChoosingToDo extends Instruction {
 
 /** 同時に行う */
 export class DoingSimultaneously extends Instruction {
-    // 任意のものが同時に行えるわけではない！
+    // 任意のものが同時に行えるわけではない！ --> 本当？
     // 別々のオブジェクトの、領域または位相の変更のみ
     // ・ゴブリンの溶接工 アーティファクトを生け贄にすると同時に、墓地のアーティファクトを戦場に戻す
     // ・砕ける波 タップクリーチャーをアンタップすると同時に、アンタップクリーチャーをタップする
@@ -121,6 +122,14 @@ export class DoingSimultaneously extends Instruction {
     // 領域の移動
     // 生け贄
     // フェイズアウト、フェイズイン
+    // ダメージを与えるとかも同時にやる・・・
+
+    instructions: Instruction[];
+
+    constructor(instructions: Instruction[]) {
+        super();
+        this.instructions = instructions;
+    }
 
     perform(args: Required<QueryParam>): GameState {
         // TODO
@@ -242,7 +251,7 @@ export class MovingZone extends Instruction {
 }
 
 /** カードを引く */
-export class DrawInstruction extends Instruction {
+export class Drawing extends Instruction {
     number: number | ValueReference;
 
     constructor(number: number | ValueReference, player: Player) {
@@ -274,10 +283,92 @@ export class DrawInstruction extends Instruction {
 // TODO 托鉢するものは置換処理の方で特別扱いする
 
 /** ダメージを与える */
-export class DealDamageInstruction extends Instruction {
-    dealt_objects = []; // ダメージを与えられたもの（クリーチャー、PW、バトル、プレイヤー）
-    amount = new ValueReference(); // ダメージ量
-    source = new ObjectReference(); // ダメージの発生源
+export class DealingDamage extends Instruction {
+    /** ダメージを与える先のオブジェクト */
+    objectives: (GameObject | Player | ObjectReference)[];
+    /** ダメージの量 */
+    amount: ValueReference;
+    /** ダメージの発生源であるオブジェクト */
+    source: ObjectReference;
+
+    constructor(
+        objectives: (GameObject | Player | ObjectReference)[],
+        amount: ValueReference,
+        source: ObjectReference
+    ) {
+        super();
+        this.objectives = objectives;
+        this.amount = amount;
+        this.source = source;
+    }
+
+    perform(args: Required<QueryParam>): GameState {
+        // 参照の解決
+        let objs: (GameObject | Player)[] = this.objectives.flatMap((o) => {
+            return o instanceof GameObject || o instanceof Player
+                ? o
+                : o.execute(args);
+        });
+        // 個数のチェック
+        if (objs.length >= 2) {
+            const each_dealings = new DoingSimultaneously(
+                objs.map(
+                    (o) => new DealingDamage([o], this.amount, this.source)
+                )
+            );
+            // それぞれに同時にダメージ
+            return each_dealings.perform(args);
+        } else {
+            const new_state = args.state.copy();
+            // TODO ダメージ処理。パーマネントはダメージ、プレイヤーはライフ減少
+            // TODO 絆魂 --> 回復Instruction
+            // TODO 最後の情報
+            if (objs[0] instanceof Player) {
+                // TODO ライフ減少　感染は毒カウンター --> カウンター配置Instruction
+            } else if (objs[0] instanceof GameObject) {
+                // TODO ダメージを負う　感染は-1/-1カウンター
+            }
+            return new_state;
+        }
+    }
+}
+
+/** ライフを得る */
+export class GainingLife extends Instruction {
+    amount: number | ValueReference;
+
+    constructor(player: Player, amount: number | ValueReference) {
+        super();
+        this.performer = player;
+        this.amount = amount;
+    }
+
+    perform(args: Required<QueryParam>): GameState {
+        const am =
+            this.amount instanceof ValueReference
+                ? this.amount.execute(args)
+                : this.amount;
+        if (this.perform instanceof Player) {
+            const new_state = args.state.copy();
+            // FIXME new_stateのperformerどうやってとる？
+            // (this.performer as Player).life += am;
+            return new_state;
+        } else {
+            throw Error("player undefined");
+        }
+    }
+}
+
+/** カウンターを置く・得る */
+export class PuttingCounter extends Instruction {
+    counters: Counter[];
+
+    constructor(counters: Counter[]) {
+        super();
+        this.counters = counters;
+    }
+
+    perform(args: Required<QueryParam>): GameState {}
 }
 
 /** 見る */

@@ -92,6 +92,10 @@ class GameState {
         )[0];
     }
 
+    copy(): GameState {
+        // FIXME
+    }
+
     get_next_player_of(player: Player): Player | undefined {
         for (let i = 0; i < this.players.length; i++) {
             if (this.players[i] == player) {

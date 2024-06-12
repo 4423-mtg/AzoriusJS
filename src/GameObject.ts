@@ -43,6 +43,9 @@ export abstract class GameObject {
     paid_cost;
     // どんな効果によって唱えたかは記憶する？
     alternative_cost; // 支払った追加コスト
+
+    // ----- ダメージ -----
+    damage: number = 0;
 }
 
 /** カード */
@@ -323,6 +326,9 @@ export class Status {
 export class Player {
     id: number;
     name?: string;
+    life: number;
+    counters: Counter[];
+    abilities: Ability[];
 }
 
 type ZoneType =
@@ -355,4 +361,17 @@ export class Zone {
             this.zonetype = zonetype;
         }
     }
+}
+
+export class Counter {
+    name: string;
+    instructions?: Instruction[];
+
+    constructor(name: string, instructions?: Instruction[]) {
+        this.name = name;
+        this.instructions = instructions;
+    }
+
+    static "+1/+1" = new Counter("+1/+1"); // FIXME
+    static "-1/-1" = new Counter("-1/-1"); // FIXME
 }
