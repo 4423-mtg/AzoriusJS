@@ -13,9 +13,10 @@
 //         controller: this.target,
 //     });
 // })
+import { ActivatedAbility, SpellAbility, TriggeredAbility } from "./Ability";
 import { CardType } from "./Characteristic";
 import { GameState, GameHistory } from "./Game";
-import { GameObject, Zone } from "./GameObject";
+import { Card, GameObject, Player, Zone, ZoneType } from "./GameObject";
 
 export type QueryParam = {
     state: GameState;
@@ -26,64 +27,78 @@ export type QueryParam = {
     source?: GameObject;
 };
 
-export class Reference {
-    query_func: (args: QueryParam) => any;
-
-    constructor(func: (args: QueryParam) => any) {
-        this.query_func = func;
-    }
-
-    /** なんでも返ってくる InGameObject[], int, string, ... */
-    execute(args: QueryParam): any {
-        return this.query_func(args);
-    }
-}
-
+// ==============================================================================
+/** 任意の参照 */
+export type Reference =
+    | ObjectReference
+    | NumberReference
+    | PlayerReference
+    | ZoneReference;
+// ==============================================================================
 /** オブジェクトへの参照 */
-export class ObjectReference extends Reference {
-    execute(args: QueryParam): GameObject[] {
-        const ret = super.execute(args);
-        if (!Array.isArray(ret)) {
-            throw Error("error");
-        } else if (ret.some((obj) => !(obj instanceof GameObject))) {
-            throw Error("error");
-        } else {
-            return ret;
-        }
-    }
+export type ObjectReference = (param: QueryParam) => GameObject[];
+/** `GameObject | ObjectReference` を `GameObject[]` に変換する関数 */
+export function get_objects(
+    arg: GameObject | ObjectReference,
+    param: QueryParam
+) {
+    return arg instanceof GameObject ? [arg] : arg(param);
 }
+// ==============================================================================
+/** プレイヤーの参照 */
+export type PlayerReference = (param: QueryParam) => Player[];
+// ==============================================================================
+/** オブジェクトかプレイヤーへの参照 */
+export type ObjectOrPlayerReference = (
+    param: QueryParam
+) => (GameObject | Player)[];
+// ==============================================================================
+/** 数値の参照 */
+export type NumberReference = (param: QueryParam) => number[];
 
-/** 値の参照 */
-export class ValueReference extends Reference {
-    execute(args: QueryParam): number {}
-}
-
+// ==============================================================================
 /** 領域の参照 */
-export class ZoneReference extends Reference {
-    execute(args: QueryParam): Zone {}
+export type ZoneReference = (param: QueryParam) => Zone[];
+/** オブジェクトのオーナーの領域 */
+export function owners_zone(
+    object: GameObject | ObjectReference,
+    zonetype: ZoneType
+): ZoneReference {
+    return (param: QueryParam) => {
+        const obj = object instanceof GameObject ? object : object(param);
+        if (Array.isArray(obj)) {
+            throw new Error("");
+        } else {
+            return [param.state.getZone(zonetype, obj.owner)];
+        }
+    };
+}
+// ==============================================================================
+// 参照生成ユーティリティ
+
+/** 指定プレイヤーのコントロールしているクリーチャー */
+export function Creatures_controlled_by(player: Player): ObjectReference {
+    return ({ state }: { state: GameState }) =>
+        state.get_objects((obj: GameObject) => {
+            return (
+                obj.is_permanent() &&
+                obj.characteristics.card_types !== undefined &&
+                obj.characteristics.card_types.includes(CardType.Creature) &&
+                obj.controller == player
+            );
+        });
 }
 
-// よく使う参照は使いまわしたい
-/** 指定プレイヤーのコントロールしているクリーチャー */
-export function creatures_controlled_by(player: any): Reference {
-    return new Reference((args: QueryParam) => {
-        // TODO 発生源も必要？
-        return args.state.get_objects({
-            // TODO GameState.get_objects()
-            is_permanent: true,
-            type: CardType.Creature, // TODO Type
-            controller: player,
-        });
-    });
+/** パーマネント */
+export function PermanentSpec(spec): ObjectReference {}
+
+/** 対象 */
+export function Target(): ObjectOrPlayerReference {
+    return (params: QueryParam) => params.self?.target;
 }
 
 /** プレイヤーのライブラリーの一番上のカード */
-export function top_of_library(player: Player): ObjectReference {}
+export function Top_of_library(player: Player): ObjectReference {}
 
 /** プレイヤーの領域 */
 // export function
-
-/** 対象 */
-export const TargetOfThis = new Reference((args: QueryParam) => {
-    return args.self?.target;
-});

@@ -4,10 +4,9 @@
 
 import {
     ObjectReference,
-    Reference as ValueReference,
-    QueryFunc,
     QueryParam,
-    top_of_library,
+    Top_of_library,
+    ZoneReference,
 } from "./Reference";
 import { GameHistory, GameState } from "./Game";
 import {
@@ -22,7 +21,9 @@ import {
     ReplacementEffect,
     GameObject,
     Zone,
+    ZoneType,
     Counter,
+    Card,
 } from "./GameObject";
 
 /** `Instruction`の実行関数`perform()`の引数 */
@@ -59,19 +60,25 @@ export abstract class Instruction {
         return this instanceof x;
     }
 
-    /** 指示を実行する */
-    abstract perform(args: Required<QueryParam>): GameState;
-
-    /** 複数の指示を順に実行する */
-    static performArray(
-        instructions: Instruction[],
-        args: PerformArgs
-    ): GameState {
-        // TODO
-        // 複数の連続処理を置換する効果の確認
-        // 指示を１つ実行
-        // 以下ループ
+    add_to_history(state: GameState, history: GameHistory): void {
+        history.push(state.deepcopy());
     }
+
+    /** 指示を実行する
+     * @param params 参照に渡すためのパラメータ。
+     * どんな引数の参照を持つかは実行時までわからないため、すべてのパラメータが必須。
+     */
+    abstract perform(params: Required<QueryParam>): GameState;
+}
+/** 複数の指示を順に実行する */
+export function performInstructions(
+    instructions: Instruction[],
+    args: PerformArgs
+): GameState {
+    // TODO
+    // 複数の連続処理を置換する効果の確認
+    // 指示を１つ実行
+    // 以下ループ
 }
 
 // 抽象的な処理 ************************************************
@@ -176,10 +183,11 @@ export class GeneratingProcessAlteringEffect extends Instruction {
         this.replace = CastAsInstructionReplacer(replace);
     }
 
-    perform({ state }: PerformArgs) {
-        const ce = new ProcessAlteringContinousEffect(this.check, this.replace);
-        state.continuous_effects.push(ce);
-    }
+    // perform({ state }: PerformArgs) {
+    //     const ce = new ProcessAlteringContinousEffect(this.check, this.replace);
+    //     state.continuous_effects.push(ce);
+    // }
+    perform(args: Required<QueryParam>): GameState {}
 }
 
 // OK
@@ -225,27 +233,57 @@ export class GeneratingReplacementEffect extends Instruction {
 export class CheckingStateTriggers extends Instruction {}
 
 // キーワードでない処理 ********************************
-/** 領域を移動する */
+/** 領域を移動させる OK */
 export class MovingZone extends Instruction {
-    objectrefs: ObjectReference[];
-    dest: Zone;
+    /** 移動させるオブジェクトの参照と、移動先領域の参照の組。 */
+    specs: {
+        object_spec: (GameObject | ObjectReference)[];
+        dest: ZoneReference;
+    }[];
 
-    constructor(objectrefs: ObjectReference[] | QueryFunc[], dest: Zone) {
+    constructor(
+        ...spec: {
+            moved_objects: (GameObject | ObjectReference)[];
+            dest: ZoneReference;
+        }[]
+    ) {
         super();
-        if (objectrefs.every((ref) => ref instanceof ObjectReference)) {
-            this.objectrefs = objectrefs as ObjectReference[];
-        } else if (objectrefs.every((ref) => typeof ref === "function")) {
-            this.objectrefs = (objectrefs as QueryFunc[]).map(
-                (func: QueryFunc) => new ObjectReference(func)
-            );
-        }
-        this.dest = dest;
+        this.specs = spec.map((e) => ({
+            object_spec: e.moved_objects,
+            dest: e.dest,
+        }));
     }
 
-    perform(args: Required<QueryParam>): GameState {
-        const new_state: GameState = args.state.copy(); // TODO state.copy()を実装する
-        const objects = this.objectrefs.flatMap((ref) => ref.execute(args));
-        objects.forEach((obj) => (obj.zone = this.dest));
+    perform(params: Required<QueryParam>): GameState {
+        const new_state = params.state.deepcopy();
+        const new_params = { ...params, state: new_state };
+        this.specs.forEach((spec) => {
+            const new_zones = spec.dest(new_params);
+            if (new_zones.length == 0) {
+                throw Error("ZoneReference resolved into no zones");
+            } else if (new_zones.length > 1) {
+                throw Error("ZoneReference resolved into multiple zone");
+            } else {
+                const new_zone = new_zones[0];
+                spec.object_spec
+                    .map((obj) => {
+                        if (obj instanceof GameObject) {
+                            return obj;
+                        } else if (typeof obj === "function") {
+                            return obj(new_params);
+                        } else {
+                            throw new Error("");
+                        }
+                    })
+                    .forEach((obj) => {
+                        if (obj instanceof GameObject) {
+                            obj.zone = new_zone;
+                        } else {
+                            obj.forEach((o) => (o.zone = new_zone));
+                        }
+                    });
+            }
+        });
         return new_state;
     }
 }
@@ -271,7 +309,7 @@ export class Drawing extends Instruction {
         for (let i = 0; i < number_of_cards; i++) {
             instructions.push(
                 new MovingZone(
-                    [top_of_library(this.performer)],
+                    [Top_of_library(this.performer)],
                     args.state.getZone("Hand", this.performer) // TODO 領域をどうやってとる？
                 )
             );
@@ -319,7 +357,7 @@ export class DealingDamage extends Instruction {
             // それぞれに同時にダメージ
             return each_dealings.perform(args);
         } else {
-            const new_state = args.state.copy();
+            const new_state = args.state.deepcopy();
             // TODO ダメージ処理。パーマネントはダメージ、プレイヤーはライフ減少
             // TODO 絆魂 --> 回復Instruction
             // TODO 最後の情報
@@ -349,7 +387,7 @@ export class GainingLife extends Instruction {
                 ? this.amount.execute(args)
                 : this.amount;
         if (this.perform instanceof Player) {
-            const new_state = args.state.copy();
+            const new_state = args.state.deepcopy();
             // FIXME new_stateのperformerどうやってとる？
             // (this.performer as Player).life += am;
             return new_state;
@@ -395,14 +433,34 @@ export class Resolving extends Instruction {}
 export class Paying extends Instruction {}
 
 // キーワード処理 常盤木 *****************************************
-/** タップ */
+/** タップ OK */
 export class Tapping extends Instruction {
-    permanents: ValueReference[];
-    performer: Player | undefined;
-    constructor(permanents: ValueReference[], performer?: Player) {
+    refs_objects: ObjectReference[];
+    performer?: Player;
+    constructor(permanents: ObjectReference[], performer?: Player) {
         super();
-        this.permanents = permanents;
+        this.refs_objects = permanents;
         this.performer = performer;
+    }
+
+    perform(params: Required<QueryParam>): GameState {
+        // まずstateをコピーする。このstateを変更して返す
+        const new_state = params.state.deepcopy();
+        this.refs_objects.forEach((ref) => {
+            // コピーしたstateを渡して参照を解決する
+            const objects = ref({ ...params, state: new_state });
+            // stateを変更する
+            objects.forEach((obj) => {
+                // パーマネントであればタップする
+                if (obj.is_permanent()) {
+                    obj.status.tapped = true;
+                } else {
+                    throw Error("Referenced object is not a permanent.");
+                }
+            });
+        });
+        // 変更した新しいstateを返す
+        return new_state;
     }
 }
 
@@ -413,7 +471,7 @@ export class Untapping extends Instruction {
 
 /** 破壊する */
 export class Destroying extends Instruction {
-    destroyed_permanents = [];
+    refs_objects = [];
 }
 
 /** 追放する */

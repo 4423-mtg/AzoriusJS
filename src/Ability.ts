@@ -12,7 +12,7 @@ import {
     StackedAbility,
     StackedAbilityType,
 } from "./GameObject";
-import { Instruction, PerformArgs } from "./Instruction";
+import { Instruction, PerformArgs, performInstructions } from "./Instruction";
 export {
     Ability,
     ActivatedAbility,
@@ -22,25 +22,31 @@ export {
     KeywordAbility,
 };
 
-/** オブジェクトが持っている能力。スタックに乗る方ではない。抽象クラス */
-abstract class Ability {
-    static id = 0;
-    id: number;
+// ==============================================================================
 
+/** オブジェクトが持つ能力。スタックに乗る方ではない。 */
+abstract class Ability {
+    /** 能力オブジェクトIDのカウンタ */
+    static id = 0;
+
+    /** 能力オブジェクトID */
+    id: number;
     /** テキスト */
     text: string;
 
-    constructor(args: { text: string }) {
-        this.text = args.text;
+    constructor({ text }: { text: string }) {
+        this.text = text;
         this.id = Ability.id;
         Ability.id += 1;
     }
 }
 
+type AbilitySpec = ConstructorParameters<typeof Ability>[any];
+
 // ==============================================================================
 type Constraint = any; // FIXME
 
-/** 起動型能力 */
+/** オブジェクトの持つ起動型能力 */
 class ActivatedAbility extends Ability {
     /** 起動コスト */
     costs: Instruction[] = [];
@@ -49,16 +55,21 @@ class ActivatedAbility extends Ability {
     /** 起動制限 */
     constraints?: Constraint[] = [];
 
-    constructor(args: {
-        text: string;
-        costs: Instruction[];
-        initializer: () => Instruction[];
-        constraints?: Constraint[];
-    }) {
-        super(args);
-        this.costs = args.costs;
-        this.instructions = args.initializer();
-        this.constraints = args.constraints;
+    constructor(
+        spec: AbilitySpec & {
+            costs: Instruction[];
+            effects: Instruction[] | (() => Instruction[]);
+            constraints?: Constraint[];
+        }
+    ) {
+        super(spec);
+        this.costs = spec.costs;
+        if (Array.isArray(spec.effects)) {
+            this.instructions = spec.effects;
+        } else {
+            this.instructions = spec.effects();
+        }
+        this.constraints = spec.constraints;
     }
 
     /** 起動する */ // FIXME これはInstructionで実装する
@@ -76,7 +87,7 @@ class ActivatedAbility extends Ability {
 }
 
 // ==============================================================================
-/** 誘発型能力 */
+/** オブジェクトの持つ誘発型能力 */
 class TriggeredAbility extends Ability {
     /** 誘発判定処理 */
     #checker: InstructionChecker;
@@ -86,16 +97,22 @@ class TriggeredAbility extends Ability {
     constraints?: Constraint[] = [];
     // 「1回しか誘発しない」は制限、「1回のみ行える」は効果？
 
-    constructor(args: {
-        text: string;
-        checker: InstructionChecker;
-        initializer: () => Instruction[];
-        constraints?: Constraint[];
-    }) {
-        super(args);
-        this.#checker = args.checker;
-        this.instructions = args.initializer();
-        this.constraints = args.constraints;
+    constructor(
+        spec: AbilitySpec & {
+            trigger_condition: InstructionChecker;
+            effects: Instruction[] | ((event) => Instruction[]); // TODO
+            // 誘発型能力は生成するときに誘発イベントの情報が必要では？
+            constraints?: Constraint[];
+        }
+    ) {
+        super(spec);
+        this.#checker = spec.trigger_condition;
+        if (Array.isArray(spec.effects)) {
+            this.instructions = spec.effects;
+        } else {
+            this.instructions = spec.effects();
+        }
+        this.constraints = spec.constraints;
     }
 
     /** 誘発するかどうかを判定する */
@@ -147,29 +164,41 @@ class TriggeredAbility extends Ability {
 }
 
 // ==============================================================================
-/** 呪文能力 */
+/** オブジェクトの持つ呪文能力 */
 class SpellAbility extends Ability {
     /** 効果処理 */
     instructions: Instruction[];
 
-    /** コンストラクタ。
-     * Instruction間の任意の関係を呼び出し側で記述できるようにするため、関数を引数にとる */
-    constructor(args: { text: string; initializer: () => Instruction[] }) {
-        super(args);
-        this.instructions = args.initializer();
+    /** コンストラクタ */
+    constructor(
+        spec: AbilitySpec & {
+            /** 効果、または効果の初期化処理 */
+            effects: Instruction[] | (() => Instruction[]);
+        }
+    ) {
+        super(spec);
+        if (Array.isArray(spec.effects)) {
+            this.instructions = spec.effects;
+        } else {
+            this.instructions = spec.effects();
+        }
     }
 
     /** 効果処理の実行 */
     perform(args: PerformArgs) {
-        Instruction.performArray(this.instructions, args);
+        performInstructions(this.instructions, args);
     }
 }
 
 // ==============================================================================
-/** 常在型能力 */
+/** オブジェクトの持つ常在型能力 */
 class StaticAbility extends Ability {
     /** 効果。単一の能力が複数の継続的効果を持つこともある（キーワード能力など） */
     effects: ContinuousEffect[] = [];
+
+    constructor(spec: AbilitySpec & {}) {
+        super(spec);
+    }
 }
 
 // ==============================================================================

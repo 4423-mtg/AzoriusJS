@@ -49,10 +49,10 @@ class GameState {
     /** 生成済みのターン */
     turns: Turn[] = [];
     /** 生成されたオブジェクト */
-    objects: GameObject[] = [];
+    #objects: GameObject[] = [];
 
     // FIXME
-    extra_turns = [];
+    extra_turns = []; // 追加ターン生成効果の配列
     extra_phasesteps = [];
     skip_turns = [];
     skip_phasesteps = [];
@@ -65,7 +65,7 @@ class GameState {
     delayed_triggered_abilities: DelayedTriggeredAbility[] = [];
 
     /** ゲームの履歴 */
-    game_history: GameHistory = new GameHistory();
+    history: GameHistory = new GameHistory();
     /** 優先権を連続でパスしたプレイヤーの数 */
     pass_count: number = 0;
     /** クリンナップをもう一度行うかどうか。
@@ -73,6 +73,7 @@ class GameState {
      * そのクリンナップでは優先権が発生するとともに、追加のクリンナップが発生する。 */
     cleanup_again = false;
 
+    // ========================================================================
     get current_turn(): Turn | undefined {
         return this.turns.length == 0
             ? undefined
@@ -86,14 +87,22 @@ class GameState {
     set player_with_priority(player: Player) {}
     get players_from_active_player() {}
     get stack(): GameObject[] {}
+
+    // ========================================================================
+    /** 条件を満たすオブジェクトを取得 */
+    get_objects(query: (obj: GameObject) => boolean): GameObject[] {
+        return this.#objects.filter(query);
+    }
+
     getZone(zonetype: ZoneType, owner?: Player): Zone {
         return this.zones.filter(
             (z) => z.zonetype === zonetype && z.owner === owner
         )[0];
     }
 
-    copy(): GameState {
-        // FIXME
+    /** ディープコピー */
+    deepcopy(): GameState {
+        // TODO
     }
 
     get_next_player_of(player: Player): Player | undefined {
@@ -107,6 +116,7 @@ class GameState {
         return undefined;
     }
 
+    // ターン進行処理 ==========================================================
     /** メインループ */
     run() {
         let flag_goto_next = true; // 次のターン・フェイズ・ステップに移行するかどうか
@@ -295,15 +305,16 @@ class GameState {
     goto_new_phase_or_step(phase_or_step) {
         this.turns[-1].push_phase_or_step(phase_or_step);
     }
-
-    /** 条件を満たすオブジェクトを取得 */
-    get_objects(query: any): GameObject[] {
-        return [];
-    }
 }
 
 /** ゲームの履歴。実装は隠蔽する */
 class GameHistory {
     /** ゲーム内の履歴 */
-    game_states = [];
+    #states: GameState[] = [];
+    // TODO
+    // - historyの実装としては現在を表すstateを入れてしまったほうが都合がいい
+
+    push(state: GameState): void {
+        this.#states.push(state);
+    }
 }

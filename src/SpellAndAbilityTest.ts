@@ -7,12 +7,13 @@ import {
     ProcessAlteringContinousEffect,
 } from "./GameObject";
 import {
+    Ability,
     ActivatedAbility,
     TriggeredAbility,
     SpellAbility,
     StaticAbility,
 } from "./Ability";
-import { Reference, creatures_controlled_by, TargetOfThis } from "./Reference";
+import { Reference, Creatures_controlled_by, TargetOfThis } from "./Reference";
 import {
     GeneratingContinuousEffect,
     GeneratingProcessAlteringEffect,
@@ -34,19 +35,21 @@ const card_sleep = new Card({
     name: ["Sleep"],
     mana_cost: ManaSymbols("2UU"),
     card_types: [CardType.Sorcery],
-    text: "Tap all creatures target player controls. Those creatures don’t untap during that player’s next untap step.",
     abilities: [
-        new SpellAbility(() => {
-            const creatures = creatures_controlled_by(TargetOfThis);
-            return [
-                new Tapping([creatures]),
-                new GeneratingProcessAlteringEffect(
-                    ({ instruction, state }) =>
-                        instruction.isInstanceOf(Untapping) &&
-                        state.current_step === UntapStep,
-                    new VoidInstruction()
-                ),
-            ];
+        new SpellAbility({
+            text: "Tap all creatures target player controls. Those creatures don’t untap during that player’s next untap step.",
+            effects: () => {
+                const ref_creatures = Creatures_controlled_by(TargetOfThis);
+                return [
+                    new Tapping([ref_creatures]),
+                    new GeneratingProcessAlteringEffect(
+                        ({ instruction, state }) =>
+                            instruction.isInstanceOf(Untapping) &&
+                            state.current_step === UntapStep,
+                        new VoidInstruction()
+                    ),
+                ];
+            },
         }),
     ],
 });

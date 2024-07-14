@@ -38,7 +38,7 @@ export abstract class GameObject {
     // ----スタック上で取る特性----
     chosen_mode;
     x: number;
-    target: GameObject;
+    target?: (GameObject | Player)[];
     distributing;
     paid_cost;
     // どんな効果によって唱えたかは記憶する？
@@ -46,6 +46,32 @@ export abstract class GameObject {
 
     // ----- ダメージ -----
     damage: number = 0;
+
+    // 判定関数 ==========================
+    /**
+     * カードかどうか
+     * @returns
+     */
+    is_card(): this is Card {
+        return this instanceof Card;
+    }
+
+    /**
+     * パーマネントかどうか。
+     * typesを指定した場合はそのカードタイプすべてを持つパーマネントであるかどうか。
+     * 指定しない場合は、単にパーマネントであるかどうか。
+     * @param type カードタイプ
+     * @returns
+     */
+    is_permanent(types?: CardType[]): this is Card {
+        return (
+            this instanceof Card &&
+            this.zone.zonetype === ZoneType.Battlefield &&
+            types?.every((t) =>
+                this.characteristics.card_types?.includes(t)
+            ) === true
+        );
+    }
 }
 
 /** カード */
@@ -269,7 +295,7 @@ type CharacteristicsSpec = {
     card_types?: CardType[];
     subtypes?: Subtype[];
     supertypes?: Supertype[];
-    abilities?: Ability[];
+    abilities?: Ability[] | (() => Ability[]);
     text?: string;
     power?: number | string;
     toughness?: number | string;
@@ -331,33 +357,63 @@ export class Player {
     abilities: Ability[];
 }
 
-type ZoneType =
-    | "Battlefield"
-    | "Hand"
-    | "Library"
-    | "Graveyard"
-    | "Exile"
-    | "Command";
+/** 領域の種別 OK */
+export class ZoneType {
+    /** 領域の名前 */
+    name: string;
+    /** オーナーを持つかどうか。 */
+    has_owner: boolean;
+    /** この領域に置かれているオブジェクトが順序を持つかどうか。 */
+    has_order: boolean;
+
+    /**
+     *
+     * @param name 領域の名前
+     * @param has_owner オーナーを持つかどうか。
+     * @param has_order この領域に置かれているオブジェクトが順序を持つかどうか。
+     */
+    constructor(name: string, has_owner: boolean, has_order: boolean) {
+        this.name = name;
+        this.has_owner = has_owner;
+        this.has_order = has_order;
+    }
+
+    /** 戦場 */
+    static Battlefield = new ZoneType("battlefield", false, false);
+    /** 手札 */
+    static Hand = new ZoneType("hand", true, false);
+    /** ライブラリー */
+    static Library = new ZoneType("library", true, true);
+    /** 墓地 */
+    static Graveyard = new ZoneType("graveyard", true, true);
+    /** 追放 */
+    static Exile = new ZoneType("exile", false, false);
+    /** 統率 */
+    static Command = new ZoneType("command", true, false);
+}
 
 /** 領域 */
 export class Zone {
+    /** 領域の種別 */
     zonetype: ZoneType;
+    /** 領域のオーナー */
     owner?: Player;
+    /** この領域にあるオブジェクト */
+    objects: GameObject[] = [];
 
+    /**
+     * @param zonetype 領域の種別
+     * @param owner 領域のオーナー
+     */
     constructor(zonetype: ZoneType, owner?: Player) {
-        if (
-            zonetype === "Hand" ||
-            zonetype === "Library" ||
-            zonetype === "Graveyard" ||
-            zonetype === "Command"
-        ) {
+        if (zonetype.has_owner) {
             if (owner !== undefined) {
                 this.zonetype = zonetype;
                 this.owner = owner;
             } else {
-                throw new Error("invalid zone spec");
+                throw new Error("owner of zone is undefined");
             }
-        } else if (zonetype === "Battlefield" || zonetype === "Exile") {
+        } else {
             this.zonetype = zonetype;
         }
     }
