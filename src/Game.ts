@@ -94,7 +94,7 @@ class GameState {
         return this.#objects.filter(query);
     }
 
-    getZone(zonetype: ZoneType, owner?: Player): Zone {
+    get_zone(zonetype: ZoneType, owner?: Player): Zone {
         return this.zones.filter(
             (z) => z.zonetype === zonetype && z.owner === owner
         )[0];
