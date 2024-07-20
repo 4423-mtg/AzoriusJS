@@ -12,7 +12,7 @@ import {
     resolve_single_spec,
     resolve_multiple_spec,
     resolve_spec,
-    Top_of_library,
+    top_of_library,
 } from "./Reference";
 import { Game, GameHistory, GameState } from "./Game";
 import {
@@ -271,6 +271,7 @@ export class MovingZone extends Instruction {
                 new_params
             );
             if (Array.isArray(obj)) {
+                // オブジェクトが複数の場合
                 obj.forEach((o) => {
                     // destを解決して代入
                     o.zone = resolve_single_spec<Zone, GameObject>(
@@ -279,6 +280,7 @@ export class MovingZone extends Instruction {
                     );
                 });
             } else {
+                // オブジェクトが１つの場合
                 // destを解決して代入
                 obj.zone = resolve_single_spec<Zone, GameObject>(
                     each_spec.dest,
@@ -311,7 +313,7 @@ export class Drawing extends Instruction {
         for (let i = 0; i < number_of_cards; i++) {
             instructions.push(
                 new MovingZone(
-                    [Top_of_library(this.performer)],
+                    [top_of_library(this.performer)],
                     args.state.get_zone("Hand", this.performer) // TODO 領域をどうやってとる？
                 )
             );

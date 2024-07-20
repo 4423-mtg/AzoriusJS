@@ -30,7 +30,7 @@ export type QueryParam = {
 /** 参照型を使って参照可能な型。 */
 export type Referable = GameObject | Player | Zone;
 
-export type Reference<T extends Referable, U extends Object = {}> =
+export type Reference<T extends Referable = Referable, U extends Object = {}> =
     | SingleReference<T, U>
     | MultipleReference<T, U>;
 
@@ -116,53 +116,61 @@ export function resolve_spec<T extends Referable, U extends Object = {}>(
 /** オブジェクトに対し、そのオーナーの特定の領域 */
 // TODO あるオブジェクトに対しオーナーは一意に定まる事実を前提としている。
 // --> もっと汎化できる？
-export function owners_zone_of_object(
+function owners_zone_of_object(
     zonetype: ZoneType
 ): SingleReference<Zone, { object_spec: SingleSpec<GameObject> }> {
-    return (
-        param: Parameters<
-            SingleReference<Zone, { object_spec: SingleSpec<GameObject> }>
-        >[number]
-    ) => {
-        const obj = resolve_single_spec<GameObject>({
-            spec: param.object_spec,
-            param: param,
-        });
+    return (param) => {
+        const obj = resolve_single_spec<GameObject>(param.object_spec, param);
         return param.state.get_zone(zonetype, obj.owner);
     };
 }
 
-/** あるプレイヤー1人のコントロールしているすべてのクリーチャー */
+/** オーナーの手札 */
+export const owners_hand = owners_zone_of_object(ZoneType.Hand);
+
+/** プレイヤーのコントロールしているすべてのクリーチャー */
 export function creatures_controlled_by_player(): MultipleReference<
     GameObject,
-    { controller: SingleSpec<Player> }
+    { controller: Spec<Player> }
 > {
-    return (
-        param: Parameters<
-            MultipleReference<GameObject, { controller: SingleSpec<Player> }>
-        >[number]
-    ) =>
-        param.state.get_objects(
-            (obj) =>
-                obj.is_permanent([CardType.Creature]) &&
-                obj.controller ===
-                    resolve_single_spec<Player>({
-                        spec: param.controller,
-                        param: param,
-                    })
-        );
+    return (param) => {
+        const player = resolve_spec<Player>(param.controller, param);
+        if (Array.isArray(player)) {
+            return player.flatMap((pl) =>
+                param.state.get_objects(
+                    (obj) =>
+                        obj.is_permanent([CardType.Creature]) &&
+                        obj.controller == pl
+                )
+            );
+        } else {
+            return param.state.get_objects(
+                (obj) =>
+                    obj.is_permanent([CardType.Creature]) &&
+                    obj.controller == player
+            );
+        }
+    };
 }
 
-/** パーマネント */
-export function PermanentSpec(spec): MultipleReference<GameObject> {}
+/** （条件を満たす）パーマネント */
+export function permanent_of(
+    spec: (obj: GameObject) => boolean
+): Reference<GameObject> {
+    return (param) => {
+        return param.state.get_objects(
+            (obj) => obj.is_permanent() && spec(obj)
+        );
+    };
+}
 
 /** 対象 */
-export function Target(): MultipleReference<GameObject | Player> {
-    return (params: QueryParam) => params.self?.target;
-}
+// export function target(): MultipleReference<GameObject | Player> {
+//     return (params: QueryParam) => params.self?.target;
+// }
 
 /** プレイヤーのライブラリーの一番上のカード */
-export function Top_of_library(player: Player): MultipleReference<GameObject> {}
+// export function top_of_library(player: Player): MultipleReference<GameObject> {}
 
 /** プレイヤーの領域 */
 // export function
