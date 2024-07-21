@@ -13,6 +13,7 @@ import {
     resolve_multiple_spec,
     resolve_spec,
     top_of_library,
+    OptionalArgsType,
 } from "./Reference";
 import { Game, GameHistory, GameState } from "./Game";
 import {
@@ -52,11 +53,14 @@ export abstract class Instruction {
     readonly id: number;
 
     /** 指示をしているオブジェクト */
-    instructor?: MultipleSpec<GameObject>;
+    instructor?: SingleSpec<GameObject>;
     /** 実際に実行するプレイヤー */
     performer?: MultipleSpec<Player>;
 
-    constructor(args: InstructionCommonParams) {
+    constructor(args: {
+        instructor?: SingleSpec<GameObject>;
+        performer?: MultipleSpec<Player>;
+    }) {
         this.id = Instruction.instance_count;
         Instruction.instance_count += 1;
         this.instructor = args.instructor;
@@ -235,24 +239,26 @@ export class MovingZone extends Instruction {
     /** 移動させるオブジェクトと、移動先領域の組。OK */
     moving_specs: {
         /** 移動させるオブジェクト */
-        objects_spec: Spec<GameObject>;
+        objects_spec: Spec<GameObject, {}>;
         /** 移動先の領域 */
-        dest: SingleSpec<Zone> | SingleReference<Zone, GameObject>;
+        dest: SingleSpec<Zone> | SingleReference<Zone, { object: GameObject }>;
     }[];
 
-    constructor(
-        args: InstructionCommonParams & {
-            /** 移動させるオブジェクトと、移動先領域の組。 */
-            specs: {
-                /** 移動させるオブジェクト */
-                moved_objects:
-                    | SingleSpec<GameObject>
-                    | MultipleReference<GameObject>;
-                /** 移動先の領域 */
-                dest: SingleSpec<Zone> | SingleReference<Zone, GameObject>;
-            }[];
-        }
-    ) {
+    constructor(args: {
+        instructor: SingleSpec<GameObject>;
+        performer: MultipleSpec<Player>;
+        /** 移動させるオブジェクトと、移動先領域の組。 */
+        specs: {
+            /** 移動させるオブジェクト */
+            moved_objects:
+                | SingleSpec<GameObject>
+                | MultipleReference<GameObject>;
+            /** 移動先の領域 */
+            dest:
+                | SingleSpec<Zone>
+                | SingleReference<Zone, { object: GameObject }>;
+        }[];
+    }) {
         super(args);
         this.moving_specs = args.specs.map((spec) => ({
             objects_spec: spec.moved_objects,
@@ -266,16 +272,18 @@ export class MovingZone extends Instruction {
         // 各 spec について
         this.moving_specs.forEach((each_spec) => {
             // object_specを解決
-            const obj = resolve_spec<GameObject>(
+            const obj = resolve_spec<GameObject, {}>(
                 each_spec.objects_spec,
-                new_params
+                new_params,
+                {}
             );
             const _objs = Array.isArray(obj) ? obj : [obj];
             _objs.forEach((o) => {
                 // destを解決して代入
-                o.zone = resolve_single_spec<Zone, GameObject>(
+                o.zone = resolve_single_spec<Zone, { object: GameObject }>(
                     each_spec.dest,
-                    Object.assign(o, new_params)
+                    new_params,
+                    { object: o }
                 );
             });
         });
@@ -368,21 +376,33 @@ export class DealingDamage extends Instruction {
 
 /** ライフを得る */
 export class GainingLife extends Instruction {
-    amount: number | ValueReference;
+    amount_spec: SingleSpec<number, Object>;
 
-    constructor(player: Player, amount: number | ValueReference) {
-        super();
-        this.performer = player;
-        this.amount = amount;
+    constructor(args: {
+        instructor: SingleSpec<GameObject>;
+        performer: MultipleSpec<Player>;
+        amount_spec: SingleSpec<number, Object>;
+    }) {
+        super(args);
+        this.amount_spec = args.amount_spec;
     }
 
-    perform(args: Required<QueryParam>): GameState {
+    perform(params: Required<QueryParam>): GameState {
+        const new_state = params.state.deepcopy();
+        const new_params = { ...params, state: new_state };
+        const amount: number = resolve_single_spec<number>(
+            this.amount_spec,
+            new_params
+        );
+
+        // TODO
+
         const am =
-            this.amount instanceof ValueReference
-                ? this.amount.execute(args)
-                : this.amount;
+            this.amount_spec instanceof ValueReference
+                ? this.amount_spec.execute(params)
+                : this.amount_spec;
         if (this.perform instanceof Player) {
-            const new_state = args.state.deepcopy();
+            const new_state = params.state.deepcopy();
             // FIXME new_stateのperformerどうやってとる？
             // (this.performer as Player).life += am;
             return new_state;
