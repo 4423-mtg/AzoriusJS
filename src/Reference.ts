@@ -119,7 +119,7 @@ export function resolve_spec<T extends Referable, U extends Object = {}>(
  * - 引数が`T[]`かつ`func`の戻り値が`U[]`（配列）である場合、
  * 深さ1の`Array.prototype.flat()`により戻り値をフラット化し`U[]`にして返す。
  */
-function flatApply<T, U>(arg: T | T[], func: (t: T) => U | U[]): U[] {
+export function flatApply<T, U>(arg: T | T[], func: (t: T) => U | U[]): U[] {
     if (Array.isArray(arg)) {
         arg.flatMap((a) => func(a));
     } else {

@@ -270,23 +270,14 @@ export class MovingZone extends Instruction {
                 each_spec.objects_spec,
                 new_params
             );
-            if (Array.isArray(obj)) {
-                // オブジェクトが複数の場合
-                obj.forEach((o) => {
-                    // destを解決して代入
-                    o.zone = resolve_single_spec<Zone, GameObject>(
-                        each_spec.dest,
-                        Object.assign(o, new_params)
-                    );
-                });
-            } else {
-                // オブジェクトが１つの場合
+            const _objs = Array.isArray(obj) ? obj : [obj];
+            _objs.forEach((o) => {
                 // destを解決して代入
-                obj.zone = resolve_single_spec<Zone, GameObject>(
+                o.zone = resolve_single_spec<Zone, GameObject>(
                     each_spec.dest,
-                    Object.assign(obj, new_params)
+                    Object.assign(o, new_params)
                 );
-            }
+            });
         });
         return new_state;
     }
