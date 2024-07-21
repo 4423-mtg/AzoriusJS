@@ -23,28 +23,29 @@ export type QueryParam = {
     /** この参照において「これ自身」であるオブジェクト */
     self?: GameObject;
     /** この参照における「これ自身」が能力である場合、それの発生源であるオブジェクト */
-    source?: GameObject;
+    source_of_ability?: GameObject;
 };
 
 // ==============================================================================
 /** 参照型を使って参照可能な型。 */
 export type Referable = GameObject | Player | Zone;
 
+/** すべての参照型。 */
 export type Reference<T extends Referable = Referable, U extends Object = {}> =
     | SingleReference<T, U>
     | MultipleReference<T, U>;
 
-/** 参照。引数として`QueryParam`を受け取り、単一の`T`を返す。\
- * `T`: 戻り値の型。`Referable`である任意の型。\
- * `U`: 追加の引数。任意のオブジェクト型。
+/** 単一参照。引数として`QueryParam`を受け取り、単一の`T`を返す。
+ * - `T`: 戻り値の型。`Referable`である任意の型。
+ * - `U`: 追加の引数。任意のオブジェクト型。
  */
 export type SingleReference<T extends Referable, U extends Object = {}> = (
     param: QueryParam & U
 ) => T;
 
-/** 複数参照。引数として`QueryParam`を受け取り、`T[]`を返す。\
- * `T`: 戻り値の配列の要素の型。`Referable`である任意の型。\
- * `U`: 追加の引数。任意のオブジェクト型。
+/** 複数参照。引数として`QueryParam`を受け取り、`T[]`を返す。
+ * - `T`: 戻り値の配列の要素の型。`Referable`である任意の型。
+ * - `U`: 追加の引数。任意のオブジェクト型。
  */
 export type MultipleReference<T extends Referable, U extends Object = {}> = (
     param: QueryParam & U
@@ -61,12 +62,12 @@ export type SingleSpec<T extends Referable, U extends Object = {}> =
     | SingleReference<T, U>;
 /** `T[]`に解決可能な型。`Spec<T,U>[]`または`MultipleReference<T,U>`。 */
 export type MultipleSpec<T extends Referable, U extends Object = {}> =
-    | (T | SingleReference<T, U>)[]
+    | SingleSpec<T, U>[]
     | MultipleReference<T, U>;
 
 /**
  * `SingleSpec<T, U>`と`QueryParam`と`U`を引数に取り、`T`に解決して返す関数
- * @param spec `T`そのもの、または`T`への参照
+ * @param spec `T`に解決可能な型
  * @param param 参照の解決に使うパラメータ
  * @returns `spec`が`T`なら、`spec`を返す。
  * `spec`が`Reference<T>`なら、`spec(param)`を返す。
