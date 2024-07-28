@@ -17,7 +17,7 @@ import { CardType } from "./Characteristic";
 import { GameState, GameHistory } from "./Game";
 import { Card, GameObject, Player, Zone, ZoneType } from "./GameObject";
 
-export type QueryParam = {
+export type ReferenceParam = {
     state: GameState;
     history?: GameHistory;
     /** この参照において「これ自身」であるオブジェクト */
@@ -45,7 +45,7 @@ export type Reference<
 export type SingleReference<
     T extends Referable,
     U extends OptionalArgs = OptionalArgs
-> = (param: QueryParam, optional: U) => T;
+> = (param: ReferenceParam, optional: U) => T;
 
 /** 複数参照。引数として`QueryParam`を受け取り、`T[]`を返す。
  * - `T`: 戻り値の配列の要素の型。`Referable`である任意の型。
@@ -54,7 +54,7 @@ export type SingleReference<
 export type MultipleReference<
     T extends Referable,
     U extends OptionalArgs = OptionalArgs
-> = (param: QueryParam, optional: U) => T[];
+> = (param: ReferenceParam, optional: U) => T[];
 
 export type OptionalArgsType<T> = T extends Reference<any, infer V> ? V : never;
 
@@ -87,7 +87,7 @@ export type MultipleSpec<
 export function resolve_single_spec<
     T extends Referable,
     U extends OptionalArgs = OptionalArgs
->(spec: SingleSpec<T, U>, param: QueryParam, optional: U): T {
+>(spec: SingleSpec<T, U>, param: ReferenceParam, optional: U): T {
     if (typeof spec === "function") {
         return spec(param, optional);
     } else {
@@ -100,7 +100,7 @@ export function resolve_single_spec<
 export function resolve_multiple_spec<
     T extends Referable,
     U extends OptionalArgs = OptionalArgs
->(spec: MultipleSpec<T, U>, param: QueryParam, optional: U): T[] {
+>(spec: MultipleSpec<T, U>, param: ReferenceParam, optional: U): T[] {
     if (Array.isArray(spec)) {
         return spec.map((s) => resolve_single_spec<T, U>(s, param, optional));
     } else if (typeof spec === "function") {
@@ -113,7 +113,7 @@ export function resolve_multiple_spec<
 export function resolve_spec<
     T extends Referable,
     U extends OptionalArgs = OptionalArgs
->(spec: Spec<T, U>, param: QueryParam, optional: U): T | T[] {
+>(spec: Spec<T, U>, param: ReferenceParam, optional: U): T | T[] {
     if (Array.isArray(spec)) {
         return spec.map((s) => resolve_single_spec<T, U>(s, param, optional));
     } else if (typeof spec === "function") {

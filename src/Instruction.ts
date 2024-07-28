@@ -3,7 +3,7 @@
  */
 
 import {
-    QueryParam,
+    ReferenceParam,
     SingleReference,
     MultipleReference,
     Spec,
@@ -76,7 +76,7 @@ export abstract class Instruction {
      * @param params 参照に渡すためのパラメータ。
      * どんな引数の参照を持つかは実行時までわからないため、すべてのパラメータが必須。
      */
-    abstract perform(params: Required<QueryParam>): GameState;
+    abstract perform(params: Required<ReferenceParam>): GameState;
 }
 type InstructionCommonParams = {
     instructor?: MultipleSpec<GameObject>;
@@ -266,7 +266,7 @@ export class MovingZone extends Instruction {
         }));
     }
 
-    perform(params: Required<QueryParam>): GameState {
+    perform(params: Required<ReferenceParam>): GameState {
         const new_state = params.state.deepcopy();
         const new_params = { ...params, state: new_state };
         // 各 spec について
@@ -301,7 +301,7 @@ export class Drawing extends Instruction {
         this.performer = player;
     }
 
-    perform(args: Required<QueryParam>): GameState {
+    perform(args: Required<ReferenceParam>): GameState {
         /** 「カードを1枚引く」をN個作る */
         const number_of_cards =
             typeof this.number === "number"
@@ -343,7 +343,7 @@ export class DealingDamage extends Instruction {
         this.source = source;
     }
 
-    perform(args: Required<QueryParam>): GameState {
+    perform(args: Required<ReferenceParam>): GameState {
         // 参照の解決
         let objs: (GameObject | Player)[] = this.objectives.flatMap((o) => {
             return o instanceof GameObject || o instanceof Player
@@ -387,7 +387,7 @@ export class GainingLife extends Instruction {
         this.amount_spec = args.amount_spec;
     }
 
-    perform(params: Required<QueryParam>): GameState {
+    perform(params: Required<ReferenceParam>): GameState {
         const new_state = params.state.deepcopy();
         const new_params = { ...params, state: new_state };
         const amount: number = resolve_single_spec<number>(
@@ -421,7 +421,7 @@ export class PuttingCounter extends Instruction {
         this.counters = counters;
     }
 
-    perform(args: Required<QueryParam>): GameState {}
+    perform(args: Required<ReferenceParam>): GameState {}
 }
 
 /** 見る */
@@ -458,7 +458,7 @@ export class Tapping extends Instruction {
         this.performer = performer;
     }
 
-    perform(params: Required<QueryParam>): GameState {
+    perform(params: Required<ReferenceParam>): GameState {
         // まずstateをコピーする。このstateを変更して返す
         const new_state = params.state.deepcopy();
         this.refs_objects.forEach((ref) => {
@@ -509,7 +509,7 @@ export class Exiling extends Instruction {
     //         const moving_zone = new MovingZone({moved_objects: objects, dest: })
     //     });
     // }
-    perform(params: Required<QueryParam>): GameState {
+    perform(params: Required<ReferenceParam>): GameState {
         // FIXME 「各オブジェクトのオーナーの手札」はどうやって指定する？(ZoneReference)
         // const moving_zone = new MovingZone({moved_objects: this.refs_objects, dest: })
     }
