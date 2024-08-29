@@ -10,7 +10,7 @@ import {
 } from "./Characteristic";
 import { GameHistory, GameState } from "./Game";
 import { Instruction } from "./Instruction";
-import { MultipleReference } from "./Reference";
+import { MultiRef } from "./Reference";
 
 /** ゲーム内のオブジェクト
  * カード、スタック上の能力、継続的効果、遅延誘発型能力、置換効果
@@ -189,7 +189,7 @@ export type InstructionReplacer = (instruction: Instruction) => Instruction[];
 /** 値や特性を変更する継続的効果 */
 export class ValueAlteringContinousEffect extends ContinuousEffect {
     /** 影響を及ぼすオブジェクト */
-    affected_objects: GameObject[] | MultipleReference[];
+    affected_objects: GameObject[] | MultiRef[];
 }
 
 // OK

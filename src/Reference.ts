@@ -22,102 +22,79 @@ export type ReferenceParam = {
     history?: GameHistory;
     /** この参照において「これ自身」であるオブジェクト */
     self?: GameObject;
-    /** この参照における「これ自身」が能力である場合、それの発生源であるオブジェクト */
-    source_of_ability?: GameObject;
+    // /** この参照における「これ自身」が能力である場合、それの発生源であるオブジェクト */
+    // source_of_ability?: GameObject;
 };
-
-// ==============================================================================
 /** 参照型を使って参照可能な型。 */
 export type Referable = GameObject | Player | Zone | number | string;
 
-export type OptionalArgs = Record<number | string | symbol, unknown>;
-
-/** すべての参照型。 */
-export type Reference<
-    T extends Referable = Referable,
-    U extends OptionalArgs = OptionalArgs
-> = SingleReference<T, U> | MultipleReference<T, U>;
-
-/** 単一参照。引数として`QueryParam`を受け取り、単一の`T`を返す。
+// ==============================================================================
+/** 単一参照。単一の`T`を返す。
  * - `T`: 戻り値の型。`Referable`である任意の型。
  * - `U`: 追加の引数。任意のオブジェクト型。
  */
-export type SingleReference<
-    T extends Referable,
-    U extends OptionalArgs = OptionalArgs
-> = (param: ReferenceParam, optional: U) => T;
+export type SingleRef<T extends Referable> = (param: ReferenceParam) => T;
 
-/** 複数参照。引数として`QueryParam`を受け取り、`T[]`を返す。
+/** 複数参照。`T[]`を返す。
  * - `T`: 戻り値の配列の要素の型。`Referable`である任意の型。
  * - `U`: 追加の引数。任意のオブジェクト型。
  */
-export type MultipleReference<
-    T extends Referable,
-    U extends OptionalArgs = OptionalArgs
-> = (param: ReferenceParam, optional: U) => T[];
+export type MultiRef<T extends Referable> = (param: ReferenceParam) => T[];
 
-export type OptionalArgsType<T> = T extends Reference<any, infer V> ? V : never;
-
-type xxx = OptionalArgsType<Reference<Zone, { x: GameObject }>>;
+/** 単一または複数参照型。 */
+export type Ref<T extends Referable = Referable> = SingleRef<T> | MultiRef<T>;
 
 // ==============================================================================
-export type Spec<T extends Referable, U extends OptionalArgs = OptionalArgs> =
-    | SingleSpec<T, U>
-    | MultipleSpec<T, U>;
+/** `T`に解決可能な型。`T`または`SingleRef<T>`。 */
+export type SingleSpec<T extends Referable> = T | SingleRef<T>;
 
-/** `T`に解決可能な型。`T`または`Reference<T, U>`。 */
-export type SingleSpec<
-    T extends Referable,
-    U extends OptionalArgs = OptionalArgs
-> = T | SingleReference<T, U>;
+/** `T[]`に解決可能な型。`SingleSpec<T>[]`または`MultiRef<T>`。 */
+export type MultiSpec<T extends Referable> = SingleSpec<T>[] | MultiRef<T>;
 
-/** `T[]`に解決可能な型。`Spec<T,U>[]`または`MultipleReference<T,U>`。 */
-export type MultipleSpec<
-    T extends Referable,
-    U extends OptionalArgs = OptionalArgs
-> = SingleSpec<T, U>[] | MultipleReference<T, U>;
+/** `T`または`T[]`に解決可能な型。 */
+export type Spec<T extends Referable> = SingleSpec<T> | MultiSpec<T>;
 
+// ==============================================================================
 /**
- * `SingleSpec<T, U>`と`QueryParam`と`U`を引数に取り、`T`に解決して返す関数
+ * `SingleSpec<T>`と`QueryParam`を`T`に解決して返す。
  * @param spec `T`に解決可能な型
  * @param param 参照の解決に使うパラメータ
  * @returns `spec`が`T`なら、`spec`を返す。
- * `spec`が`Reference<T>`なら、`spec(param)`を返す。
+ * `spec`が`SingleRef<T>`なら、`spec(param)`を返す。
  */
-export function resolve_single_spec<
-    T extends Referable,
-    U extends OptionalArgs = OptionalArgs
->(spec: SingleSpec<T, U>, param: ReferenceParam, optional: U): T {
+export function resolve_single_spec<T extends Referable>(
+    spec: SingleSpec<T>,
+    param: ReferenceParam
+): T {
     if (typeof spec === "function") {
-        return spec(param, optional);
+        return spec(param);
     } else {
         return spec;
     }
 }
 /**
- * `MultipleSpec<T,U>`を`T[]`に解決して返す関数
+ * `MultiSpec<T>`を`T[]`に解決して返す関数
  */
-export function resolve_multiple_spec<
-    T extends Referable,
-    U extends OptionalArgs = OptionalArgs
->(spec: MultipleSpec<T, U>, param: ReferenceParam, optional: U): T[] {
+export function resolve_multiple_spec<T extends Referable>(
+    spec: MultiSpec<T>,
+    param: ReferenceParam
+): T[] {
     if (Array.isArray(spec)) {
-        return spec.map((s) => resolve_single_spec<T, U>(s, param, optional));
-    } else if (typeof spec === "function") {
-        return spec(param, optional);
+        return spec.map((s) => resolve_single_spec<T>(s, param));
+    } else {
+        return spec(param);
     }
-    throw new Error("Unreachable code");
 }
 
 /** `Spec<T, U> | MultipleSpec<T, U>`を解決し、`T | T[]`を返す関数。 */
-export function resolve_spec<
-    T extends Referable,
-    U extends OptionalArgs = OptionalArgs
->(spec: Spec<T, U>, param: ReferenceParam, optional: U): T | T[] {
+export function resolve_spec<T extends Referable>(
+    spec: Spec<T>,
+    param: ReferenceParam
+): T | T[] {
     if (Array.isArray(spec)) {
-        return spec.map((s) => resolve_single_spec<T, U>(s, param, optional));
+        return spec.map((s) => resolve_single_spec<T>(s, param));
     } else if (typeof spec === "function") {
-        return spec(param, optional);
+        return spec(param);
     } else {
         return spec;
     }
@@ -143,9 +120,10 @@ export function flatApply<T, U>(arg: T | T[], func: (t: T) => U | U[]): U[] {
 
 /** オブジェクト1つに対し、そのオーナーの`zonetype`の領域 */
 function owners_zone_of_object(
+    object: SingleSpec<GameObject>,
     zonetype: ZoneType
-): SingleReference<Zone, { object: GameObject }> {
-    return (param, optional) => {
+): SingleRef<Zone> {
+    return (param) => {
         return param.state.get_zone(zonetype, optional.object.owner);
     };
 }
@@ -154,7 +132,7 @@ function owners_zone_of_object(
 export const owners_hand = owners_zone_of_object(ZoneType.Hand);
 
 /** 1人以上のプレイヤーに対し、それらのプレイヤーのコントロールしているすべてのクリーチャー */
-export function creatures_controlled_by_player(): MultipleReference<
+export function creatures_controlled_by_player(): MultiRef<
     GameObject,
     { controller: Player }
 > {
@@ -175,7 +153,7 @@ export function creatures_controlled_by_player(): MultipleReference<
 /** 条件`spec`を満たすすべてのパーマネント */
 export function permanent_of(
     spec: (obj: GameObject) => boolean
-): Reference<GameObject, {}> {
+): Ref<GameObject, {}> {
     return (param) => {
         return param.state.get_objects(
             (obj) => obj.is_permanent() && spec(obj)
