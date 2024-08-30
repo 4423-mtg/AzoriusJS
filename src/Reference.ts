@@ -118,18 +118,30 @@ export function flatApply<T, U>(arg: T | T[], func: (t: T) => U | U[]): U[] {
     throw new Error("Unreachable code");
 }
 
+/** オブジェクトのオーナー */
+function owner(object: SingleSpec<GameObject>): SingleSpec<Player> {
+    if (typeof object == "function") {
+        return (param: ReferenceParam) => {
+            const obj = resolve_single_spec(object, param);
+            return obj.owner;
+        };
+    } else {
+        return (param: ReferenceParam) => object.owner;
+    }
+}
+
 /** オブジェクト1つに対し、そのオーナーの`zonetype`の領域 */
-function owners_zone_of_object(
+function zone_of_object_owner(
     object: SingleSpec<GameObject>,
     zonetype: ZoneType
 ): SingleRef<Zone> {
     return (param) => {
-        return param.state.get_zone(zonetype, optional.object.owner);
+        return param.state.get_zone(zonetype, param.state.xxx);
     };
 }
 
 /** オーナーの手札 */
-export const owners_hand = owners_zone_of_object(ZoneType.Hand);
+export const owners_hand = zone_of_object_owner(ZoneType.Hand);
 
 /** 1人以上のプレイヤーに対し、それらのプレイヤーのコントロールしているすべてのクリーチャー */
 export function creatures_controlled_by_player(): MultiRef<

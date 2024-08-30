@@ -465,9 +465,15 @@ export class Exile extends MoveZone {
 }
 
 /** 生け贄に捧げる */
-// export class Sacrificing extends Instruction {
-//     sacrificed_permanents = [];
-// }
+export class Sacrifice extends MoveZone {
+    constructor(args: ConstructorParameters<typeof MoveZone>[number]) {
+        super(args);
+        this.moving_specs = this.moving_specs.map((spec) => ({
+            moved: spec.moved,
+            dest: (param) => param.state.get_zone(ZoneType.Graveyard),
+        }));
+    }
+}
 
 /** 探す */
 // export class Searching extends Instruction {
@@ -478,9 +484,9 @@ export class Exile extends MoveZone {
 // export class Shuffling extends Instruction {}
 
 /** 捨てる */
-// export class Discarding extends Instruction {
-//     discarded_cards = [];
-// }
+export class Discarding extends MoveZone {
+    discarded_cards = [];
+}
 
 /** 公開する */
 // export class Revealing extends Instruction {
@@ -488,7 +494,7 @@ export class Exile extends MoveZone {
 // }
 
 /** 打ち消す */
-// export class Countering extends Instruction {}
+export class Countering extends MoveZone {}
 
 /** 生成する */
 // export class Creating extends Instruction {}
@@ -500,7 +506,7 @@ export class Exile extends MoveZone {
 /** 格闘を行う */
 // export class Fighting extends Instruction {}
 /** 切削する */
-// export class Milling extends Instruction {}
+export class Milling extends MoveZone {}
 /** 占術を行う */
 // export class Scrying extends Instruction {}
 /** 倍にする */
