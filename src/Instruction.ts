@@ -3,17 +3,10 @@
  */
 
 import {
-    ReferenceParam,
-    SingleRef,
-    MultiRef,
-    Spec,
+    ReferenceParams,
     SingleSpec,
     MultiSpec,
-    resolve_single_spec,
-    resolve_multiple_spec,
-    resolve_spec,
-    top_of_library,
-    OptionalArgsType,
+    resolve_single,
 } from "./Reference";
 import { Game, GameHistory, GameState } from "./Game";
 import {
@@ -52,7 +45,6 @@ export abstract class Instruction {
     /** InstructionのID (0始まり) */
     readonly id: number;
 
-    /** 指示をしているオブジェクト */
     instructor?: SingleSpec<GameObject>;
 
     constructor(args: { instructor?: SingleSpec<GameObject> }) {
@@ -61,11 +53,7 @@ export abstract class Instruction {
         this.instructor = args.instructor;
     }
 
-    /** 指示を実行する
-     * @param params 参照に渡すためのパラメータ。
-     * どんな引数の参照を持つかは実行時までわからないため、すべてのパラメータが必須。
-     */
-    abstract perform(params: Required<ReferenceParam>): GameState;
+    abstract perform: (params: Required<ReferenceParams>) => GameState;
 }
 
 /** 複数の指示を順に実行する */
@@ -217,35 +205,21 @@ export class MoveZone extends Instruction {
         }
     ) {
         super(args);
-        this.moving_specs = args.specs.map((spec) => ({
-            moved: spec.moved,
-            dest: spec.dest,
-        }));
+        this.moving_specs = args.specs;
     }
 
-    perform(params: Required<ReferenceParam>): GameState {
+    perform: (params: Required<ReferenceParams>) => GameState = (params) => {
         const new_state = params.state.deepcopy();
         const new_params = { ...params, state: new_state };
         // 各 spec について
         this.moving_specs.forEach((each_spec) => {
             // object_specを解決
-            const obj = resolve_spec<GameObject, {}>(
-                each_spec.moved,
-                new_params,
-                {}
-            );
-            const _objs = Array.isArray(obj) ? obj : [obj];
-            _objs.forEach((o) => {
-                // destを解決して代入
-                o.zone = resolve_single_spec<Zone, { object: GameObject }>(
-                    each_spec.dest,
-                    new_params,
-                    { object: o }
-                );
-            });
+            const obj = resolve_single(each_spec.moved, new_params);
+            const zone = resolve_single(each_spec.dest, new_params);
+            obj.zone = zone;
         });
         return new_state;
-    }
+    };
 }
 
 /** カードを引く */
@@ -258,7 +232,7 @@ export class Drawing extends Instruction {
         this.performer = player;
     }
 
-    perform(args: Required<ReferenceParam>): GameState {
+    perform(args: Required<ReferenceParams>): GameState {
         /** 「カードを1枚引く」をN個作る */
         const number_of_cards =
             typeof this.number === "number"
@@ -300,7 +274,7 @@ export class DealingDamage extends Instruction {
         this.source = source;
     }
 
-    perform(args: Required<ReferenceParam>): GameState {
+    perform(args: Required<ReferenceParams>): GameState {
         // 参照の解決
         let objs: (GameObject | Player)[] = this.objectives.flatMap((o) => {
             return o instanceof GameObject || o instanceof Player
@@ -346,10 +320,7 @@ export class GainingLife extends Instruction {
         this.specs = args.specs;
     }
 
-    perform(
-        params: Required<ReferenceParam>,
-        option: OptionalArgsType<>
-    ): GameState {
+    perform(params: Required<ReferenceParams>): GameState {
         const new_state = params.state.deepcopy();
         const new_params = { ...params, state: new_state };
         this.specs.forEach((each_spec) => {
@@ -385,7 +356,7 @@ export class GainingLife extends Instruction {
 //         this.counters = counters;
 //     }
 
-//     perform(args: Required<ReferenceParam>): GameState {}
+//     perform(args: Required<ReferenceParams>): GameState {}
 // }
 
 /** 見る */
@@ -422,7 +393,7 @@ export class Tapping extends Instruction {
         this.performer = performer;
     }
 
-    perform(params: Required<ReferenceParam>): GameState {
+    perform(params: Required<ReferenceParams>): GameState {
         // まずstateをコピーする。このstateを変更して返す
         const new_state = params.state.deepcopy();
         this.refs_objects.forEach((ref) => {

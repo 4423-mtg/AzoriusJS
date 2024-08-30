@@ -1,3 +1,4 @@
+"use strict";
 import { Card } from "./GameObject";
 
 export class Color {

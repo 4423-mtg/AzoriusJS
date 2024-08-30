@@ -42,9 +42,26 @@ class MultiRef<T extends Referable> extends Ref<T> {
     resolve: (params: ReferenceParams) => T[] = (params) => this.ref(params);
 }
 
-type SingleSpec<T extends Referable> = T | SingleRef<T>;
-type MultiSpec<T extends Referable> = SingleSpec<T>[] | MultiRef<T>;
-type Spec<T extends Referable> = SingleSpec<T> | MultiSpec<T>;
+export type SingleSpec<T extends Referable> = T | SingleRef<T>;
+export type MultiSpec<T extends Referable> = SingleSpec<T>[] | MultiRef<T>;
+export type Spec<T extends Referable> = SingleSpec<T> | MultiSpec<T>;
+
+export function resolve_single<T extends Referable>(
+    spec: SingleSpec<T>,
+    params: ReferenceParams
+): T {
+    return spec instanceof SingleRef ? spec.resolve(params) : spec;
+}
+export function resolve_multi<T extends Referable>(
+    spec: MultiSpec<T>,
+    params: ReferenceParams
+): T[] {
+    if (Array.isArray(spec)) {
+        return spec.map((s) => resolve_single(s, params));
+    } else {
+        return spec.resolve(params);
+    }
+}
 
 // ==============================================================================
 // オブジェクトのオーナー
