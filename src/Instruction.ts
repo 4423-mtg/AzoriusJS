@@ -7,6 +7,7 @@ import {
     SingleSpec,
     MultiSpec,
     resolve_single,
+    SingleRef,
 } from "./Reference";
 import { Game, GameHistory, GameState } from "./Game";
 import {
@@ -53,7 +54,7 @@ export abstract class Instruction {
         this.instructor = args.instructor;
     }
 
-    abstract perform: (params: Required<ReferenceParams>) => GameState;
+    abstract perform: (params: ReferenceParams) => GameState;
 }
 
 /** 複数の指示を順に実行する */
@@ -61,7 +62,6 @@ export abstract class Instruction {
 //     instructions: Instruction[],
 //     args: PerformArgs
 // ): GameState {
-//     // TODO
 //     // 複数の連続処理を置換する効果の確認
 //     // 指示を１つ実行
 //     // 以下ループ
@@ -97,7 +97,6 @@ export abstract class Instruction {
 //     //     this.instructions = instructions;
 //     // }
 //     // perform(args: Required<QueryParam>): GameState {
-//     //     // TODO
 //     // }
 // }
 
@@ -120,11 +119,9 @@ export abstract class Instruction {
 //     // perform(args: PerformArgs): void {}
 // }
 
-// TODO 途中
 /** 値を変更する効果の生成 */
 // export class GeneratingValueAlteringEffect extends Instruction {}
 
-// OK
 /** 手続きを変更する効果の生成 */
 // export class GeneratingProcessAlteringEffect extends Instruction {
 //     // check: InstructionChecker;
@@ -144,7 +141,6 @@ export abstract class Instruction {
 //     // perform(args: Required<QueryParam>): GameState {}
 // }
 
-// OK
 /** 処理を禁止する効果の生成 */
 // export class GeneratingProcessForbiddingEffect extends Instruction {
 //     // check: InstructionChecker;
@@ -166,7 +162,7 @@ export abstract class Instruction {
 //     //     this.ability = delayed_triggered_ability;
 //     // }
 //     // perform({ state, source }: PerformArgs): void {
-//     //     state.delayed_triggered_abilities.push(this.ability.copy()); // FIXME 発生源
+//     //     state.delayed_triggered_abilities.push(this.ability.copy()); // 発生源
 //     // }
 // }
 
@@ -208,7 +204,7 @@ export class MoveZone extends Instruction {
         this.moving_specs = args.specs;
     }
 
-    perform: (params: Required<ReferenceParams>) => GameState = (params) => {
+    perform = (params: ReferenceParams) => {
         const new_state = params.state.deepcopy();
         const new_params = { ...params, state: new_state };
         // 各 spec について
@@ -244,7 +240,7 @@ export class Drawing extends Instruction {
             instructions.push(
                 new MoveZone(
                     [top_of_library(this.performer)],
-                    args.state.get_zone("Hand", this.performer) // TODO 領域をどうやってとる？
+                    args.state.get_zone("Hand", this.performer) // 領域をどうやってとる？
                 )
             );
         }
@@ -252,7 +248,7 @@ export class Drawing extends Instruction {
         return Instruction.performArray(instructions, args);
     }
 }
-// TODO 托鉢するものは置換処理の方で特別扱いする
+// 托鉢するものは置換処理の方で特別扱いする
 
 /** ダメージを与える */
 export class DealingDamage extends Instruction {
@@ -292,13 +288,13 @@ export class DealingDamage extends Instruction {
             return each_dealings.perform(args);
         } else {
             const new_state = args.state.deepcopy();
-            // TODO ダメージ処理。パーマネントはダメージ、プレイヤーはライフ減少
-            // TODO 絆魂 --> 回復Instruction
-            // TODO 最後の情報
+            // ダメージ処理。パーマネントはダメージ、プレイヤーはライフ減少
+            // 絆魂 --> 回復Instruction
+            // 最後の情報
             if (objs[0] instanceof Player) {
-                // TODO ライフ減少　感染は毒カウンター --> カウンター配置Instruction
+                // ライフ減少　感染は毒カウンター --> カウンター配置Instruction
             } else if (objs[0] instanceof GameObject) {
-                // TODO ダメージを負う　感染は-1/-1カウンター
+                // ダメージを負う　感染は-1/-1カウンター
             }
             return new_state;
         }
@@ -330,15 +326,13 @@ export class GainingLife extends Instruction {
             );
         });
 
-        // TODO
-
         const am =
             this.amount_spec instanceof ValueReference
                 ? this.amount_spec.execute(params)
                 : this.amount_spec;
         if (this.perform instanceof Player) {
             const new_state = params.state.deepcopy();
-            // FIXME new_stateのperformerどうやってとる？
+            // new_stateのperformerどうやってとる？
             // (this.performer as Player).life += am;
             return new_state;
         } else {
@@ -383,7 +377,7 @@ export class GainingLife extends Instruction {
 // export class Paying extends Instruction {}
 
 // キーワード処理 常盤木 *****************************************
-/** タップ OK */
+/** タップ */
 export class Tapping extends Instruction {
     refs_objects: MultiSpec<GameObject>[];
     performer?: MultiSpec<Player>;
@@ -424,13 +418,15 @@ export class Tapping extends Instruction {
 //     refs_objects = [];
 // }
 
-/** 追放する */ // OK
+/** 追放する */
 export class Exile extends MoveZone {
     constructor(args: ConstructorParameters<typeof MoveZone>[number]) {
         super(args);
         this.moving_specs = this.moving_specs.map((spec) => ({
             moved: spec.moved,
-            dest: (param) => param.state.get_zone(ZoneType.Exile),
+            dest: new SingleRef<Zone>((param: { state: GameState }) =>
+                param.state.get_zone(ZoneType.Exile)
+            ),
         }));
     }
 }
