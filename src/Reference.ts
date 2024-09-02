@@ -49,9 +49,6 @@ export class SingleRef<T extends Referable> extends Ref<T> {
         return isGameObject(ret) ? ret.controller : undefined;
     });
 }
-function isGameObject(arg: any): arg is GameObject {
-    return arg instanceof GameObject;
-}
 
 export class MultiRef<T extends Referable> extends Ref<T> {
     ref: (param: ReferenceParams) => T[];
@@ -67,6 +64,20 @@ export type SingleSpec<T extends Referable> = T | SingleRef<T>;
 export type MultiSpec<T extends Referable> = SingleSpec<T>[] | MultiRef<T>;
 export type Spec<T extends Referable> = SingleSpec<T> | MultiSpec<T>;
 
+// タイプガード ===============================================================
+function isGameObject(arg: any): arg is GameObject {
+    return arg instanceof GameObject;
+}
+
+function isPlayer(arg: any): arg is Player {
+    return arg instanceof Player;
+}
+
+function isZone(arg: any): arg is Zone {
+    return arg instanceof Zone;
+}
+
+// Specの解決 ===============================================================
 export function resolve_single<T extends Referable>(
     spec: SingleSpec<T>,
     params: ReferenceParams
@@ -86,8 +97,6 @@ export function resolve_multi<T extends Referable>(
 
 // ==============================================================================
 // TODO
-// オブジェクトのオーナー
-// SingleSpec<GameObject>.owner: () => SingleSpec<Player>
 
 // プレイヤーの領域
 // SingleSpec<Player>.zone: (zonetype) => SingleSpec<Zone>

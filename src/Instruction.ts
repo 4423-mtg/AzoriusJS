@@ -4,10 +4,11 @@
 
 import {
     ReferenceParams,
+    SingleRef,
     SingleSpec,
     MultiSpec,
+    Spec,
     resolve_single,
-    SingleRef,
 } from "./Reference";
 import { Game, GameHistory, GameState } from "./Game";
 import {
@@ -420,7 +421,11 @@ export class Tapping extends Instruction {
 
 /** 追放する */
 export class Exile extends MoveZone {
-    constructor(args: ConstructorParameters<typeof MoveZone>[number]) {
+    constructor(
+        args: ConstructorParameters<typeof Instruction>[number] & {
+            exiled: Spec<GameObject>;
+        }
+    ) {
         super(args);
         this.moving_specs = this.moving_specs.map((spec) => ({
             moved: spec.moved,
@@ -431,13 +436,16 @@ export class Exile extends MoveZone {
     }
 }
 
-/** 生け贄に捧げる */
+/** 生け贄に捧げる */ // TODO
 export class Sacrifice extends MoveZone {
     constructor(args: ConstructorParameters<typeof MoveZone>[number]) {
+        // FIXME そもそも移動先を指定する必要がないので MoveZoneの使い回しではいけない
         super(args);
         this.moving_specs = this.moving_specs.map((spec) => ({
             moved: spec.moved,
-            dest: (param) => param.state.get_zone(ZoneType.Graveyard),
+            dest: new SingleRef<Zone>((param: { state: GameState }) =>
+                param.state.get_zone(ZoneType.Graveyard, spec.moved.owner)
+            ),
         }));
     }
 }
