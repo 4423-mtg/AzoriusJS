@@ -29,7 +29,7 @@ export class Ref<T extends Referable> {
 }
 
 export class SingleRef<T extends Referable> extends Ref<T> {
-    ref: (params: ReferenceParams) => T;
+    declare ref: (params: ReferenceParams) => T;
 
     constructor(ref: (params: ReferenceParams) => T) {
         super(ref);
@@ -51,7 +51,7 @@ export class SingleRef<T extends Referable> extends Ref<T> {
 }
 
 export class MultiRef<T extends Referable> extends Ref<T> {
-    ref: (param: ReferenceParams) => T[];
+    declare ref: (param: ReferenceParams) => T[];
 
     constructor(ref: (param: ReferenceParams) => T[]) {
         super(ref);
@@ -78,18 +78,18 @@ function isZone(arg: any): arg is Zone {
 }
 
 // Specの解決 ===============================================================
-export function resolve_single<T extends Referable>(
+export function resolve_single_spec<T extends Referable>(
     spec: SingleSpec<T>,
     params: ReferenceParams
 ): T {
     return spec instanceof SingleRef ? spec.resolve(params) : spec;
 }
-export function resolve_multi<T extends Referable>(
+export function resolve_multi_spec<T extends Referable>(
     spec: MultiSpec<T>,
     params: ReferenceParams
 ): T[] {
     if (Array.isArray(spec)) {
-        return spec.map((s) => resolve_single(s, params));
+        return spec.map((s) => resolve_single_spec(s, params));
     } else {
         return spec.resolve(params);
     }

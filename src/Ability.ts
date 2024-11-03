@@ -1,5 +1,5 @@
 "use strict";
-import { GameHistory, GameState } from "./Game";
+import { Game, GameHistory, GameState } from "./Game";
 /** オブジェクトが持つ能力
  * 起動型能力、誘発型能力、呪文能力、常在型能力
  */
@@ -12,7 +12,7 @@ import {
     StackedAbility,
     StackedAbilityType,
 } from "./GameObject";
-import { Instruction, PerformArgs, performInstructions } from "./Instruction";
+import { Instruction, PerformArgs } from "./Instruction";
 export {
     Ability,
     ActivatedAbility,
@@ -25,14 +25,11 @@ export {
 // ==============================================================================
 
 /** オブジェクトが持つ能力。スタックに乗る方ではない。 */
-abstract class Ability {
-    /** 能力オブジェクトIDのカウンタ */
-    static id = 0;
-
-    /** 能力オブジェクトID */
-    id: number;
-    /** テキスト */
-    text: string;
+class Ability {
+    static id = 0; // 能力オブジェクトID
+    id: number; // 能力オブジェクトID。関連している能力などに
+    text: string; // ルール文章
+    source?: GameObject; // この能力の生成元
 
     constructor({ text }: { text: string }) {
         this.text = text;
@@ -41,34 +38,25 @@ abstract class Ability {
     }
 }
 
-type AbilitySpec = ConstructorParameters<typeof Ability>[any];
-
 // ==============================================================================
 type Constraint = any; // FIXME
 
-/** オブジェクトの持つ起動型能力 */
+/** オブジェクトの起動型能力 */
 class ActivatedAbility extends Ability {
-    /** 起動コスト */
-    costs: Instruction[] = [];
-    /** 効果 */
-    instructions: Instruction[];
-    /** 起動制限 */
-    constraints?: Constraint[] = [];
+    costs: Instruction[] = []; // 起動コスト
+    instructions: Instruction[]; // 効果
+    constraints?: Constraint[] = []; // 起動制限
 
     constructor(
-        spec: AbilitySpec & {
+        spec: ConstructorParameters<typeof Ability>[any] & {
             costs: Instruction[];
-            effects: Instruction[] | (() => Instruction[]);
+            effects: Instruction[];
             constraints?: Constraint[];
         }
     ) {
         super(spec);
         this.costs = spec.costs;
-        if (Array.isArray(spec.effects)) {
-            this.instructions = spec.effects;
-        } else {
-            this.instructions = spec.effects();
-        }
+        this.instructions = spec.effects;
         this.constraints = spec.constraints;
     }
 
@@ -89,16 +77,13 @@ class ActivatedAbility extends Ability {
 // ==============================================================================
 /** オブジェクトの持つ誘発型能力 */
 class TriggeredAbility extends Ability {
-    /** 誘発判定処理 */
-    #checker: InstructionChecker;
-    /** 効果 */
-    instructions: Instruction[];
-    /** 誘発制限 */
-    constraints?: Constraint[] = [];
-    // 「1回しか誘発しない」は制限、「1回のみ行える」は効果？
+    #checker: InstructionChecker; // 誘発判定
+    instructions: Instruction[]; // 効果
+    constraints?: Constraint[] = []; // 誘発制限
+    // NOTE:「1回しか誘発しない」は制限、「1回のみ行える」は効果？
 
     constructor(
-        spec: AbilitySpec & {
+        spec: ConstructorParameters<typeof Ability>[any] & {
             trigger_condition: InstructionChecker;
             effects: Instruction[] | ((event) => Instruction[]); // TODO
             // 誘発型能力は生成するときに誘発イベントの情報が必要では？
@@ -171,7 +156,7 @@ class SpellAbility extends Ability {
 
     /** コンストラクタ */
     constructor(
-        spec: AbilitySpec & {
+        spec: ConstructorParameters<typeof Ability>[any] & {
             /** 効果、または効果の初期化処理 */
             effects: Instruction[] | (() => Instruction[]);
         }
@@ -191,23 +176,23 @@ class SpellAbility extends Ability {
 }
 
 // ==============================================================================
-/** オブジェクトの持つ常在型能力 */
+/** オブジェクトの常在型能力 */
 class StaticAbility extends Ability {
     /** 効果。単一の能力が複数の継続的効果を持つこともある（キーワード能力など） */
     effects: ContinuousEffect[] = [];
 
-    constructor(spec: AbilitySpec & {}) {
+    constructor(spec: ConstructorParameters<typeof Ability>[any] & {}) {
         super(spec);
     }
 }
 
 // ==============================================================================
 /** キーワード能力 */
+// 起動型能力とそうでない能力を含むキーワード能力もある（レベル・クラス棒
+// 起動型能力を２つ持つ能力もある（換装
 class KeywordAbility extends Ability {
-    /** 修飾語などを除いた、キーワード能力名。能力のテキスト全体は`text`。 */
-    name: string;
-    /** 含まれる能力 */ // TODO 起動型能力を含む複数の能力をもつキーワードってある？
-    abilities: Ability[] = [];
+    name: string; // キーワード能力名
+    abilities: Ability[] = []; // 構成する各能力
 
     constructor(args: { text: string; name: string; abilities: Ability[] }) {
         super(args);
