@@ -8,7 +8,7 @@ import {
     Zone,
     ZoneType,
 } from "./GameObject";
-import { Phase, Turn } from "./Turn";
+import { Phase, Step, Turn } from "./Turn";
 export { Game, GameState, GameHistory };
 
 class Game {
@@ -36,36 +36,33 @@ class Game {
         this.game_state.zones.push(new Zone(ZoneType.Exile));
         // TODO ライブラリーとサイドボード
     }
+    constructor() {}
 }
 
 /** ゲームの状態 */
 class GameState {
     /** ゲームのメタ情報 */
-    game_meta; // TODO
+    game_meta: Game;
+
     /** プレイヤー */
-    players: Player[];
+    players: Set<Player>;
+    /** プレイヤーのターン進行順 */
+    turn_order: Player[];
+    #active_player_index?: number;
+    #priority_player_index?: number;
+
     /** 領域 */
-    zones: Zone[];
-    /** 生成済みのターン */
-    turns: Turn[] = [];
-    /** 生成されたオブジェクト */
-    #objects: GameObject[] = [];
+    zones: Set<Zone>;
+    /** すべてのオブジェクト */
+    game_objects: GameObject[] = []; // Mapに変えるかも
 
-    // FIXME
-    extra_turns = []; // 追加ターン生成効果の配列
-    extra_phasesteps = [];
-    skip_turns = [];
-    skip_phasesteps = [];
+    /** 現在のターン */
+    turn: Turn;
+    /** 現在のフェイズ */
+    phase: Phase;
+    /** 現在のステップ */
+    step?: Step;
 
-    /** 誘発してまだスタックに置かれていない能力 */
-    unstacked_abilities: StackedAbility[] = [];
-    /** 継続的効果 */
-    continuous_effects: ContinuousEffect[] = [];
-    /** 生成された遅延誘発型能力 */
-    delayed_triggered_abilities: DelayedTriggeredAbility[] = [];
-
-    /** ゲームの履歴 */
-    history: GameHistory = new GameHistory();
     /** 優先権を連続でパスしたプレイヤーの数 */
     pass_count: number = 0;
     /** クリンナップをもう一度行うかどうか。
@@ -74,46 +71,60 @@ class GameState {
     cleanup_again = false;
 
     // ========================================================================
-    get current_turn(): Turn | undefined {
-        return this.turns.length == 0
+    get active_player(): Player | undefined {
+        return this.#active_player_index === undefined
             ? undefined
-            : this.turns[this.turns.length - 1];
+            : this.turn_order[this.#active_player_index];
     }
-    get current_phase(): Phase | undefined {}
-    get current_step(): Step | undefined {}
-    get current_phasestep(): Phase | Step | undefined {}
-    get active_player(): Player | undefined {}
-    get player_with_priority(): Player | undefined {}
-    set player_with_priority(player: Player) {}
-    get players_from_active_player() {}
-    get stack(): GameObject[] {}
+    get player_with_priority(): Player | undefined {
+        return this.#priority_player_index === undefined
+            ? undefined
+            : this.turn_order[this.#priority_player_index];
+    }
+
+    /** アクティブプレイヤーから始めたターン順 */
+    from_active_player(): Player[] | undefined {
+        if (this.#active_player_index === undefined) {
+            return undefined;
+        } else {
+            return new Array<Player>().concat(
+                this.turn_order.slice(this.#active_player_index),
+                this.turn_order.slice(0, this.#active_player_index - 1)
+            );
+        }
+    }
+    /** ターン順で次のプレイヤー */
+    get_next_player_of(player: Player): Player | undefined {
+        const idx = this.turn_order.findIndex((value) => value === player);
+        return idx < this.turn_order.length - 1
+            ? this.turn_order[idx + 1]
+            : this.turn_order[0];
+    }
+    // get stack(): GameObject[] {}
 
     // ========================================================================
     /** 条件を満たすオブジェクトを取得 */
-    get_objects(query: (obj: GameObject) => boolean): GameObject[] {
-        return this.#objects.filter(query);
+    get_game_objects(query: (obj: GameObject) => boolean): GameObject[] {
+        return this.game_objects.filter(query);
     }
 
-    get_zone(zonetype: ZoneType, owner?: Player): Zone {
-        return this.zones.filter(
-            (z) => z.zonetype === zonetype && z.owner === owner
-        )[0];
-    }
-
-    /** ディープコピー */
-    deepcopy(): GameState {
-        // TODO
-    }
-
-    get_next_player_of(player: Player): Player | undefined {
-        for (let i = 0; i < this.players.length; i++) {
-            if (this.players[i] == player) {
-                return i == this.players.length - 1
-                    ? this.players[0]
-                    : this.players[i + 1];
+    /** 指定したプレイヤーの指定した種類の領域を取得 */
+    get_zone(zonetype: ZoneType, owner?: Player): Zone | undefined {
+        for (const z of this.zones.values()) {
+            if (
+                z.zonetype === zonetype &&
+                (owner === undefined || z.owner === owner)
+            ) {
+                return z;
             }
         }
         return undefined;
+    }
+    ///** 指定した領域にあるオブジェクトを取得 */
+
+    /** ディープコピー */
+    deepcopy(): GameState {
+        // TODO:
     }
 
     // ターン進行処理 ==========================================================
