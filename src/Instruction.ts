@@ -8,7 +8,7 @@ import {
     SingleSpec,
     MultiSpec,
     Spec,
-    resolve_single,
+    resolve_single_spec,
 } from "./Reference";
 import { Game, GameHistory, GameState } from "./Game";
 import {
@@ -47,6 +47,7 @@ export abstract class Instruction {
     /** InstructionのID (0始まり) */
     readonly id: number;
 
+    /** このInstructionを指示したオブジェクト。実際の実行者とは別 */
     instructor?: SingleSpec<GameObject>;
 
     constructor(args: { instructor?: SingleSpec<GameObject> }) {
@@ -58,132 +59,83 @@ export abstract class Instruction {
     abstract perform: (params: ReferenceParams) => GameState;
 }
 
-/** 複数の指示を順に実行する */
-// export function performInstructions(
-//     instructions: Instruction[],
-//     args: PerformArgs
-// ): GameState {
-//     // 複数の連続処理を置換する効果の確認
-//     // 指示を１つ実行
-//     // 以下ループ
-// }
+// MARK:ルール上の処理 ************************************************
 
-// 抽象的な処理 ************************************************
-/** 選択肢を選ぶ */
-// export class MakingChoice extends Instruction {
-//     instructions: Instruction[];
-// }
+// MARK: 唱える関連 ********************************
+/** 唱える */
+export class Cast extends Instruction {
+    casted: SingleSpec<GameObject>;
 
-/** するかしないか選ぶ */
-// export class ChoosingToDo extends Instruction {
-//     instruction: Instruction;
-// }
+    constructor(
+        args: ConstructorParameters<typeof Instruction>[0] & {
+            object: GameObject;
+        }
+    ) {
+        super(args);
+        this.casted = args.object;
+    }
 
-/** 同時に行う */
-// export class DoingSimultaneously extends Instruction {
-//     // 任意のものが同時に行えるわけではない！ --> 本当？
-//     // 別々のオブジェクトの、領域または位相の変更のみ
-//     // ・ゴブリンの溶接工 アーティファクトを生け贄にすると同時に、墓地のアーティファクトを戦場に戻す
-//     // ・砕ける波 タップクリーチャーをアンタップすると同時に、アンタップクリーチャーをタップする
-//     // ・時の砂 上と同じ
-//     // ・時空の満ち干 フェイズアウトをフェイズインと同時に、他のクリーチャーをフェイズアウト
-//     // 位相の変更
-//     // 領域の移動
-//     // 生け贄
-//     // フェイズアウト、フェイズイン
-//     // ダメージを与えるとかも同時にやる・・・
-//     // instructions: Instruction[];
-//     // constructor(instructions: Instruction[]) {
-//     //     super();
-//     //     this.instructions = instructions;
-//     // }
-//     // perform(args: Required<QueryParam>): GameState {
-//     // }
-// }
+    perform: (params: ReferenceParams) => GameState = (params) => {
+        // 1. スタックに移動させる
+        const state1 = new MoveZone({
+            instructor: this.instructor,
+            movespecs: [
+                {
+                    moved: resolve_single_spec(this.casted, params),
+                    dest: params.state.get_zone(ZoneType.Stack),
+                },
+            ],
+        }).perform(params);
+        // 2. モードやコストの支払い方を選ぶ
+        // 3. 対象を選ぶ
+        // 4. 適正チェック
+        // 5. 総コスト決定
+        // 6. マナ能力起動
+        // 7. コストの支払い
+        return params.state; // TODO:
+    };
+}
 
-/** 何もしない */
-// export class DoingNothing extends Instruction {
-//     // perform(args: Required<QueryParam>): GameState {
-//     //     return args.state;
-//     // }
-// }
+/** 起動する */
 
-// ルール上の処理 ************************************************
-/** 継続的効果の生成 */
-// export class GeneratingContinuousEffect extends Instruction {
-//     // type: ContinousEffectType;
-//     // effect: ContinuousEffect;
-//     // constructor(continuous_effect: ContinuousEffect) {
-//     //     super();
-//     //     this.effect = continuous_effect;
-//     // }
-//     // perform(args: PerformArgs): void {}
-// }
+/** 誘発する */
+// export class Triggering extends Instruction {}
 
-/** 値を変更する効果の生成 */
-// export class GeneratingValueAlteringEffect extends Instruction {}
+/** プレイする */
 
-/** 手続きを変更する効果の生成 */
-// export class GeneratingProcessAlteringEffect extends Instruction {
-//     // check: InstructionChecker;
-//     // replace: InstructionReplacer;
-//     // constructor(
-//     //     check: InstructionChecker,
-//     //     replace: Instruction | Instruction[] | InstructionReplacer
-//     // ) {
-//     //     super();
-//     //     this.check = check;
-//     //     this.replace = CastAsInstructionReplacer(replace);
-//     // }
-//     // // perform({ state }: PerformArgs) {
-//     // //     const ce = new ProcessAlteringContinousEffect(this.check, this.replace);
-//     // //     state.continuous_effects.push(ce);
-//     // // }
-//     // perform(args: Required<QueryParam>): GameState {}
-// }
+/** 呪文や能力を解決する */
+// export class Resolving extends Instruction {}
 
-/** 処理を禁止する効果の生成 */
-// export class GeneratingProcessForbiddingEffect extends Instruction {
-//     // check: InstructionChecker;
-//     // constructor(check: InstructionChecker) {
-//     //     super();
-//     //     this.check = check;
-//     // }
-//     // perform({ state }: PerformArgs): void {
-//     //     const ce = new ProcessForbiddingContinousEffect(this.check);
-//     //     state.continuous_effects.push(ce);
-//     // }
-// }
+/** 支払う */
+export class Paying extends Instruction {
+    costs: Instruction[];
+    // 任意の処理がコストになりうる（例：炎の編み込み）
 
-/** 遅延誘発型能力の生成 */
-// export class GeneratingDelayedTriggeredAbility extends Instruction {
-//     // ability: DelayedTriggeredAbility;
-//     // constructor(delayed_triggered_ability: DelayedTriggeredAbility) {
-//     //     super();
-//     //     this.ability = delayed_triggered_ability;
-//     // }
-//     // perform({ state, source }: PerformArgs): void {
-//     //     state.delayed_triggered_abilities.push(this.ability.copy()); // 発生源
-//     // }
-// }
+    constructor(
+        args: ConstructorParameters<typeof Instruction>[0] & {
+            costs: Instruction[];
+        }
+    ) {
+        super(args);
+        this.costs = args.costs;
+    }
 
-/** 置換効果の生成 */
-// export class GeneratingReplacementEffect extends Instruction {
-//     // replacement_effect: ReplacementEffect;
-//     // constructor(replacement_effect: ReplacementEffect) {
-//     //     super();
-//     //     this.replacement_effect = replacement_effect;
-//     // }
-// }
+    perform: (params: ReferenceParams) => GameState = (params) => {
+        // TODO: 複数のコストは好きな順番で支払える
 
-/** 状況誘発のチェック。Instructionの子にしていい？ */
-// export class CheckingStateTriggers extends Instruction {}
+        return this.costs.reduce((p: ReferenceParams, current: Instruction) => {
+            let _p = p;
+            _p.state = current.perform(_p);
+            return _p;
+        }, params).state;
+    };
+}
 
-// キーワードでない処理 ********************************
+// MARK:キーワードでない処理 ********************************
 /** 領域を移動させる */
 export class MoveZone extends Instruction {
     /** 移動させるオブジェクトと、移動先領域の組。 */
-    moving_specs: {
+    movespecs: {
         /** 移動させるオブジェクト */
         moved: SingleSpec<GameObject>;
         /** 移動先の領域 */
@@ -191,9 +143,9 @@ export class MoveZone extends Instruction {
     }[];
 
     constructor(
-        args: ConstructorParameters<typeof Instruction>[number] & {
+        args: ConstructorParameters<typeof Instruction>[0] & {
             /** 移動指定の組 */
-            specs: {
+            movespecs: {
                 /** 移動させるオブジェクト */
                 moved: SingleSpec<GameObject>;
                 /** 移動先の領域 */
@@ -202,17 +154,17 @@ export class MoveZone extends Instruction {
         }
     ) {
         super(args);
-        this.moving_specs = args.specs;
+        this.movespecs = args.movespecs;
     }
 
     perform = (params: ReferenceParams) => {
         const new_state = params.state.deepcopy();
         const new_params = { ...params, state: new_state };
         // 各 spec について
-        this.moving_specs.forEach((each_spec) => {
+        this.movespecs.forEach((each_spec) => {
             // object_specを解決
-            const obj = resolve_single(each_spec.moved, new_params);
-            const zone = resolve_single(each_spec.dest, new_params);
+            const obj = resolve_single_spec(each_spec.moved, new_params);
+            const zone = resolve_single_spec(each_spec.dest, new_params);
             obj.zone = zone;
         });
         return new_state;
@@ -361,23 +313,7 @@ export class GainingLife extends Instruction {
 
 /** 裏向きにする・表向きにする */
 
-// 唱える関連の処理 ********************************
-/** 唱える */
-
-/** 起動する */
-
-/** 誘発する */
-// export class Triggering extends Instruction {}
-
-/** プレイする */
-
-/** 呪文や能力を解決する */
-// export class Resolving extends Instruction {}
-
-/** 支払う */
-// export class Paying extends Instruction {}
-
-// キーワード処理 常盤木 *****************************************
+// MARK: 常盤木 *****************************************
 /** タップ */
 export class Tapping extends Instruction {
     refs_objects: MultiSpec<GameObject>[];
@@ -427,7 +363,7 @@ export class Exile extends MoveZone {
         }
     ) {
         super(args);
-        this.moving_specs = this.moving_specs.map((spec) => ({
+        this.movespecs = this.movespecs.map((spec) => ({
             moved: spec.moved,
             dest: new SingleRef<Zone>((param: { state: GameState }) =>
                 param.state.get_zone(ZoneType.Exile)
@@ -441,7 +377,7 @@ export class Sacrifice extends MoveZone {
     constructor(args: ConstructorParameters<typeof MoveZone>[number]) {
         // FIXME そもそも移動先を指定する必要がないので MoveZoneの使い回しではいけない
         super(args);
-        this.moving_specs = this.moving_specs.map((spec) => ({
+        this.movespecs = this.movespecs.map((spec) => ({
             moved: spec.moved,
             dest: new SingleRef<Zone>((param: { state: GameState }) =>
                 param.state.get_zone(ZoneType.Graveyard, spec.moved.owner)
@@ -489,7 +425,6 @@ export class Milling extends MoveZone {}
 /** 交換する */
 // export class Exchanging extends Instruction {}
 
-// キーワード処理 常盤木 *****************************************
 /** 変身する */
 // export class Transforming extends Instruction {}
 

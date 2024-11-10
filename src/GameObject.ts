@@ -392,6 +392,8 @@ export class ZoneType {
     static Exile = new ZoneType("exile", false, false);
     /** 統率 */
     static Command = new ZoneType("command", true, false);
+    /** スタック */
+    static Stack = new ZoneType("stack", false, true);
 }
 
 /** 領域 */

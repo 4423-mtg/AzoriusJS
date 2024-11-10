@@ -109,7 +109,7 @@ class GameState {
     }
 
     /** 指定したプレイヤーの指定した種類の領域を取得 */
-    get_zone(zonetype: ZoneType, owner?: Player): Zone | undefined {
+    get_zone(zonetype: ZoneType, owner?: Player): Zone {
         for (const z of this.zones.values()) {
             if (
                 z.zonetype === zonetype &&
@@ -118,7 +118,7 @@ class GameState {
                 return z;
             }
         }
-        return undefined;
+        throw new Error("");
     }
     ///** 指定した領域にあるオブジェクトを取得 */
 
