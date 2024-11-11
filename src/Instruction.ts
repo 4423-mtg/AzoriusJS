@@ -3,7 +3,7 @@
  */
 
 import {
-    ReferenceParams,
+    ReferenceParam,
     SingleRef,
     SingleSpec,
     MultiSpec,
@@ -56,7 +56,7 @@ export abstract class Instruction {
         this.instructor = args.instructor;
     }
 
-    abstract perform: (params: ReferenceParams) => GameState;
+    abstract perform: (params: ReferenceParam) => GameState;
 }
 
 // MARK:ルール上の処理 ************************************************
@@ -75,7 +75,7 @@ export class Cast extends Instruction {
         this.casted = args.object;
     }
 
-    perform: (params: ReferenceParams) => GameState = (params) => {
+    perform: (params: ReferenceParam) => GameState = (params) => {
         // 1. スタックに移動させる
         const state1 = new MoveZone({
             instructor: this.instructor,
@@ -120,10 +120,10 @@ export class Paying extends Instruction {
         this.costs = args.costs;
     }
 
-    perform: (params: ReferenceParams) => GameState = (params) => {
+    perform: (params: ReferenceParam) => GameState = (params) => {
         // TODO: 複数のコストは好きな順番で支払える
 
-        return this.costs.reduce((p: ReferenceParams, current: Instruction) => {
+        return this.costs.reduce((p: ReferenceParam, current: Instruction) => {
             let _p = p;
             _p.state = current.perform(_p);
             return _p;
@@ -157,7 +157,7 @@ export class MoveZone extends Instruction {
         this.movespecs = args.movespecs;
     }
 
-    perform = (params: ReferenceParams) => {
+    perform = (params: ReferenceParam) => {
         const new_state = params.state.deepcopy();
         const new_params = { ...params, state: new_state };
         // 各 spec について
@@ -181,7 +181,7 @@ export class Drawing extends Instruction {
         this.performer = player;
     }
 
-    perform(args: Required<ReferenceParams>): GameState {
+    perform(args: Required<ReferenceParam>): GameState {
         /** 「カードを1枚引く」をN個作る */
         const number_of_cards =
             typeof this.number === "number"
@@ -223,7 +223,7 @@ export class DealingDamage extends Instruction {
         this.source = source;
     }
 
-    perform(args: Required<ReferenceParams>): GameState {
+    perform(args: Required<ReferenceParam>): GameState {
         // 参照の解決
         let objs: (GameObject | Player)[] = this.objectives.flatMap((o) => {
             return o instanceof GameObject || o instanceof Player
@@ -269,7 +269,7 @@ export class GainingLife extends Instruction {
         this.specs = args.specs;
     }
 
-    perform(params: Required<ReferenceParams>): GameState {
+    perform(params: Required<ReferenceParam>): GameState {
         const new_state = params.state.deepcopy();
         const new_params = { ...params, state: new_state };
         this.specs.forEach((each_spec) => {
@@ -303,7 +303,7 @@ export class GainingLife extends Instruction {
 //         this.counters = counters;
 //     }
 
-//     perform(args: Required<ReferenceParams>): GameState {}
+//     perform(args: Required<ReferenceParam>): GameState {}
 // }
 
 /** 見る */
@@ -324,7 +324,7 @@ export class Tapping extends Instruction {
         this.performer = performer;
     }
 
-    perform(params: Required<ReferenceParams>): GameState {
+    perform(params: Required<ReferenceParam>): GameState {
         // まずstateをコピーする。このstateを変更して返す
         const new_state = params.state.deepcopy();
         this.refs_objects.forEach((ref) => {

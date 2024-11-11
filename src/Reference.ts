@@ -2,11 +2,32 @@
 import { GameHistory, GameState } from "./Game";
 import { GameObject, Player, Zone } from "./GameObject";
 
-export type ReferenceParams = {
-    state: GameState;
-    history: GameHistory;
-    self: GameObject;
-};
+// export type ReferenceParams = {
+//     state: GameState;
+//     history: GameHistory;
+//     self: GameObject;
+// };
+
+/** Referenceの解決に必要な値。 */
+export class ReferenceParam {
+    #history: GameState[];
+    #self: GameObject;
+
+    constructor(args: { history: GameState[]; self: GameObject }) {
+        this.#history = args.history;
+        this.#self = args.self;
+    }
+
+    get state(): GameState {
+        return this.#history[-1];
+    }
+    get history(): GameState[] {
+        return this.#history;
+    }
+    get self(): GameObject {
+        return this.#self;
+    }
+}
 
 export type Referable =
     | GameObject
@@ -18,46 +39,45 @@ export type Referable =
 
 // ==============================================================================
 export class Ref<T extends Referable> {
-    ref: (params: ReferenceParams) => T | T[];
+    ref: (params: ReferenceParam) => T | T[];
 
-    constructor(ref: (params: ReferenceParams) => T | T[]) {
+    constructor(ref: (params: ReferenceParam) => T | T[]) {
         this.ref = ref;
     }
 
-    resolve: (params: ReferenceParams) => T | T[] = (params) =>
-        this.ref(params);
+    resolve: (params: ReferenceParam) => T | T[] = (params) => this.ref(params);
 }
 
 export class SingleRef<T extends Referable> extends Ref<T> {
-    declare ref: (params: ReferenceParams) => T;
+    declare ref: (params: ReferenceParam) => T;
 
-    constructor(ref: (params: ReferenceParams) => T) {
+    constructor(ref: (params: ReferenceParam) => T) {
         super(ref);
     }
 
-    resolve: (params: ReferenceParams) => T = (params) => this.ref(params);
+    resolve: (params: ReferenceParam) => T = (params) => this.ref(params);
 
     // オーナー
-    owner = new SingleRef((params: ReferenceParams) => {
+    owner = new SingleRef((params: ReferenceParam) => {
         const ret = this.ref(params);
         return isGameObject(ret) ? ret.owner : undefined;
     });
 
     // コントローラー
-    controller = new SingleRef((params: ReferenceParams) => {
+    controller = new SingleRef((params: ReferenceParam) => {
         const ret = this.ref(params);
         return isGameObject(ret) ? ret.controller : undefined;
     });
 }
 
 export class MultiRef<T extends Referable> extends Ref<T> {
-    declare ref: (param: ReferenceParams) => T[];
+    declare ref: (param: ReferenceParam) => T[];
 
-    constructor(ref: (param: ReferenceParams) => T[]) {
+    constructor(ref: (param: ReferenceParam) => T[]) {
         super(ref);
     }
 
-    resolve: (params: ReferenceParams) => T[] = (params) => this.ref(params);
+    resolve: (params: ReferenceParam) => T[] = (params) => this.ref(params);
 }
 
 export type SingleSpec<T extends Referable> = T | SingleRef<T>;
@@ -80,13 +100,13 @@ function isZone(arg: any): arg is Zone {
 // Specの解決 ===============================================================
 export function resolve_single_spec<T extends Referable>(
     spec: SingleSpec<T>,
-    params: ReferenceParams
+    params: ReferenceParam
 ): T {
     return spec instanceof SingleRef ? spec.resolve(params) : spec;
 }
 export function resolve_multi_spec<T extends Referable>(
     spec: MultiSpec<T>,
-    params: ReferenceParams
+    params: ReferenceParam
 ): T[] {
     if (Array.isArray(spec)) {
         return spec.map((s) => resolve_single_spec(s, params));

@@ -9,13 +9,13 @@ import {
     ZoneType,
 } from "./GameObject";
 import { Phase, Step, Turn } from "./Turn";
-export { Game, GameState, GameHistory };
+export { Game, GameState };
 
 class Game {
     /** ゲームを表すオブジェクト */
     id: number = 0;
-    players: Player[] = [];
-    decks = []; // FIXME サイドボード
+    players: Set<Player>;
+    decks = []; // FIXME: サイドボード
     game_state: GameState = new GameState();
 
     initGame(): void {
@@ -71,11 +71,13 @@ class GameState {
     cleanup_again = false;
 
     // ========================================================================
+    /** アクティブプレイヤー */
     get active_player(): Player | undefined {
         return this.#active_player_index === undefined
             ? undefined
             : this.turn_order[this.#active_player_index];
     }
+    /** 優先権を持つプレイヤー */
     get player_with_priority(): Player | undefined {
         return this.#priority_player_index === undefined
             ? undefined
@@ -319,13 +321,13 @@ class GameState {
 }
 
 /** ゲームの履歴。実装は隠蔽する */
-class GameHistory {
-    /** ゲーム内の履歴 */
-    #states: GameState[] = [];
-    // TODO
-    // - historyの実装としては現在を表すstateを入れてしまったほうが都合がいい
+// class GameHistory {
+//     /** ゲーム内の履歴 */
+//     #states: GameState[] = [];
+//     // TODO
+//     // - historyの実装としては現在を表すstateを入れてしまったほうが都合がいい
 
-    push(state: GameState): void {
-        this.#states.push(state);
-    }
-}
+//     push(state: GameState): void {
+//         this.#states.push(state);
+//     }
+// }
