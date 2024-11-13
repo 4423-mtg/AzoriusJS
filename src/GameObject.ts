@@ -357,6 +357,10 @@ export class Player {
     abilities: Ability[];
     /** 既に敗北しているかどうか */
     losed: boolean = false;
+
+    equals(player: Player): boolean {
+        return this.id === player.id;
+    }
 }
 
 /** 領域の種別 OK */

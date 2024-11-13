@@ -178,34 +178,34 @@ class Step {
         return obj instanceof Step;
     }
 
-    get is_untap_step() {
+    is_untap_step(): boolean {
         return this instanceof UntapStep;
     }
-    get is_upkeep_step() {
+    is_upkeep_step(): boolean {
         return this instanceof UpkeepStep;
     }
-    get is_draw_step() {
+    is_draw_step(): boolean {
         return this instanceof DrawStep;
     }
-    get is_beginning_of_combat_step() {
+    is_beginning_of_combat_step(): boolean {
         return this instanceof BeginningOfCombatStep;
     }
-    get is_declare_attackers_step() {
+    is_declare_attackers_step(): boolean {
         return this instanceof DeclareAttackersStep;
     }
-    get is_declare_blockers_step() {
+    is_declare_blockers_step(): boolean {
         return this instanceof DeclareBlockersStep;
     }
-    get is_combat_damage_step() {
+    is_combat_damage_step(): boolean {
         return this instanceof CombatDamageStep;
     }
-    get is_end_of_combat_step() {
+    is_end_of_combat_step(): boolean {
         return this instanceof EndOfCombatStep;
     }
-    get is_end_step() {
+    is_end_step(): boolean {
         return this instanceof EndStep;
     }
-    get is_cleanup_step() {
+    is_cleanup_step(): boolean {
         return this instanceof CleanupStep;
     }
 }
