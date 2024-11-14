@@ -2,301 +2,159 @@
 
 import { Player } from "./GameObject";
 
-/** ターン、フェイズ、ステップを表すオブジェクト
- *
- */
+/** ターン、フェイズ、ステップを表すオブジェクト */
 
-export {
-    Turn,
-    Phase,
-    BeginningPhase,
-    PrecombatMainPhase,
-    CombatPhase,
-    PostcombatMainPhase,
-    EndingPhase,
-    Step,
-    UntapStep,
-    UpkeepStep,
-    DrawStep,
-    BeginningOfCombatStep,
-    DeclareAttackersStep,
-    DeclareBlockersStep,
-    CombatDamageStep,
-    EndOfCombatStep,
-    EndStep,
-    CleanupStep,
-};
+export { Turn, Phase, Step };
 
 class Turn {
     /** ターン
      * ターン > フェイズ > ステップ の木構造を持つ
      * ターン、フェイズ、ステップは実際に開始するときに初めて生成される
      */
-    count: number;
-    player: Player;
-    phases: Phase[];
+    static count: number;
+    id: number;
+    active_player: Player;
     is_extra: boolean = false;
 
-    constructor(count, player, phases = [], is_extra = false) {
-        this.count = count;
-        this.player = player;
-        this.phases = phases; // フェイズ
+    constructor(active_player: Player, is_extra: boolean = false) {
+        this.id = Turn.count;
+        Turn.count++;
+        this.active_player = active_player;
         this.is_extra = is_extra;
     }
 
-    /** フェイズオブジェクトを追加する */
-    push_phase(phase: Phase) {
-        this.phases.push(phase);
-    }
-    /** ステップオブジェクトを追加する */
-    push_step(step: Step) {
-        this.phases[-1].push_step(step);
-    }
-    /** フェイズオブジェクト、またはステップオブジェクトを追加する */
-    push_phase_or_step(phase_or_step: Phase | Step) {
-        // if (Phase.is_phase(phase_or_step)) {
-        //     this.push_phase(phase_or_step)
-        // }
-        // if (Step.is_step(phase_or_step)) {
-        //     this.push_step(phase_or_step)
-        // }
-    }
-
-    static turn_def = new Turn(0, undefined, [
-        new BeginningPhase(
-            (steps = [new UntapStep(), new UpkeepStep(), new DrawStep()])
-        ),
-        new PrecombatMainPhase(),
-        new CombatPhase(
-            (steps = [
-                new BeginningOfCombatStep(),
-                new DeclareAttackersStep(),
-                new DeclareBlockersStep(),
-                new CombatDamageStep(),
-                new EndOfCombatStep(),
-            ])
-        ),
-        new PostcombatMainPhase(),
-        new EndingPhase((steps = [new EndStep(), new CleanupStep()])),
-    ]);
-
     // TODO 次のフェイズ・ステップを返す　ジェネレータ？
-
-    // /** ターン起因処理 */
-    // turn_based_action() {
-    // }
 }
 
+type PhaseKind =
+    | "Beginning"
+    | "Precombat Main"
+    | "Combat"
+    | "Postcombat Main"
+    | "Ending";
 class Phase {
     /** フェイズ */
-    name: string;
-    player: Player;
-    steps: Step[] = [];
-    turn_based_action;
-    constructor(name: string, player: Player, steps = []) {
-        this.name = name;
-        this.player = player;
-        this.steps = steps; // ステップ
+    static count = 0;
+    id: number;
+    kind: PhaseKind;
+    active_player: Player;
+    is_extra: boolean;
+
+    constructor(
+        kind: PhaseKind,
+        active_player: Player,
+        is_extra: boolean = false
+    ) {
+        this.id = Phase.count;
+        Phase.count++;
+        this.kind = kind;
+        this.active_player = active_player;
+        this.is_extra = is_extra;
     }
 
-    static is_phase(obj: any) {
-        return obj instanceof Phase;
+    get child_step_kinds(): StepKind[] {
+        switch (this.kind) {
+            case "Beginning":
+                return ["Untap", "Upkeep", "Draw"];
+            case "Precombat Main":
+                return [];
+            case "Combat":
+                return [
+                    "Beginning of Combat",
+                    "Declare Attackers",
+                    "Declare Blockers",
+                    "Combat Damage",
+                    "End of Combat",
+                ];
+            case "Postcombat Main":
+                return [];
+            case "Ending":
+                return ["End", "Cleanup"];
+        }
     }
-    push_step(step: Step) {
-        this.steps.push(step);
+    get has_step(): boolean {
+        return this.child_step_kinds.length > 0;
     }
-
-    get is_beginning_phase() {
-        return this instanceof BeginningPhase;
-    }
-    get is_precombat_main_phase() {
-        return this instanceof PrecombatMainPhase;
-    }
-    get is_combat_phase() {
-        return this instanceof CombatPhase;
-    }
-    get is_postcombat_main_phase() {
-        return this instanceof PostcombatMainPhase;
-    }
-    get is_ending_phase() {
-        return this instanceof EndingPhase;
-    }
-}
-class BeginningPhase extends Phase {
-    constructor(name, player, steps) {
-        super();
-        this.name = "Beginning Phase";
-    }
-}
-class PrecombatMainPhase extends Phase {
-    constructor(name, player, steps) {
-        super();
-        this.name = "Precombat Main Phase";
-        this.turn_based_action = (game_state) => {
-            this.set_scheme_in_motion();
-            this.put_counter_on_saga();
-            this.roll_to_visit_attractions();
-        };
-    }
-    /* 計略を実行中にする */
-    set_scheme_in_motion() {}
-    /* 英雄譚に伝承カウンターを置く */
-    put_counter_on_saga() {}
-    /* アトラクションを観覧するためのサイコロを振る */
-    roll_to_visit_attractions() {}
-}
-class CombatPhase extends Phase {
-    constructor(name, player, steps) {
-        super();
-        this.name = "Combat Phase";
-    }
-}
-class PostcombatMainPhase extends Phase {
-    constructor(name, player, steps) {
-        super();
-        this.name = "Postcombat Main Phase";
-    }
-}
-class EndingPhase extends Phase {
-    constructor(name, player, steps) {
-        super();
-        this.name = "Ending Phase";
+    get next_kind(): PhaseKind | undefined {
+        switch (this.kind) {
+            case "Beginning":
+                return "Precombat Main";
+            case "Precombat Main":
+                return "Combat";
+            case "Combat":
+                return "Postcombat Main";
+            case "Postcombat Main":
+                return "Ending";
+            case "Ending":
+                return undefined;
+        }
     }
 }
 
+type StepKind =
+    | "Untap"
+    | "Upkeep"
+    | "Draw"
+    | "Beginning of Combat"
+    | "Declare Attackers"
+    | "Declare Blockers"
+    | "Combat Damage"
+    | "End of Combat"
+    | "End"
+    | "Cleanup";
 class Step {
     /** ステップ */
-    name;
-    player;
-    turn_based_action;
-    constructor(name, player) {
-        this.name = name;
-        this.player = player;
+    static count = 0;
+    id: number;
+    kind: StepKind;
+    active_player: Player;
+    is_extra: boolean;
+
+    constructor(
+        kind: StepKind,
+        active_player: Player,
+        is_extra: boolean = false
+    ) {
+        this.id = Step.count;
+        Step.count++;
+        this.kind = kind;
+        this.active_player = active_player;
+        this.is_extra = is_extra;
     }
 
-    static is_step(obj: any) {
-        return obj instanceof Step;
+    get parent_phase_kind(): PhaseKind {
+        switch (this.kind) {
+            case "Untap":
+            case "Upkeep":
+            case "Draw":
+                return "Beginning";
+            case "Beginning of Combat":
+            case "Declare Attackers":
+            case "Declare Blockers":
+            case "Combat Damage":
+            case "End of Combat":
+                return "Combat";
+            case "End":
+            case "Cleanup":
+                return "Ending";
+        }
     }
-
-    is_untap_step(): boolean {
-        return this instanceof UntapStep;
+    get next_kind(): StepKind | undefined {
+        const order: (StepKind | undefined)[] = [
+            "Untap",
+            "Upkeep",
+            "Draw",
+            undefined,
+            "Beginning of Combat",
+            "Declare Attackers",
+            "Declare Blockers",
+            "Combat Damage",
+            "End of Combat",
+            undefined,
+            "End",
+            "Cleanup",
+            undefined,
+        ];
+        return order[order.indexOf(this.kind) + 1];
     }
-    is_upkeep_step(): boolean {
-        return this instanceof UpkeepStep;
-    }
-    is_draw_step(): boolean {
-        return this instanceof DrawStep;
-    }
-    is_beginning_of_combat_step(): boolean {
-        return this instanceof BeginningOfCombatStep;
-    }
-    is_declare_attackers_step(): boolean {
-        return this instanceof DeclareAttackersStep;
-    }
-    is_declare_blockers_step(): boolean {
-        return this instanceof DeclareBlockersStep;
-    }
-    is_combat_damage_step(): boolean {
-        return this instanceof CombatDamageStep;
-    }
-    is_end_of_combat_step(): boolean {
-        return this instanceof EndOfCombatStep;
-    }
-    is_end_step(): boolean {
-        return this instanceof EndStep;
-    }
-    is_cleanup_step(): boolean {
-        return this instanceof CleanupStep;
-    }
-}
-
-class UntapStep extends Step {
-    constructor(name) {
-        this.name = " Step";
-        this.turn_based_action = (game_state) => {
-            this.phasing(game_state);
-            this.switchDayNight(game_state);
-            this.untap(game_state);
-        };
-    }
-    phasing(game_state) {}
-    switchDayNight(game_state) {}
-    untap(game_state) {}
-}
-class UpkeepStep extends Step {
-    constructor(name) {
-        this.name = "Upkeep Step";
-    }
-}
-class DrawStep extends Step {
-    constructor(name) {
-        this.name = "Draw Step";
-        this.turn_based_action = (game_state) => {
-            this.draw(game_state);
-        };
-    }
-    draw(game_state) {}
-}
-class BeginningOfCombatStep extends Step {
-    constructor(name) {
-        this.name = "Beginning of Combat Step";
-        this.turn_based_action = (game_state) => {
-            this.select_defending_player(game_state);
-        };
-    }
-    select_defending_player(game_state) {}
-}
-class DeclareAttackersStep extends Step {
-    constructor(name) {
-        this.name = "Declare Attackers Step";
-        this.turn_based_action = (game_state) => {
-            this.declare_attackers(game_state);
-        };
-    }
-    declare_attackers(game_state) {}
-}
-class DeclareBlockersStep extends Step {
-    constructor(name) {
-        this.name = "Declare Blockers Step";
-        this.turn_based_action = (game_state) => {
-            this.declare_blockers(game_state);
-            this.declare_order_attackers_dealing_damage(game_state);
-            this.declare_order_blockers_dealing_damage(game_state);
-        };
-    }
-    declare_blockers(game_state) {}
-    declare_order_attackers_dealing_damage(game_state) {}
-    declare_order_blockers_dealing_damage(game_state) {}
-}
-class CombatDamageStep extends Step {
-    constructor(name) {
-        this.name = "Combat Damage Step";
-        this.turn_based_action = (game_state) => {
-            this.declare_damage(game_state);
-            this.deal_damage(game_state);
-        };
-    }
-    declare_damage(game_state) {}
-    deal_damage(game_state) {}
-}
-class EndOfCombatStep extends Step {
-    constructor(name) {
-        this.name = "End of Combat Step";
-    }
-}
-class EndStep extends Step {
-    constructor(name) {
-        this.name = "End Step";
-    }
-}
-class CleanupStep extends Step {
-    constructor(name) {
-        this.name = "Cleanup Step";
-        this.turn_based_action = (game_state) => {
-            this.discard(game_state);
-            this.remove_damage_and_end_effects(game_state);
-        };
-    }
-    discard(game_state) {}
-    remove_damage_and_end_effects(game_state) {}
 }
