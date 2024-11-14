@@ -212,17 +212,15 @@ class GameHistory {
 
     run2(): void {
         while (true) {
+            // 全員が連続で優先権をパスしている
             if (
-                // クリンナップ・ステップ
-                (this.current.step?.is_cleanup_step() &&
-                    this.current.cleanup_again &&
-                    this.current.pass_count === this.current.players.size) ||
+                // クリンナップ・ステップではフラグが立っている場合のみ
+                (this.current.step?.kind === "Cleanup" &&
+                    this.current.cleanup_again) ||
                 // 通常のフェイズやステップ
+                // NOTE: アンタップ・ステップでは優先権は発生しないが、アンタップ・ステップでここに来ることはない
                 this.current.pass_count === this.current.players.size
             ) {
-                // 全員が連続で優先権をパスしている
-                // FIXME: アンタップ・ステップでは優先権は発生しない
-                // FIXME: クリンナップ・ステップは誘発があった場合のみ発生する？
                 // スタックが空
                 if (
                     this.current.get_game_objects(
@@ -242,20 +240,47 @@ class GameHistory {
                     continue;
                 }
             }
-            // 全員がパスしていない
+            // まだ全員がパスしていない
             else {
-                // 優先権に基づく行動
-                this.priority_action();
+                // 優先権に基づく行動。なにか行動するか、または優先権をパスする
+                this.take_priority_action();
             }
         }
     }
 
-    /** 現在のステップを終了し、次のターンかフェイズかステップに移る。
-     * メイン・フェイズである場合は、ステップがないので次のフェイズに移る。
-     * 終了ステップである場合は、クリンナップを行った後次のターンに移る。
+    /** 現在のステップを終了し、次のステップに移る。
+     * 次がメイン・フェイズである場合は、ステップがないので次のフェイズに移る。
+     * 現在がクリンナップ・ステップである場合は、次のターンに移る。
+     * 追加ターンや追加のフェイズ、追加のステップがある場合はそれに移る。
+     * 移った先のフェイズやステップにターン起因処理がある場合はそれも行う。
      */
-    goto_next(state?: GameState): GameState {
-        if (state.current_step.is_cleanup_step) {
+    goto_next(): void {
+        // 移る先のフェイズやステップ、ターンを決める。追加ターンや追加のフェイズ・ステップを考慮する
+        // - ステップの追加があるなら
+        //   - それに移る goto_step(step)
+        // - ステップの追加がないなら
+        //   - 次のステップがあるなら
+        //     - それに移る goto_step()
+        //   - 次のステップがないなら
+        //     - フェイズの追加があるなら
+        //       - それに移る goto_phase(phase)
+        //     - フェイズの追加がないなら
+        //       - 次のフェイズがあるなら
+        //         - それに移る goto_phase()
+        //       - 次のフェイズがないなら
+        //         - ターンの追加があるなら
+        //           - それに移る goto_turn(turn)
+        //         - ターンの追加がないなら
+        //           - 次のターンに移る goto_turn()
+        // TODO: スキップは実際にそれに移ろうとしたタイミングで適用する (in goto_step, goto_phase, goto_turn)
+
+        // ================
+        if (!this.current.step?.is_cleanup_step()) {
+            this.goto_new_phase_or_step();
+            /* クリンナップ・ステップ以外の場合は、次のフェイズまたはステップへ移行する */
+            // TODO: 移行先のフェイズやステップを確認する
+            // TODO: フェイズ、ステップを追加またスキップする効果
+        } else {
             /* 現在クリンナップ・ステップの場合 */
             if (state.cleanup_again) {
                 /* フラグが立っているなら再度クリンナップ・ステップを行う */
@@ -265,8 +290,7 @@ class GameHistory {
                 let turn;
                 /** --> ループ */
                 /** 次に始まるターンを決定する。
-                 * 追加ターンがあれば、最後に発生した追加ターンを取り出す。
-                 * その追加ターン効果が消滅するなら消滅する。
+                 * 追加ターンがあれば、最後に発生した追加ターンを取り出す。（追加ターンはスタック式）
                  * 追加ターンがなければ通常のターンとなる。
                  */
                 if (state.extra_turns.length > 0) {
@@ -292,26 +316,61 @@ class GameHistory {
                 /** 決定したターンを開始する */
                 state.goto_new_turn(turn);
             }
-        } else {
-            /* クリンナップ・ステップでない場合は、次のフェイズまたはステップへ移行する */
-            let phase_or_step = // TODO 移行先のフェイズやステップを確認する
-                // TODO フェイズ、ステップを追加またスキップする効果
-                state.goto_new_phase_or_step(phase_or_step);
         }
         state.cleanup_again = false;
     }
 
-    /** ターン起因処理 */
-    turn_based_action(state: GameState, proc): GameState {}
+    /** ステップを移る。追加のステップ`step`が渡されたならそれに移る。
+     * 渡されなかったなら、通常のステップ順で次のステップに移る。
+     * ステップがスキップする場合はそれも考慮する。
+     * 現在のフェイズに次のステップがもうないか、
+     * 現在のステップがない（メインフェイズ）ならエラーを投げる。 */
+    goto_step(step?: Step): void {
+        // stepが与えられていないなら新しいステップを生成する
+        if (step === undefined) {
+            // 次のステップがない場合はエラー
+            if (this.current.step?.next_kind === undefined) {
+                throw new Error("No next step");
+            } else {
+                step = new Step(
+                    this.current.step.next_kind,
+                    this.current.active_player
+                ); // FIXME: newした時点でidが振られてしまう。newする際にhistoryを参照して最新+1を振ること。
+            }
+        }
+        // stepのスキップ判定
+        // TODO:
+
+        // stepを更新する
+        const new_state = this.current.deepcopy();
+        new_state.step = step;
+        // stateを移る
+        this.#history.push(new_state);
+
+        // 移った先のステップのターン起因処理を行う
+        // TODO:
+    }
+    goto_phase(phase?: Phase): void {}
+    goto_turn(turn?: Turn): void {}
+    get_extra_step(): Step | undefined {}
+    get_extra_phase(): Phase | undefined {}
+    get_extra_turn(): Turn | undefined {}
+    is_skipped(arg: Step | Phase | Turn): boolean {}
+
+    /** スタックを1つ解決する */
+    resolve_stack(): void {}
 
     /** 状況起因処理 (1回) */
-    state_based_action(state: GameState): GameState {}
+    state_based_action(): void {}
+
+    /** 状況誘発 */
+    check_state_triggers(state: GameState): void {}
 
     /** 誘発した能力をスタックに置く */
-    put_triggered_abilities_on_stack(state: GameState): GameState {}
+    put_triggered_abilities_on_stack(): void {}
 
     /** プレイヤーが優先権を得る */
-    set_priority_to(state: GameState) {
+    set_priority_to(): void {
         /* 状況起因処理と誘発 */
         let ret = false;
         let flag = true;
@@ -332,39 +391,30 @@ class GameHistory {
         }
         /* プレイヤーが優先権を得る */
         state.player_with_priority = player;
-
-        return ret;
     }
 
     /** 優先権による行動。呪文を唱える、能力を起動する、特別な処理を行う、優先権をパスする */
-    priority_action(state?: GameState): GameState {
-        let action = ask_action_to_player(); // TODO ask_action_to_player()
+    take_priority_action(): void {
+        let action: "cast" | "activate" | "take_special_action" | "pass" =
+            ask_action_to_player(); // TODO: ask_action_to_player()
         // 呪文を唱える
-        if (action == cast_spell) {
-            state.pass_count = 0;
+        if (action == "cast") {
+            // state.pass_count = 0;
         }
         // 能力を起動する
-        if (action == activate_ability) {
-            state.pass_count = 0;
+        if (action == "activate") {
+            // state.pass_count = 0;
         }
         // 特別な処理を行う
-        if (action == do_special_action) {
-            state.pass_count = 0;
+        if (action == "take_special_action") {
+            // state.pass_count = 0;
         }
         // 優先権をパスする
-        if (action == pass_priority) {
-            state.set_priority_to(
-                state.get_next_player_of(state.player_with_priority)
-            ); // TODO
-            state.pass_count++;
+        if (action == "pass") {
+            // state.set_priority_to(
+            //     state.get_next_player_of(state.player_with_priority)
+            // ); // TODO:
+            // state.pass_count++;
         }
     }
-
-    resolve_stack(state?: GameState): GameState {}
-
-    check_state_triggers(state: GameState): GameState {}
-
-    goto_new_turn(state: GameState): GameState {}
-
-    goto_new_phase_or_step(state: GameState): GameState {}
 }

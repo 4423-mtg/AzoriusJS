@@ -37,12 +37,12 @@ class Phase {
     static count = 0;
     id: number;
     kind: PhaseKind;
-    active_player: Player;
+    active_player?: Player;
     is_extra: boolean;
 
     constructor(
         kind: PhaseKind,
-        active_player: Player,
+        active_player?: Player,
         is_extra: boolean = false
     ) {
         this.id = Phase.count;
@@ -107,12 +107,12 @@ class Step {
     static count = 0;
     id: number;
     kind: StepKind;
-    active_player: Player;
+    active_player?: Player;
     is_extra: boolean;
 
     constructor(
         kind: StepKind,
-        active_player: Player,
+        active_player?: Player,
         is_extra: boolean = false
     ) {
         this.id = Step.count;
