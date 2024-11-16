@@ -22,10 +22,10 @@ export {
 
 /** Referenceの解決に必要な値。 */
 class ReferenceParam {
-    #history: GameState[];
-    #self: GameObject;
+    #history: GameHistory;
+    #self: GameObject | undefined;
 
-    constructor(args: { history: GameState[]; self: GameObject }) {
+    constructor(args: { history: GameHistory; self: GameObject | undefined }) {
         this.#history = args.history;
         this.#self = args.self;
     }
@@ -33,15 +33,22 @@ class ReferenceParam {
     get state(): GameState {
         return this.#history[-1];
     }
-    get history(): GameState[] {
+    get history(): GameHistory {
         return this.#history;
     }
-    get self(): GameObject {
+    get self(): GameObject | undefined {
         return this.#self;
     }
 }
 
-type Referable = GameObject | Player | Zone | number | string | undefined;
+type Referable =
+    | string
+    | number
+    | boolean
+    | GameObject
+    | Player
+    | Zone
+    | undefined;
 
 // ==============================================================================
 class Ref<T extends Referable> {
@@ -63,13 +70,13 @@ class SingleRef<T extends Referable> extends Ref<T> {
 
     resolve: (params: ReferenceParam) => T = (params) => this.ref(params);
 
-    // オーナー
+    /** オーナー (GameObjectのみ)*/
     owner = new SingleRef((params: ReferenceParam) => {
         const ret = this.ref(params);
         return isGameObject(ret) ? ret.owner : undefined;
     });
 
-    // コントローラー
+    /** コントローラー (GameObjectのみ)*/
     controller = new SingleRef((params: ReferenceParam) => {
         const ret = this.ref(params);
         return isGameObject(ret) ? ret.controller : undefined;

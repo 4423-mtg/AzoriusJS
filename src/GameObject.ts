@@ -1,10 +1,14 @@
+/** ゲーム内のオブジェクト
+ * カード、スタック上の能力、継続的効果、遅延誘発型能力、置換効果
+ */
 "use strict";
 
-import { GameHistory, GameState } from "./Game";
+import { GameHistory, GameState, Zone } from "./Game";
 import { Ability, SpellAbility, TriggeredAbility } from "./Ability";
 import { CardType } from "./Characteristic";
 import { Instruction } from "./Instruction";
-import { MultiRef } from "./Reference";
+import { MultiRef, ReferenceParam, SingleSpec } from "./Reference";
+import { Phase, Step, Turn } from "./Turn";
 
 export {
     GameObject,
@@ -19,20 +23,9 @@ export {
     Counter,
 };
 
-/** ゲーム内のオブジェクト
- * カード、スタック上の能力、継続的効果、遅延誘発型能力、置換効果
- */
-
-// ==== ゲーム内オブジェクト ======================================
 /** ゲーム内のオブジェクト。
  * ルール上の「オブジェクト」の他に、継続的効果や遅延誘発型能力など、
  * 「ゲームの状態」に含まれるもの全般。 */
-// TODO
-// - オブジェクト
-//   - カード　☑
-//   - スタック上の能力
-//   - 継続的効果
-//   - 遅延誘発型能力
 abstract class GameObject {
     id: number;
     zone: Zone;
@@ -287,19 +280,42 @@ class DelayedTriggeredAbility extends GameObject {
 
 // MARK: ターン、フェイズ、ステップを追加する効果
 /** 追加のターン、フェイズ、ステップ */
-class Additional extends GameObject {
+abstract class Additional extends GameObject {
     /** 開始する条件 */
-    condition;
+    // NOTE: 「ターン開始タイミング」(Time Valutタイミング)で追加ターンが
+    // 適用されるかどうかの判定が行われる。
+    // 判定には以下のものを追加で使う
+    // - 始まろうとしているターン
+    // - この効果が生成されてからの履歴
+    condition: boolean | ((params: ReferenceParam, next?: Turn) => boolean);
+    // ターンスキップは置換効果なので、ターン追加はInstructionである
+    instruction: Instruction;
+
+    create(params: ReferenceParam): any {
+        // FIXME: instructionだが戻り値は GameStateではない！
+        return this.instruction.perform(params);
+    }
+}
+// ターンを追加する
+// フェイズ、ステップを追加する
+// ターンを追加するが、その追加ターンのステップを飛ばす（瞬間の味わい）
+// 次のターンをコントロールし、そのターンの後にターンを追加する（終末エムラ）
+// 現在がメインフェイズならこの後にフェイズを追加する（連続突撃）
+// ターンを追加するが、そのターンの終了ステップに敗北
+// 開始フェイズと、N個のアップキープを追加する（オベカ）
+
+class AdditionalTurn extends Additional {
+    create(params: ReferenceParam): Turn {}
+}
+class AdditionalPhase extends Additional {
+    create(params: ReferenceParam): Phase {}
+}
+class AdditionalStep extends Additional {
+    create(params: ReferenceParam): Step {}
 }
 
-class AdditionalTurn extends Additional {}
-
-class AdditionalPhase extends Additional {}
-
-class AdditionalStep extends Additional {}
-
 // ==================================================================
-
+// MARK: プレイヤー
 /** プレイヤー */
 class Player {
     id: number;
@@ -315,6 +331,7 @@ class Player {
     }
 }
 
+// MARK: カウンター
 class Counter {
     name: string;
     instructions?: Instruction[];
