@@ -4,7 +4,7 @@ import { Player } from "./GameObject";
 
 /** ターン、フェイズ、ステップを表すオブジェクト */
 
-export { Turn, Phase, Step };
+export { Turn, Phase, Step, PhaseKind, StepKind };
 
 class Turn {
     /** ターン

@@ -74,6 +74,7 @@ export abstract class GameObject {
     }
 }
 
+// MARK: カード
 /** カード */
 export class Card extends GameObject {
     constructor(spec: CharacteristicsSpec) {
@@ -95,7 +96,7 @@ export class Card extends GameObject {
     /** 位相 */
     status: Status;
     /** トークンやコピーであるか */
-    is_copy: boolean;
+    is_copy: boolean = false;
     /** 乗っているカウンター */
     counters;
     /** 貼られているステッカー */
@@ -123,6 +124,16 @@ export class Card extends GameObject {
     }
 }
 
+/** 位相 */
+export class Status {
+    tapped: boolean;
+    flipped: boolean;
+    is_face_down: boolean;
+    is_phase_out: boolean;
+}
+
+// MARK: スタック上の能力
+/** スタック上の能力 */
 export class StackedAbilityType {
     name: string;
     constructor(name: string) {
@@ -160,7 +171,7 @@ export class StackedAbility extends GameObject {
     }
 }
 
-// ==================================================================
+// MARK: 継続的効果
 /** 継続的効果
  * 1. 特性や値を変更する効果
  * 2. 手続きを修整する効果
@@ -170,7 +181,6 @@ export class ContinousEffectType {
 }
 
 export class ContinuousEffect extends GameObject {
-    // TODO
     // 1. 期間
 }
 
@@ -185,14 +195,12 @@ export type InstructionChecker = (args: {
 /** Instructionを別の1つ以上のInstructionに置き換える関数を表す型 */
 export type InstructionReplacer = (instruction: Instruction) => Instruction[];
 
-// TODO
 /** 値や特性を変更する継続的効果 */
 export class ValueAlteringContinousEffect extends ContinuousEffect {
     /** 影響を及ぼすオブジェクト */
     affected_objects: GameObject[] | MultiRef[];
 }
 
-// OK
 /** 手続きを変更する継続的効果 */
 export class ProcessAlteringContinousEffect extends ContinuousEffect {
     /** 変更対象の手続きに該当するかどうかをチェックする関数 */
@@ -218,7 +226,6 @@ export class ProcessAlteringContinousEffect extends ContinuousEffect {
     }
 }
 
-// OK
 /** 処理を禁止する継続的効果 */
 export class ProcessForbiddingContinousEffect extends ContinuousEffect {
     /** 禁止対象の手続きに該当するかどうかをチェックする関数 */
@@ -230,8 +237,7 @@ export class ProcessForbiddingContinousEffect extends ContinuousEffect {
     }
 }
 
-// ==================================================================
-// OK
+// MARK: 置換効果
 /** 置換効果 */
 export class ReplacementEffect extends GameObject {
     /** 置換対象の手続きに該当するかどうかをチェックする関数 */
@@ -255,7 +261,7 @@ export class ReplacementEffect extends GameObject {
     }
 }
 
-// OK 多分
+// MARK: 遅延誘発型能力
 /** 遅延誘発型能力 */
 export class DelayedTriggeredAbility extends GameObject {
     // 誘発型能力のラップ
@@ -272,8 +278,7 @@ export class DelayedTriggeredAbility extends GameObject {
     }
 }
 
-// ==================================================================
-// TODO
+// MARK: ターン、フェイズ、ステップを追加する効果
 /** 追加のターン、フェイズ、ステップ */
 class Additional extends GameObject {
     /** 開始する条件 */
@@ -287,66 +292,6 @@ class AdditionalPhase extends Additional {}
 class AdditionalStep extends Additional {}
 
 // ==================================================================
-/** 特性の指定 */
-type CharacteristicsSpec = {
-    name?: string[];
-    mana_cost?: ManaSymbol[];
-    color_indicator?: ColorIndicator;
-    card_types?: CardType[];
-    subtypes?: Subtype[];
-    supertypes?: Supertype[];
-    abilities?: Ability[] | (() => Ability[]);
-    text?: string;
-    power?: number | string;
-    toughness?: number | string;
-    loyalty?: number | string;
-    defense?: number | string;
-    hand_modifier?: number | string;
-    life_modifier?: number | string;
-};
-
-/** 特性 */
-export class Characteristics {
-    name?: string;
-    mana_cost?: ManaSymbol[];
-    color_indicator?: ColorIndicator;
-    card_types?: CardType[];
-    subtypes?: Subtype[];
-    supertypes?: Supertype[];
-    abilities?: Ability[];
-    text?: string;
-    power?: number | string;
-    toughness?: number | string;
-    loyalty?: number | string;
-    defense?: number | string;
-    hand_modifier?: number | string;
-    life_modifier?: number | string;
-    constructor(characteristicsSpec: CharacteristicsSpec) {
-        this.name = characteristicsSpec.name;
-        this.mana_cost = characteristicsSpec.mana_cost;
-        this.color_indicator = characteristicsSpec.color_indicator;
-        this.card_types = characteristicsSpec.card_types;
-        this.subtypes = characteristicsSpec.subtypes;
-        this.supertypes = characteristicsSpec.supertypes;
-        this.abilities = characteristicsSpec.abilities;
-        this.text = characteristicsSpec.text;
-        this.power = characteristicsSpec.power;
-        this.toughness = characteristicsSpec.toughness;
-        this.loyalty = characteristicsSpec.loyalty;
-        this.defense = characteristicsSpec.defense;
-        this.hand_modifier = characteristicsSpec.hand_modifier;
-        this.life_modifier = characteristicsSpec.life_modifier;
-    }
-}
-
-// ==================================================================
-/** 位相 */
-export class Status {
-    tapped: boolean;
-    flipped: boolean;
-    is_face_down: boolean;
-    is_phase_out: boolean;
-}
 
 /** プレイヤー */
 export class Player {
@@ -360,70 +305,6 @@ export class Player {
 
     equals(player: Player): boolean {
         return this.id === player.id;
-    }
-}
-
-/** 領域の種別 OK */
-export class ZoneType {
-    /** 領域の名前 */
-    name: string;
-    /** オーナーを持つかどうか。 */
-    has_owner: boolean;
-    /** この領域に置かれているオブジェクトが順序を持つかどうか。 */
-    has_order: boolean;
-
-    /**
-     *
-     * @param name 領域の名前
-     * @param has_owner オーナーを持つかどうか。
-     * @param has_order この領域に置かれているオブジェクトが順序を持つかどうか。
-     */
-    constructor(name: string, has_owner: boolean, has_order: boolean) {
-        this.name = name;
-        this.has_owner = has_owner;
-        this.has_order = has_order;
-    }
-
-    /** 戦場 */
-    static Battlefield = new ZoneType("battlefield", false, false);
-    /** 手札 */
-    static Hand = new ZoneType("hand", true, false);
-    /** ライブラリー */
-    static Library = new ZoneType("library", true, true);
-    /** 墓地 */
-    static Graveyard = new ZoneType("graveyard", true, true);
-    /** 追放 */
-    static Exile = new ZoneType("exile", false, false);
-    /** 統率 */
-    static Command = new ZoneType("command", true, false);
-    /** スタック */
-    static Stack = new ZoneType("stack", false, true);
-}
-
-/** 領域 */
-export class Zone {
-    /** 領域の種別 */
-    zonetype: ZoneType;
-    /** 領域のオーナー */
-    owner?: Player;
-    /** この領域にあるオブジェクト */
-    objects: GameObject[] = [];
-
-    /**
-     * @param zonetype 領域の種別
-     * @param owner 領域のオーナー
-     */
-    constructor(zonetype: ZoneType, owner?: Player) {
-        if (zonetype.has_owner) {
-            if (owner !== undefined) {
-                this.zonetype = zonetype;
-                this.owner = owner;
-            } else {
-                throw new Error("owner of zone is undefined");
-            }
-        } else {
-            this.zonetype = zonetype;
-        }
     }
 }
 

@@ -1,6 +1,58 @@
 "use strict";
 import { Card } from "./GameObject";
 
+/** 特性の指定 */
+type CharacteristicsSpec = {
+    name?: string[];
+    mana_cost?: ManaSymbol[];
+    color_indicator?: ColorIndicator;
+    card_types?: CardType[];
+    subtypes?: Subtype[];
+    supertypes?: Supertype[];
+    abilities?: Ability[] | (() => Ability[]);
+    text?: string;
+    power?: number | string;
+    toughness?: number | string;
+    loyalty?: number | string;
+    defense?: number | string;
+    hand_modifier?: number | string;
+    life_modifier?: number | string;
+};
+
+/** 特性 */
+export class Characteristics {
+    name?: string;
+    mana_cost?: ManaSymbol[];
+    color_indicator?: ColorIndicator;
+    card_types?: CardType[];
+    subtypes?: Subtype[];
+    supertypes?: Supertype[];
+    abilities?: Ability[];
+    text?: string;
+    power?: number | string;
+    toughness?: number | string;
+    loyalty?: number | string;
+    defense?: number | string;
+    hand_modifier?: number | string;
+    life_modifier?: number | string;
+    constructor(characteristicsSpec: CharacteristicsSpec) {
+        this.name = characteristicsSpec.name;
+        this.mana_cost = characteristicsSpec.mana_cost;
+        this.color_indicator = characteristicsSpec.color_indicator;
+        this.card_types = characteristicsSpec.card_types;
+        this.subtypes = characteristicsSpec.subtypes;
+        this.supertypes = characteristicsSpec.supertypes;
+        this.abilities = characteristicsSpec.abilities;
+        this.text = characteristicsSpec.text;
+        this.power = characteristicsSpec.power;
+        this.toughness = characteristicsSpec.toughness;
+        this.loyalty = characteristicsSpec.loyalty;
+        this.defense = characteristicsSpec.defense;
+        this.hand_modifier = characteristicsSpec.hand_modifier;
+        this.life_modifier = characteristicsSpec.life_modifier;
+    }
+}
+
 export class Color {
     name: string;
     alias?: string;
