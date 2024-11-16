@@ -1,5 +1,22 @@
 "use strict";
-import { Card } from "./GameObject";
+
+export {
+    Characteristics,
+    Color,
+    ColorIndicator,
+    CardType,
+    Subtype,
+    CreatureType,
+    LandType,
+    SpellType,
+    ArtifactType,
+    EnchantmentType,
+    PlaneswalkerType,
+    BattleType,
+    Supertype,
+    CostSymbol,
+    ManaSymbol,
+};
 
 /** 特性の指定 */
 type CharacteristicsSpec = {
@@ -20,7 +37,7 @@ type CharacteristicsSpec = {
 };
 
 /** 特性 */
-export class Characteristics {
+class Characteristics {
     name?: string;
     mana_cost?: ManaSymbol[];
     color_indicator?: ColorIndicator;
@@ -53,7 +70,7 @@ export class Characteristics {
     }
 }
 
-export class Color {
+class Color {
     name: string;
     alias?: string;
 
@@ -69,7 +86,7 @@ export class Color {
     static Green = new Color("green", "G");
 }
 
-export class ColorIndicator {
+class ColorIndicator {
     colors: Color[];
 
     constructor(colors: Color[]) {
@@ -146,7 +163,7 @@ export class ColorIndicator {
     ]);
 }
 
-export class CardType {
+class CardType {
     name: string;
 
     constructor(name: string) {
@@ -167,7 +184,7 @@ export class CardType {
     static Conspiracy = new CardType("Conspiracy");
 }
 
-export abstract class Subtype {
+abstract class Subtype {
     name: string;
     parent_type: CardType[];
 
@@ -177,7 +194,7 @@ export abstract class Subtype {
     }
 }
 
-export class CreatureType extends Subtype {
+class CreatureType extends Subtype {
     static Advisor = new CreatureType("Advisor", [
         CardType.Creature,
         CardType.Tribal,
@@ -1323,7 +1340,7 @@ export class CreatureType extends Subtype {
 
 // 土地タイプ
 /** 土地タイプ */
-export class LandType extends Subtype {
+class LandType extends Subtype {
     static Plains = new LandType("Plains", [CardType.Land]);
     static Island = new LandType("Island", [CardType.Land]);
     static Swamp = new LandType("Swamp", [CardType.Land]);
@@ -1341,7 +1358,7 @@ export class LandType extends Subtype {
     static Cave = new LandType("Cave", [CardType.Land]);
 }
 // 呪文タイプ
-export class SpellType extends Subtype {
+class SpellType extends Subtype {
     static Adventure = new SpellType("Adventure", [
         CardType.Instant,
         CardType.Sorcery,
@@ -1357,7 +1374,7 @@ export class SpellType extends Subtype {
     static Trap = new SpellType("Trap", [CardType.Instant, CardType.Sorcery]);
 }
 // アーティファクト・タイプ
-export class ArtifactType extends Subtype {
+class ArtifactType extends Subtype {
     static Attraction = new ArtifactType("Attraction", [CardType.Artifact]);
     static Blood = new ArtifactType("Blood", [CardType.Artifact]);
     static Bobblehead = new ArtifactType("Bobblehead", [CardType.Artifact]);
@@ -1377,7 +1394,7 @@ export class ArtifactType extends Subtype {
     static Vehicle = new ArtifactType("Vehicle", [CardType.Artifact]);
 }
 // エンチャント・タイプ
-export class EnchantmentType extends Subtype {
+class EnchantmentType extends Subtype {
     static Aura = new EnchantmentType("Aura", [CardType.Enchantment]);
     static Background = new EnchantmentType("Background", [
         CardType.Enchantment,
@@ -1393,7 +1410,7 @@ export class EnchantmentType extends Subtype {
     static Shrine = new EnchantmentType("Shrine", [CardType.Enchantment]);
 }
 // プレインズウォーカー・タイプ
-export class PlaneswalkerType extends Subtype {
+class PlaneswalkerType extends Subtype {
     static Ajani = new PlaneswalkerType("Ajani", [CardType.Planeswalker]);
     static Aminatou = new PlaneswalkerType("Aminatou", [CardType.Planeswalker]);
     static Angrath = new PlaneswalkerType("Angrath", [CardType.Planeswalker]);
@@ -1486,13 +1503,13 @@ export class PlaneswalkerType extends Subtype {
 }
 
 // バトル・タイプ
-export class BattleType extends Subtype {
+class BattleType extends Subtype {
     static Siege = new BattleType("Siege", [CardType.Battle]);
 }
 // 次元タイプ
 // ダンジョン・タイプ
 
-export class Supertype {
+class Supertype {
     name: string;
 
     constructor(name: string) {
@@ -1507,7 +1524,7 @@ export class Supertype {
 }
 
 /** コストシンボル。マナ以外のもの（エネルギーなど）も含む */
-export class CostSymbol {}
+class CostSymbol {}
 
 /** 色マナシンボル */
 class ColoredManaSymbol extends CostSymbol {
@@ -1561,7 +1578,7 @@ class HybridSymbol extends CostSymbol {
 }
 
 /** マナ・シンボル */
-export class ManaSymbol extends CostSymbol {
+class ManaSymbol extends CostSymbol {
     // constructor(spec: Color | number | "X" | "Y" | "Z") {
     //     super();
     //     if (typeof spec === "number") {
@@ -1635,7 +1652,7 @@ export class ManaSymbol extends CostSymbol {
     static PhyGU = new HybridSymbol([ManaSymbol.PhyGreen, ManaSymbol.PhyBlue]);
 }
 
-export function ManaSymbols(glyphs: string): ManaSymbol[] {
+function SymbolsFromString(glyphs: string): ManaSymbol[] {
     // FIXME テキストからマナ・コストを生成する
     let x: ManaSymbol[] = [];
     return x;

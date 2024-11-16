@@ -1,6 +1,18 @@
 "use strict";
-import { GameHistory, GameState } from "./Game";
-import { GameObject, Player, Zone } from "./GameObject";
+import { GameHistory, GameState, Zone } from "./Game";
+import { GameObject, Player } from "./GameObject";
+
+export {
+    ReferenceParam,
+    Ref,
+    SingleRef,
+    MultiRef,
+    Spec,
+    SingleSpec,
+    MultiSpec,
+    resolve_single_spec,
+    resolve_multi_spec,
+};
 
 // export type ReferenceParams = {
 //     state: GameState;
@@ -9,7 +21,7 @@ import { GameObject, Player, Zone } from "./GameObject";
 // };
 
 /** Referenceの解決に必要な値。 */
-export class ReferenceParam {
+class ReferenceParam {
     #history: GameState[];
     #self: GameObject;
 
@@ -29,16 +41,10 @@ export class ReferenceParam {
     }
 }
 
-export type Referable =
-    | GameObject
-    | Player
-    | Zone
-    | number
-    | string
-    | undefined;
+type Referable = GameObject | Player | Zone | number | string | undefined;
 
 // ==============================================================================
-export class Ref<T extends Referable> {
+class Ref<T extends Referable> {
     ref: (params: ReferenceParam) => T | T[];
 
     constructor(ref: (params: ReferenceParam) => T | T[]) {
@@ -48,7 +54,7 @@ export class Ref<T extends Referable> {
     resolve: (params: ReferenceParam) => T | T[] = (params) => this.ref(params);
 }
 
-export class SingleRef<T extends Referable> extends Ref<T> {
+class SingleRef<T extends Referable> extends Ref<T> {
     declare ref: (params: ReferenceParam) => T;
 
     constructor(ref: (params: ReferenceParam) => T) {
@@ -70,7 +76,7 @@ export class SingleRef<T extends Referable> extends Ref<T> {
     });
 }
 
-export class MultiRef<T extends Referable> extends Ref<T> {
+class MultiRef<T extends Referable> extends Ref<T> {
     declare ref: (param: ReferenceParam) => T[];
 
     constructor(ref: (param: ReferenceParam) => T[]) {
@@ -80,9 +86,9 @@ export class MultiRef<T extends Referable> extends Ref<T> {
     resolve: (params: ReferenceParam) => T[] = (params) => this.ref(params);
 }
 
-export type SingleSpec<T extends Referable> = T | SingleRef<T>;
-export type MultiSpec<T extends Referable> = SingleSpec<T>[] | MultiRef<T>;
-export type Spec<T extends Referable> = SingleSpec<T> | MultiSpec<T>;
+type SingleSpec<T extends Referable> = T | SingleRef<T>;
+type MultiSpec<T extends Referable> = SingleSpec<T>[] | MultiRef<T>;
+type Spec<T extends Referable> = SingleSpec<T> | MultiSpec<T>;
 
 // タイプガード ===============================================================
 function isGameObject(arg: any): arg is GameObject {
@@ -98,13 +104,13 @@ function isZone(arg: any): arg is Zone {
 }
 
 // Specの解決 ===============================================================
-export function resolve_single_spec<T extends Referable>(
+function resolve_single_spec<T extends Referable>(
     spec: SingleSpec<T>,
     params: ReferenceParam
 ): T {
     return spec instanceof SingleRef ? spec.resolve(params) : spec;
 }
-export function resolve_multi_spec<T extends Referable>(
+function resolve_multi_spec<T extends Referable>(
     spec: MultiSpec<T>,
     params: ReferenceParam
 ): T[] {

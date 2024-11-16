@@ -2,6 +2,8 @@
 /** 効果やルールによってゲーム中に行われる指示。
  */
 
+import { Game, GameHistory, GameState } from "./Game";
+import { GameObject, Card, Player } from "./GameObject";
 import {
     ReferenceParam,
     SingleRef,
@@ -10,26 +12,25 @@ import {
     Spec,
     resolve_single_spec,
 } from "./Reference";
-import { Game, GameHistory, GameState } from "./Game";
-import {
-    ContinousEffectType,
-    ContinuousEffect,
-    DelayedTriggeredAbility,
-    ProcessForbiddingContinousEffect,
-    InstructionChecker,
-    InstructionReplacer,
-    Player,
-    ProcessAlteringContinousEffect,
-    ReplacementEffect,
-    GameObject,
-    Zone,
-    ZoneType,
-    Counter,
-    Card,
-} from "./GameObject";
+
+export {
+    Instruction,
+    Cast,
+    Paying,
+    MoveZone,
+    Drawing,
+    DealingDamage,
+    GainingLife,
+    Tapping,
+    Exile,
+    Sacrifice,
+    Discarding,
+    Countering,
+    Milling,
+};
 
 /** `Instruction`の実行関数`perform()`の引数 */
-export type PerformArgs = {
+type PerformArgs = {
     /** 実行前の状態 */
     state: GameState;
     /** 履歴 */
@@ -41,7 +42,7 @@ export type PerformArgs = {
 /** 処理指示を表すクラス。効果やターン起因処理、状況起因処理などの行う指示
  * ゲーム中に実行されるときに`Reference`を通じて実際のゲーム内の情報を注入される
  */
-export abstract class Instruction {
+abstract class Instruction {
     /** 生成済みのインスタンスの数 */
     static instance_count = 0;
     /** InstructionのID (0始まり) */
@@ -63,7 +64,7 @@ export abstract class Instruction {
 
 // MARK: 唱える関連 ********************************
 /** 唱える */
-export class Cast extends Instruction {
+class Cast extends Instruction {
     casted: SingleSpec<GameObject>;
 
     constructor(
@@ -99,15 +100,15 @@ export class Cast extends Instruction {
 /** 起動する */
 
 /** 誘発する */
-// export class Triggering extends Instruction {}
+// class Triggering extends Instruction {}
 
 /** プレイする */
 
 /** 呪文や能力を解決する */
-// export class Resolving extends Instruction {}
+// class Resolving extends Instruction {}
 
 /** 支払う */
-export class Paying extends Instruction {
+class Paying extends Instruction {
     costs: Instruction[];
     // 任意の処理がコストになりうる（例：炎の編み込み）
 
@@ -133,7 +134,7 @@ export class Paying extends Instruction {
 
 // MARK:キーワードでない処理 ********************************
 /** 領域を移動させる */
-export class MoveZone extends Instruction {
+class MoveZone extends Instruction {
     /** 移動させるオブジェクトと、移動先領域の組。 */
     movespecs: {
         /** 移動させるオブジェクト */
@@ -172,7 +173,7 @@ export class MoveZone extends Instruction {
 }
 
 /** カードを引く */
-export class Drawing extends Instruction {
+class Drawing extends Instruction {
     number: number | ValueReference;
 
     constructor(number: number | ValueReference, player: Player) {
@@ -204,7 +205,7 @@ export class Drawing extends Instruction {
 // 托鉢するものは置換処理の方で特別扱いする
 
 /** ダメージを与える */
-export class DealingDamage extends Instruction {
+class DealingDamage extends Instruction {
     /** ダメージを与える先のオブジェクト */
     objectives: (GameObject | Player | ObjectReference)[];
     /** ダメージの量 */
@@ -255,7 +256,7 @@ export class DealingDamage extends Instruction {
 }
 
 /** ライフを得る */
-export class GainingLife extends Instruction {
+class GainingLife extends Instruction {
     specs: { player: MultiSpec<Player>; amount_spec: SingleSpec<number> }[];
 
     constructor(args: {
@@ -295,7 +296,7 @@ export class GainingLife extends Instruction {
 }
 
 /** カウンターを置く・得る */
-// export class PuttingCounter extends Instruction {
+// class PuttingCounter extends Instruction {
 //     counters: Counter[];
 
 //     constructor(counters: Counter[]) {
@@ -309,13 +310,13 @@ export class GainingLife extends Instruction {
 /** 見る */
 /** 束に分ける */
 /** 値を選ぶ・宣言する */
-// export class DeclaringValue extends Instruction {}
+// class DeclaringValue extends Instruction {}
 
 /** 裏向きにする・表向きにする */
 
 // MARK: 常盤木 *****************************************
 /** タップ */
-export class Tapping extends Instruction {
+class Tapping extends Instruction {
     refs_objects: MultiSpec<GameObject>[];
     performer?: MultiSpec<Player>;
     constructor(permanents: ObjectReference[], performer?: Player) {
@@ -346,17 +347,17 @@ export class Tapping extends Instruction {
 }
 
 /** アンタップ */
-// export class Untapping extends Instruction {
+// class Untapping extends Instruction {
 //     permanents: ValueReference[];
 // }
 
 /** 破壊する */
-// export class Destroying extends Instruction {
+// class Destroying extends Instruction {
 //     refs_objects = [];
 // }
 
 /** 追放する */
-export class Exile extends MoveZone {
+class Exile extends MoveZone {
     constructor(
         args: ConstructorParameters<typeof Instruction>[number] & {
             exiled: Spec<GameObject>;
@@ -373,7 +374,7 @@ export class Exile extends MoveZone {
 }
 
 /** 生け贄に捧げる */ // TODO
-export class Sacrifice extends MoveZone {
+class Sacrifice extends MoveZone {
     constructor(args: ConstructorParameters<typeof MoveZone>[number]) {
         // FIXME そもそも移動先を指定する必要がないので MoveZoneの使い回しではいけない
         super(args);
@@ -387,52 +388,52 @@ export class Sacrifice extends MoveZone {
 }
 
 /** 探す */
-// export class Searching extends Instruction {
+// class Searching extends Instruction {
 //     searched_objects = [];
 // }
 
 /** 切り直す */
-// export class Shuffling extends Instruction {}
+// class Shuffling extends Instruction {}
 
 /** 捨てる */
-export class Discarding extends MoveZone {
+class Discarding extends MoveZone {
     discarded_cards = [];
 }
 
 /** 公開する */
-// export class Revealing extends Instruction {
+// class Revealing extends Instruction {
 //     revealed_objects = [];
 // }
 
 /** 打ち消す */
-export class Countering extends MoveZone {}
+class Countering extends MoveZone {}
 
 /** 生成する */
-// export class Creating extends Instruction {}
+// class Creating extends Instruction {}
 
 /** つける */
-// export class Attaching extends Instruction {}
+// class Attaching extends Instruction {}
 /** はずす */
-// export class Unattaching extends Instruction {}
+// class Unattaching extends Instruction {}
 /** 格闘を行う */
-// export class Fighting extends Instruction {}
+// class Fighting extends Instruction {}
 /** 切削する */
-export class Milling extends MoveZone {}
+class Milling extends MoveZone {}
 /** 占術を行う */
-// export class Scrying extends Instruction {}
+// class Scrying extends Instruction {}
 /** 倍にする */
-// export class Doubling extends Instruction {}
+// class Doubling extends Instruction {}
 /** 交換する */
-// export class Exchanging extends Instruction {}
+// class Exchanging extends Instruction {}
 
 /** 変身する */
-// export class Transforming extends Instruction {}
+// class Transforming extends Instruction {}
 
 /** 再生する */
-// export class Regenerating extends Instruction {}
+// class Regenerating extends Instruction {}
 
 /** 諜報を行う */
-// export class Surveiling extends Instruction {}
+// class Surveiling extends Instruction {}
 
 // ================================================
 // function CastAsInstructionReplacer(

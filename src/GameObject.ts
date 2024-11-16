@@ -1,16 +1,23 @@
 "use strict";
 
-import { Ability, SpellAbility, TriggeredAbility } from "./Ability";
-import {
-    CardType,
-    ColorIndicator,
-    ManaSymbol,
-    Subtype,
-    Supertype,
-} from "./Characteristic";
 import { GameHistory, GameState } from "./Game";
+import { Ability, SpellAbility, TriggeredAbility } from "./Ability";
+import { CardType } from "./Characteristic";
 import { Instruction } from "./Instruction";
 import { MultiRef } from "./Reference";
+
+export {
+    GameObject,
+    Card,
+    Status,
+    StackedAbility,
+    ContinuousEffect,
+    ReplacementEffect,
+    DelayedTriggeredAbility,
+    Additional,
+    Player,
+    Counter,
+};
 
 /** ゲーム内のオブジェクト
  * カード、スタック上の能力、継続的効果、遅延誘発型能力、置換効果
@@ -26,7 +33,7 @@ import { MultiRef } from "./Reference";
 //   - スタック上の能力
 //   - 継続的効果
 //   - 遅延誘発型能力
-export abstract class GameObject {
+abstract class GameObject {
     id: number;
     zone: Zone;
     owner: Player;
@@ -76,7 +83,7 @@ export abstract class GameObject {
 
 // MARK: カード
 /** カード */
-export class Card extends GameObject {
+class Card extends GameObject {
     constructor(spec: CharacteristicsSpec) {
         super();
         this.characteristics_sets.push(new Characteristics(spec));
@@ -125,7 +132,7 @@ export class Card extends GameObject {
 }
 
 /** 位相 */
-export class Status {
+class Status {
     tapped: boolean;
     flipped: boolean;
     is_face_down: boolean;
@@ -134,7 +141,7 @@ export class Status {
 
 // MARK: スタック上の能力
 /** スタック上の能力 */
-export class StackedAbilityType {
+class StackedAbilityType {
     name: string;
     constructor(name: string) {
         this.name = name;
@@ -147,7 +154,7 @@ export class StackedAbilityType {
 }
 
 /** スタック上の能力 */
-export class StackedAbility extends GameObject {
+class StackedAbility extends GameObject {
     /** 能力の種類。起動型、誘発型、遅延誘発型、再帰誘発型 */
     type: StackedAbilityType;
     /** 中身の能力 */
@@ -176,16 +183,16 @@ export class StackedAbility extends GameObject {
  * 1. 特性や値を変更する効果
  * 2. 手続きを修整する効果
  */
-export class ContinousEffectType {
+class ContinousEffectType {
     type: "AltarValue" | "AlterProcess" | "ForbidProcess";
 }
 
-export class ContinuousEffect extends GameObject {
+class ContinuousEffect extends GameObject {
     // 1. 期間
 }
 
 /** Instructionの実行が特定の条件を満たすかどうかを判定する関数を表す型 */
-export type InstructionChecker = (args: {
+type InstructionChecker = (args: {
     instruction: Instruction;
     state: GameState;
     history: GameHistory;
@@ -193,16 +200,16 @@ export type InstructionChecker = (args: {
 }) => boolean;
 
 /** Instructionを別の1つ以上のInstructionに置き換える関数を表す型 */
-export type InstructionReplacer = (instruction: Instruction) => Instruction[];
+type InstructionReplacer = (instruction: Instruction) => Instruction[];
 
 /** 値や特性を変更する継続的効果 */
-export class ValueAlteringContinousEffect extends ContinuousEffect {
+class ValueAlteringContinousEffect extends ContinuousEffect {
     /** 影響を及ぼすオブジェクト */
     affected_objects: GameObject[] | MultiRef[];
 }
 
 /** 手続きを変更する継続的効果 */
-export class ProcessAlteringContinousEffect extends ContinuousEffect {
+class ProcessAlteringContinousEffect extends ContinuousEffect {
     /** 変更対象の手続きに該当するかどうかをチェックする関数 */
     check: InstructionChecker;
     /** 変更後の処理 */
@@ -227,7 +234,7 @@ export class ProcessAlteringContinousEffect extends ContinuousEffect {
 }
 
 /** 処理を禁止する継続的効果 */
-export class ProcessForbiddingContinousEffect extends ContinuousEffect {
+class ProcessForbiddingContinousEffect extends ContinuousEffect {
     /** 禁止対象の手続きに該当するかどうかをチェックする関数 */
     check: InstructionChecker;
 
@@ -239,7 +246,7 @@ export class ProcessForbiddingContinousEffect extends ContinuousEffect {
 
 // MARK: 置換効果
 /** 置換効果 */
-export class ReplacementEffect extends GameObject {
+class ReplacementEffect extends GameObject {
     /** 置換対象の手続きに該当するかどうかをチェックする関数 */
     check: InstructionChecker;
     /** 置換後の処理 */
@@ -263,7 +270,7 @@ export class ReplacementEffect extends GameObject {
 
 // MARK: 遅延誘発型能力
 /** 遅延誘発型能力 */
-export class DelayedTriggeredAbility extends GameObject {
+class DelayedTriggeredAbility extends GameObject {
     // 誘発型能力のラップ
     /** 誘発する能力 */
     ability: TriggeredAbility;
@@ -294,7 +301,7 @@ class AdditionalStep extends Additional {}
 // ==================================================================
 
 /** プレイヤー */
-export class Player {
+class Player {
     id: number;
     name?: string;
     life: number;
@@ -308,7 +315,7 @@ export class Player {
     }
 }
 
-export class Counter {
+class Counter {
     name: string;
     instructions?: Instruction[];
 

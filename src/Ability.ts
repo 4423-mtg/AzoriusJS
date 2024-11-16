@@ -7,12 +7,11 @@ import { Game, GameHistory, GameState } from "./Game";
 import {
     ContinuousEffect,
     GameObject,
-    InstructionChecker,
     Player,
     StackedAbility,
-    StackedAbilityType,
 } from "./GameObject";
-import { Instruction, PerformArgs } from "./Instruction";
+import { Instruction } from "./Instruction";
+
 export {
     Ability,
     ActivatedAbility,
