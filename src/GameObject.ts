@@ -19,10 +19,15 @@ export {
     ReplacementEffect,
     DelayedTriggeredAbility,
     Additional,
+    AdditionalTurn,
+    AdditionalPhase,
+    AdditionalStep,
     Player,
     Counter,
+    GameObjectAttribute,
 };
 
+// MARK: GameObject
 /** ゲーム内のオブジェクト。
  * ルール上の「オブジェクト」の他に、継続的効果や遅延誘発型能力など、
  * 「ゲームの状態」に含まれるもの全般。 */
@@ -46,6 +51,8 @@ abstract class GameObject {
 
     // ----- ダメージ -----
     damage: number = 0;
+
+    constructor(args: {}) {}
 
     // 判定関数 ==========================
     /**
@@ -73,6 +80,28 @@ abstract class GameObject {
         );
     }
 }
+
+type GameObjectAttribute =
+    | "card"
+    | "token/copy"
+    | "stacked_ability"
+    | "ability"
+    | EffectType
+    | "player";
+// | Player;
+
+type EffectType =
+    | "continuous_effect"
+    | "delayed_triggered_ability"
+    | "replacement_effect"
+    | AdditionalType;
+
+type AdditionalType =
+    | "additional_turn"
+    | "additional_phase"
+    | "additional_step";
+
+type GameObjectArgs = ConstructorParameters<typeof GameObject>[0];
 
 // MARK: カード
 /** カード */
@@ -280,21 +309,30 @@ class DelayedTriggeredAbility extends GameObject {
 
 // MARK: ターン、フェイズ、ステップを追加する効果
 /** 追加のターン、フェイズ、ステップ */
-abstract class Additional extends GameObject {
-    /** 開始する条件 */
-    // NOTE: 「ターン開始タイミング」(Time Valutタイミング)で追加ターンが
-    // 適用されるかどうかの判定が行われる。
-    // 判定には以下のものを追加で使う
-    // - 始まろうとしているターン
-    // - この効果が生成されてからの履歴
-    condition: boolean | ((params: ReferenceParam, next?: Turn) => boolean);
-    // ターンスキップは置換効果なので、ターン追加はInstructionである
-    instruction: Instruction;
+type Additional = GameObject & {
+    condition: SingleSpec<boolean>;
+    create: (params: ReferenceParam) => Turn | Phase | Step;
+};
 
-    create(params: ReferenceParam): any {
-        // FIXME: instructionだが戻り値は GameStateではない！
-        return this.instruction.perform(params);
-    }
+class AdditionalTurn extends GameObject {
+    /** ターンを追加する条件 */
+    condition: SingleSpec<boolean>;
+    /** 追加しようとするターンを生成する */
+    create: (params: ReferenceParam) => Turn;
+}
+
+class AdditionalPhase extends GameObject {
+    /** フェイズを追加する条件 */
+    condition: SingleSpec<boolean>;
+    /** 追加しようとするフェイズを生成する */
+    create: (params: ReferenceParam) => Phase;
+}
+
+class AdditionalStep extends GameObject {
+    /** ステップを追加する条件 */
+    condition: SingleSpec<boolean>;
+    /** 追加しようとするステップを生成する */
+    create: (params: ReferenceParam) => Step;
 }
 // ターンを追加する
 // フェイズ、ステップを追加する
@@ -303,16 +341,6 @@ abstract class Additional extends GameObject {
 // 現在がメインフェイズならこの後にフェイズを追加する（連続突撃）
 // ターンを追加するが、そのターンの終了ステップに敗北
 // 開始フェイズと、N個のアップキープを追加する（オベカ）
-
-class AdditionalTurn extends Additional {
-    create(params: ReferenceParam): Turn {}
-}
-class AdditionalPhase extends Additional {
-    create(params: ReferenceParam): Phase {}
-}
-class AdditionalStep extends Additional {
-    create(params: ReferenceParam): Step {}
-}
 
 // ==================================================================
 // MARK: プレイヤー
