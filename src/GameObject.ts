@@ -18,10 +18,10 @@ export {
     ContinuousEffect,
     ReplacementEffect,
     DelayedTriggeredAbility,
-    Additional,
-    AdditionalTurn,
-    AdditionalPhase,
-    AdditionalStep,
+    AdditionalEffect,
+    AdditionalTurnEffect,
+    AdditionalPhaseEffect,
+    AdditionalStepEffect,
     Player,
     Counter,
     GameObjectAttribute,
@@ -309,26 +309,29 @@ class DelayedTriggeredAbility extends GameObject {
 
 // MARK: ターン、フェイズ、ステップを追加する効果
 /** 追加のターン、フェイズ、ステップ */
-type Additional = GameObject & {
-    condition: SingleSpec<boolean>;
-    create: (params: ReferenceParam) => Turn | Phase | Step;
-};
+type AdditionalEffect =
+    | AdditionalTurnEffect
+    | AdditionalPhaseEffect
+    | AdditionalStepEffect;
 
-class AdditionalTurn extends GameObject {
+/** ターンを追加する効果 */
+class AdditionalTurnEffect extends GameObject {
     /** ターンを追加する条件 */
     condition: SingleSpec<boolean>;
     /** 追加しようとするターンを生成する */
     create: (params: ReferenceParam) => Turn;
 }
 
-class AdditionalPhase extends GameObject {
+/** フェイズを追加する効果 */
+class AdditionalPhaseEffect extends GameObject {
     /** フェイズを追加する条件 */
     condition: SingleSpec<boolean>;
     /** 追加しようとするフェイズを生成する */
     create: (params: ReferenceParam) => Phase;
 }
 
-class AdditionalStep extends GameObject {
+/** ステップを追加する効果 */
+class AdditionalStepEffect extends GameObject {
     /** ステップを追加する条件 */
     condition: SingleSpec<boolean>;
     /** 追加しようとするステップを生成する */
