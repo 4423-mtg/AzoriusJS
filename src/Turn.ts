@@ -4,7 +4,59 @@ import { Player } from "./GameObject";
 
 /** ターン、フェイズ、ステップを表すオブジェクト */
 
-export { Turn, Phase, Step, PhaseKind, StepKind };
+export { Turn, Phase, Step, PhaseKind, StepKind, next_phase_and_step };
+
+/** フェイズの種別 */
+type PhaseKind =
+    | "Beginning"
+    | "Precombat Main"
+    | "Combat"
+    | "Postcombat Main"
+    | "Ending";
+
+/** ステップの種別 */
+type StepKind =
+    | "Untap"
+    | "Upkeep"
+    | "Draw"
+    | "Beginning of Combat"
+    | "Declare Attackers"
+    | "Declare Blockers"
+    | "Combat Damage"
+    | "End of Combat"
+    | "End"
+    | "Cleanup";
+
+const phase_step_def: Array<{
+    phase: PhaseKind | undefined;
+    step: StepKind | undefined;
+}> = [
+    { phase: "Beginning", step: "Untap" },
+    { phase: "Beginning", step: "Upkeep" },
+    { phase: "Beginning", step: "Draw" },
+    { phase: "Precombat Main", step: undefined },
+    { phase: "Combat", step: "Beginning of Combat" },
+    { phase: "Combat", step: "Declare Attackers" },
+    { phase: "Combat", step: "Declare Blockers" },
+    { phase: "Combat", step: "Combat Damage" },
+    { phase: "Combat", step: "End of Combat" },
+    { phase: "Postcombat Main", step: undefined },
+    { phase: "Ending", step: "End" },
+    { phase: "Ending", step: "Cleanup" },
+    { phase: undefined, step: undefined },
+];
+
+/** フェイズとステップの組から、それの次に来るフェイズとステップを返す。 */
+function next_phase_and_step(
+    phasekind: PhaseKind,
+    stepkind?: StepKind
+): {
+    phase: PhaseKind | undefined;
+    step: StepKind | undefined;
+} {
+    const index = phase_step_def.indexOf({ phase: phasekind, step: stepkind });
+    return phase_step_def[index + 1];
+}
 
 class Turn {
     /** ターン
@@ -22,139 +74,34 @@ class Turn {
         this.active_player = active_player;
         this.is_extra = is_extra;
     }
-
-    // TODO 次のフェイズ・ステップを返す　ジェネレータ？
 }
 
-type PhaseKind =
-    | "Beginning"
-    | "Precombat Main"
-    | "Combat"
-    | "Postcombat Main"
-    | "Ending";
+/** フェイズ */
 class Phase {
-    /** フェイズ */
     static count = 0;
     id: number;
     kind: PhaseKind;
-    active_player?: Player;
     is_extra: boolean;
 
-    constructor(
-        kind: PhaseKind,
-        active_player?: Player,
-        is_extra: boolean = false
-    ) {
+    constructor(kind: PhaseKind, is_extra: boolean = false) {
         this.id = Phase.count;
         Phase.count++;
         this.kind = kind;
-        this.active_player = active_player;
         this.is_extra = is_extra;
-    }
-
-    get child_step_kinds(): StepKind[] {
-        switch (this.kind) {
-            case "Beginning":
-                return ["Untap", "Upkeep", "Draw"];
-            case "Precombat Main":
-                return [];
-            case "Combat":
-                return [
-                    "Beginning of Combat",
-                    "Declare Attackers",
-                    "Declare Blockers",
-                    "Combat Damage",
-                    "End of Combat",
-                ];
-            case "Postcombat Main":
-                return [];
-            case "Ending":
-                return ["End", "Cleanup"];
-        }
-    }
-    get has_step(): boolean {
-        return this.child_step_kinds.length > 0;
-    }
-    get next_kind(): PhaseKind | undefined {
-        switch (this.kind) {
-            case "Beginning":
-                return "Precombat Main";
-            case "Precombat Main":
-                return "Combat";
-            case "Combat":
-                return "Postcombat Main";
-            case "Postcombat Main":
-                return "Ending";
-            case "Ending":
-                return undefined;
-        }
     }
 }
 
-type StepKind =
-    | "Untap"
-    | "Upkeep"
-    | "Draw"
-    | "Beginning of Combat"
-    | "Declare Attackers"
-    | "Declare Blockers"
-    | "Combat Damage"
-    | "End of Combat"
-    | "End"
-    | "Cleanup";
+/** ステップ */
 class Step {
-    /** ステップ */
     static count = 0;
     id: number;
     kind: StepKind;
-    active_player?: Player;
     is_extra: boolean;
 
-    constructor(
-        kind: StepKind,
-        active_player?: Player,
-        is_extra: boolean = false
-    ) {
+    constructor(kind: StepKind, is_extra: boolean = false) {
         this.id = Step.count;
         Step.count++;
         this.kind = kind;
-        this.active_player = active_player;
         this.is_extra = is_extra;
-    }
-
-    get parent_phase_kind(): PhaseKind {
-        switch (this.kind) {
-            case "Untap":
-            case "Upkeep":
-            case "Draw":
-                return "Beginning";
-            case "Beginning of Combat":
-            case "Declare Attackers":
-            case "Declare Blockers":
-            case "Combat Damage":
-            case "End of Combat":
-                return "Combat";
-            case "End":
-            case "Cleanup":
-                return "Ending";
-        }
-    }
-    get next_kind(): StepKind | undefined {
-        const order: (StepKind | undefined)[] = [
-            "Untap",
-            "Upkeep",
-            "Draw",
-            undefined,
-            "Beginning of Combat",
-            "Declare Attackers",
-            "Declare Blockers",
-            "Combat Damage",
-            "End of Combat",
-            undefined,
-            "End",
-            "Cleanup",
-            undefined,
-        ];
-        return order[order.indexOf(this.kind) + 1];
     }
 }
