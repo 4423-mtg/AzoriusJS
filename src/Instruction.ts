@@ -2,7 +2,7 @@
 /** 効果やルールによってゲーム中に行われる指示。
  */
 
-import { Game, GameHistory, GameState } from "./Game";
+import { Game, GameHistory, GameState, Zone, ZoneType } from "./Game";
 import { GameObject, Card, Player } from "./GameObject";
 import {
     ReferenceParam,

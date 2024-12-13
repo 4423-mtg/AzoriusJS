@@ -16,6 +16,7 @@ export {
     Ability,
     ActivatedAbility,
     TriggeredAbility,
+    DelayedTriggeredAbility,
     SpellAbility,
     StaticAbility,
     KeywordAbility,
@@ -146,6 +147,8 @@ class TriggeredAbility extends Ability {
         // }
     }
 }
+
+class DelayedTriggeredAbility extends TriggeredAbility {}
 
 // ==============================================================================
 /** オブジェクトの持つ呪文能力 */

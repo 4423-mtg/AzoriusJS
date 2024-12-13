@@ -2,20 +2,18 @@
 import {
     GameObject,
     Player,
-    GameObjectAttribute,
     Card,
     StackedAbility,
     ContinuousEffect,
-    DelayedTriggeredAbility,
     ReplacementEffect,
-    AdditionalEffect,
     AdditionalTurnEffect,
     AdditionalPhaseEffect,
     AdditionalStepEffect,
 } from "./GameObject";
-import { Turn, Phase, Step } from "./Turn";
+import { DelayedTriggeredAbility } from "./Ability";
+import { Turn, Phase, Step, next_phase_and_step } from "./Turn";
 
-export { Game, GameState, GameHistory };
+export { Game, GameState, GameHistory, Zone, ZoneType };
 
 // MARK: Game
 class Game {
@@ -321,13 +319,12 @@ class GameHistory {
 
     run2(): void {
         while (true) {
-            // 全員が連続で優先権をパスしている
             if (
-                // クリンナップ・ステップではフラグが立っている場合のみ
+                // 全員が連続で優先権をパスしている。
+                // クリンナップ・ステップではフラグが立っている場合のみ。
+                // アンタップ・ステップでは優先権は発生しないが、アンタップ・ステップでここに来ることはない。
                 (this.current.step?.kind === "Cleanup" &&
                     this.current.cleanup_again) ||
-                // 通常のフェイズやステップ
-                // NOTE: アンタップ・ステップでは優先権は発生しないが、アンタップ・ステップでここに来ることはない
                 this.current.pass_count === this.current.players.size
             ) {
                 // スタックが空
@@ -351,30 +348,37 @@ class GameHistory {
         }
     }
 
-    /** 現在のステップを終了し、次のステップに移る。
-     * 次がメイン・フェイズである場合は、ステップがないので次のフェイズに移る。
-     * 現在がクリンナップ・ステップである場合は、次のターンに移る。
-     * 追加ターンや追加のフェイズ、追加のステップがある場合はそれに移る。
+    /** 現在のステップやフェイズを終了し、次のステップやフェイズに移行する。
      * 移った先のフェイズやステップにターン起因処理がある場合はそれも行う。
+     * - 次がメイン・フェイズである場合は、ステップがないのでメイン・フェイズに移る。
+     * - 現在がクリンナップ・ステップである場合は、次のターンに移る。
+     * - 追加ターンや追加のフェイズ、追加のステップがある場合はそれに移る。
      */
     goto_next(): void {
         // 移る先のフェイズやステップ、ターンを決める。追加ターンや追加のフェイズ・ステップを考慮する
-        // - ステップの追加があるなら
-        //   - それに移る goto_step(step)
-        // - ステップの追加がないなら
-        //   - 次のステップがあるなら
-        //     - それに移る goto_step()
-        //   - 次のステップがないなら
-        //     - フェイズの追加があるなら
-        //       - それに移る goto_phase(phase)
-        //     - フェイズの追加がないなら
-        //       - 次のフェイズがあるなら
-        //         - それに移る goto_phase()
-        //       - 次のフェイズがないなら
-        //         - ターンの追加があるなら
-        //           - それに移る goto_turn(turn)
-        //         - ターンの追加がないなら
-        //           - 次のターンに移る goto_turn()
+
+        const next = next_phase_and_step(
+            this.current.phase.kind,
+            this.current.step?.kind
+        );
+        // ステップの追加があるならそれに移る FIXME:
+        if (1) {
+        }
+        // ないなら次のステップに移る
+        else if (next.step) {
+        }
+        // 次のステップがないなら、フェイズの追加があるならそれに移る FIXME:
+        else if (1) {
+        }
+        // フェイズの追加がないなら次のフェイズに移る
+        else if (next.phase) {
+        }
+        // 次のフェイズがないなら、ターンの追加があるならそれに移る FIXME:
+        else if (1) {
+        }
+        // ターンの追加がないなら次のターンに移る
+        else {
+        }
         // TODO: スキップは実際にそれに移ろうとしたタイミングで適用する (in goto_step, goto_phase, goto_turn)
 
         ("================");
@@ -425,32 +429,32 @@ class GameHistory {
      * ステップがスキップする場合はそれも考慮する。
      * 現在のフェイズに次のステップがもうないか、
      * 現在のステップがない（メインフェイズ）ならエラーを投げる。 */
-    goto_step(step?: Step): void {
-        // stepが与えられていないなら新しいステップを生成する
-        if (step === undefined) {
-            // 次のステップがない場合はエラー
-            if (this.current.step?.next_kind === undefined) {
-                throw new Error("No next step");
-            } else {
-                // 新しいステップを生成する
-                step = new Step(
-                    this.current.step.next_kind,
-                    this.current.active_player
-                ); // FIXME: newした時点でidが振られてしまう。newする際にhistoryを参照して最新+1を振ること。
-            }
-        }
-        // TODO: ターン、フェイズ、ステップを「飛ばす」は置換効果なので、
-        // 逆に開始することはinstructionとして行う必要がある
+    // goto_step(step?: Step): void {
+    //     // stepが与えられていないなら新しいステップを生成する
+    //     if (step === undefined) {
+    //         // 次のステップがない場合はエラー
+    //         if (this.current.step?.next_kind === undefined) {
+    //             throw new Error("No next step");
+    //         } else {
+    //             // 新しいステップを生成する
+    //             step = new Step(
+    //                 this.current.step.next_kind,
+    //                 this.current.active_player
+    //             ); // FIXME: newした時点でidが振られてしまう。newする際にhistoryを参照して最新+1を振ること。
+    //         }
+    //     }
+    //     // TODO: ターン、フェイズ、ステップを「飛ばす」は置換効果なので、
+    //     // 逆に開始することはinstructionとして行う必要がある
 
-        // stepを更新する
-        const new_state = this.current.deepcopy();
-        new_state.step = step;
-        // stateを移る
-        this.#history.push(new_state);
+    //     // stepを更新する
+    //     const new_state = this.current.deepcopy();
+    //     new_state.step = step;
+    //     // stateを移る
+    //     this.#history.push(new_state);
 
-        // 移った先のステップのターン起因処理を行う
-        // TODO:
-    }
+    //     // 移った先のステップのターン起因処理を行う
+    //     // TODO:
+    // }
     goto_phase(phase?: Phase): void {}
     goto_turn(turn?: Turn): void {}
     get_extra_step(): Step | undefined {}
@@ -521,7 +525,7 @@ class GameHistory {
 }
 
 /** 領域の種別 OK */
-export class ZoneType {
+class ZoneType {
     /** 領域の名前 */
     name: string;
     /** オーナーを持つかどうか。 */
@@ -558,7 +562,7 @@ export class ZoneType {
 }
 
 /** 領域 */
-export class Zone {
+class Zone {
     /** 領域の種別 */
     zonetype: ZoneType;
     /** 領域のオーナー */

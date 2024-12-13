@@ -52,6 +52,7 @@ class Characteristics {
     defense?: number | string;
     hand_modifier?: number | string;
     life_modifier?: number | string;
+
     constructor(characteristicsSpec: CharacteristicsSpec) {
         this.name = characteristicsSpec.name;
         this.mana_cost = characteristicsSpec.mana_cost;
