@@ -2,7 +2,7 @@
 /** 効果やルールによってゲーム中に行われる指示。
  */
 
-import { Game, GameHistory, GameState, Zone, ZoneType } from "./Game";
+import { Game, GameState, Zone, ZoneType } from "./Game";
 import { GameObject, Card, Player } from "./GameObject";
 import {
     ReferenceParam,
@@ -34,7 +34,7 @@ type PerformArgs = {
     /** 実行前の状態 */
     state: GameState;
     /** 履歴 */
-    history: GameHistory;
+    history: Game;
     // /** 対象物 */
     // objective?: GameObject[];
 };

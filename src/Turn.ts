@@ -27,7 +27,7 @@ type StepKind =
     | "End"
     | "Cleanup";
 
-const phase_step_def: Array<{
+const turn_definition: Array<{
     phase: PhaseKind | undefined;
     step: StepKind | undefined;
 }> = [
@@ -54,38 +54,40 @@ function next_phase_and_step(
     phase: PhaseKind | undefined;
     step: StepKind | undefined;
 } {
-    const index = phase_step_def.indexOf({ phase: phasekind, step: stepkind });
-    return phase_step_def[index + 1];
+    const index = turn_definition.findIndex(
+        (e) => e.phase === phasekind && e.step === stepkind
+    );
+    return turn_definition[index + 1];
 }
 
+/** ターン */
 class Turn {
-    /** ターン
-     * ターン > フェイズ > ステップ の木構造を持つ
-     * ターン、フェイズ、ステップは実際に開始するときに初めて生成される
-     */
-    static count: number;
     id: number;
     active_player: Player;
     is_extra: boolean = false;
 
-    constructor(active_player: Player, is_extra: boolean = false) {
-        this.id = Turn.count;
-        Turn.count++;
+    constructor(id: number, active_player: Player, is_extra: boolean = false) {
+        this.id = id;
         this.active_player = active_player;
         this.is_extra = is_extra;
+    }
+    equals(turn: Turn): boolean {
+        return (
+            this.id === turn.id &&
+            this.active_player === turn.active_player &&
+            this.is_extra === turn.is_extra
+        );
     }
 }
 
 /** フェイズ */
 class Phase {
-    static count = 0;
     id: number;
     kind: PhaseKind;
     is_extra: boolean;
 
-    constructor(kind: PhaseKind, is_extra: boolean = false) {
-        this.id = Phase.count;
-        Phase.count++;
+    constructor(id: number, kind: PhaseKind, is_extra: boolean = false) {
+        this.id = id;
         this.kind = kind;
         this.is_extra = is_extra;
     }
@@ -93,15 +95,15 @@ class Phase {
 
 /** ステップ */
 class Step {
-    static count = 0;
     id: number;
     kind: StepKind;
     is_extra: boolean;
 
-    constructor(kind: StepKind, is_extra: boolean = false) {
-        this.id = Step.count;
-        Step.count++;
+    constructor(id: number, kind: StepKind, is_extra: boolean = false) {
+        this.id = id;
         this.kind = kind;
         this.is_extra = is_extra;
     }
 }
+
+// TODO: ターン起因処理

@@ -1,5 +1,5 @@
 "use strict";
-import { Game, GameHistory, GameState } from "./Game";
+import { Game, GameState } from "./Game";
 /** オブジェクトが持つ能力
  * 起動型能力、誘発型能力、呪文能力、常在型能力
  */
@@ -105,7 +105,7 @@ class TriggeredAbility extends Ability {
         /** 実行されたInstruction */
         instruction: Instruction;
         state: GameState;
-        history: GameHistory;
+        history: Game;
         performer: GameObject | Player;
     }): boolean {
         return this.#checker(args); // TODO 誘発制限
@@ -139,7 +139,7 @@ class TriggeredAbility extends Ability {
         /** 実行されたInstruction */
         instruction: Instruction;
         state: GameState;
-        history: GameHistory;
+        history: Game;
         performer: GameObject | Player;
     }) {
         // if (this.check(args)) {

@@ -1,5 +1,5 @@
 "use strict";
-import { GameHistory, GameState, Zone } from "./Game";
+import { Game, GameState, Zone } from "./Game";
 import { GameObject, Player } from "./GameObject";
 
 export {
@@ -21,25 +21,11 @@ export {
 // };
 
 /** Referenceの解決に必要な値。 */
-class ReferenceParam {
-    #history: GameHistory;
-    #self: GameObject | undefined;
-
-    constructor(args: { history: GameHistory; self: GameObject | undefined }) {
-        this.#history = args.history;
-        this.#self = args.self;
-    }
-
-    get state(): GameState {
-        return this.#history[-1];
-    }
-    get history(): GameHistory {
-        return this.#history;
-    }
-    get self(): GameObject | undefined {
-        return this.#self;
-    }
-}
+type ReferenceParam = {
+    state: GameState;
+    history: Game;
+    self: GameObject | undefined;
+};
 
 type Referable =
     | string

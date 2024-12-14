@@ -3,7 +3,7 @@
  */
 "use strict";
 
-import { GameHistory, GameState, Zone } from "./Game";
+import { Zone } from "./Game";
 import { Ability, SpellAbility, TriggeredAbility } from "./Ability";
 import { Characteristics } from "./Characteristic";
 import { Instruction } from "./Instruction";
