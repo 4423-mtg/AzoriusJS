@@ -252,7 +252,7 @@ class AdditionalTurnEffect extends GameObject {
     /** ターンを追加する条件 */
     condition: SingleSpec<boolean>;
     /** 追加しようとするターンを生成する */
-    create: (params: ReferenceParam) => Turn;
+    generate: (params: ReferenceParam) => Turn;
 }
 
 /** フェイズを追加する効果 */
@@ -260,7 +260,7 @@ class AdditionalPhaseEffect extends GameObject {
     /** フェイズを追加する条件 */
     condition: SingleSpec<boolean>;
     /** 追加しようとするフェイズを生成する */
-    create: (params: ReferenceParam) => Phase;
+    generate: (params: ReferenceParam) => Phase;
 }
 
 /** ステップを追加する効果 */
@@ -268,7 +268,7 @@ class AdditionalStepEffect extends GameObject {
     /** ステップを追加する条件 */
     condition: SingleSpec<boolean>;
     /** 追加しようとするステップを生成する */
-    create: (params: ReferenceParam) => Step;
+    generate: (params: ReferenceParam) => Step;
 }
 // ターンを追加する
 // フェイズ、ステップを追加する

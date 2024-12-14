@@ -9,6 +9,7 @@ import {
     AdditionalTurnEffect,
     AdditionalPhaseEffect,
     AdditionalStepEffect,
+    GeneratedEffect,
 } from "./GameObject";
 import { DelayedTriggeredAbility } from "./Ability";
 import { Turn, Phase, Step, next_phase_and_step } from "./Turn";
@@ -49,7 +50,7 @@ class Game {
 // NOTE: GameState は immutable であってほしい
 class GameState {
     /** ゲームのメタ情報 */
-    game_meta: Game;
+    #game_meta: Game;
 
     /** プレイヤー */
     #players: Set<Player>;
@@ -71,86 +72,117 @@ class GameState {
     #step?: Step;
 
     /** 優先権を連続でパスしたプレイヤーの数 */
-    pass_count: number = 0;
+    #pass_count: number = 0;
     /** クリンナップをもう一度行うかどうか。
      * クリンナップの間に状況起因処理か能力の誘発があった場合、
      * そのクリンナップでは優先権が発生するとともに、追加のクリンナップが発生する。 */
-    cleanup_again = false;
+    #cleanup_again = false;
 
     // ==================================================================
-    // MARK: state/object
+    // MARK: GameState/object
     /** すべての領域にあるすべてのカード（トークンやコピーを含む） */
     allCard(): Card[] {
-        return new Array<Card>(); // TODO:
+        return this.#game_objects.filter((go) => go instanceof Card);
+    }
+    /** 指定した領域にあるすべてのカード（トークンやコピーを含む） */
+    card_in_zone(zonetype: ZoneType[], player?: Player[]) {
+        return this.allCard().filter((card) =>
+            this.zones(zonetype, player).includes(card.zone)
+        );
     }
 
     /** パーマネント */
     permanents(): Card[] {
-        return new Array<Card>(); // TODO:
+        return this.card_in_zone([ZoneType.Battlefield]);
     }
     /** スタックのオブジェクト */
     objects_on_stack(): (Card | StackedAbility)[] {
-        return new Array<Card>(); // TODO:
+        return this.#game_objects
+            .filter((go) => go instanceof Card || go instanceof StackedAbility)
+            .filter(
+                (go) =>
+                    (go instanceof Card &&
+                        go.zone.zonetype === ZoneType.Stack) ||
+                    !(go instanceof Card)
+            );
     }
-    /** 手札のカード（トークンを含む） */
-    cards_in_hand(player?: Player | Player[]): Card[] {
-        return new Array<Card>(); // TODO:
+    /** 追放領域のカード（トークンやコピーを含む） */
+    cards_in_exile(): Card[] {
+        return this.card_in_zone([ZoneType.Exile]);
+    }
+    /** 手札のカード（トークンやコピーを含む） */
+    cards_in_hand(player?: Player[]): Card[] {
+        return this.card_in_zone([ZoneType.Hand], player);
     }
     /** ライブラリーのカード（トークンを含む） */
-    cards_in_library(player?: Player | Player[]): Card[] {
-        return new Array<Card>(); // TODO:
+    cards_in_library(player?: Player[]): Card[] {
+        return this.card_in_zone([ZoneType.Library], player);
     }
     /** 墓地のカード（トークンを含む） */
-    cards_in_graveyard(player?: Player | Player[]): Card[] {
-        return new Array<Card>(); // TODO:
-    }
-    /** 追放領域のカード（トークンを含む） */
-    cards_in_exile(): Card[] {
-        return new Array<Card>(); // TODO:
+    cards_in_graveyard(player?: Player[]): Card[] {
+        return this.card_in_zone([ZoneType.Graveyard], player);
     }
     /** 統率領域のカード（トークンを含む） */
-    cards_in_command(player?: Player | Player[]): Card[] {
-        return new Array<Card>(); // TODO:
+    cards_in_command(player?: Player[]): Card[] {
+        return this.card_in_zone([ZoneType.Command], player);
     }
+
+    /** すべての生成された効果 */
+    generated_effects(): GeneratedEffect[] {
+        return this.#game_objects.filter((go) => go instanceof GeneratedEffect);
+    }
+
     /** すべての継続的効果 */
     continuous_effects(): ContinuousEffect[] {
-        return new Array<ContinuousEffect>(); // TODO:
+        return this.#game_objects.filter(
+            (go) => go instanceof ContinuousEffect
+        );
     }
     /** すべての遅延誘発型能力 */
     delayed_triggered_abilities(): DelayedTriggeredAbility[] {
-        return new Array<DelayedTriggeredAbility>(); // TODO:
+        return this.#game_objects.filter(
+            (go) => go instanceof DelayedTriggeredAbility
+        );
     }
     /** すべての置換効果 */
     replacement_effects(): ReplacementEffect[] {
-        return new Array<ReplacementEffect>(); // TODO:
+        return this.#game_objects.filter(
+            (go) => go instanceof ReplacementEffect
+        );
     }
     /** すべてのターン追加効果（生成された順） */
     additional_turn_effects(): AdditionalTurnEffect[] {
-        return new Array<AdditionalTurnEffect>(); // TODO:
+        return this.#game_objects.filter(
+            (go) => go instanceof AdditionalTurnEffect
+        );
     }
     /** すべてのフェイズ追加効果（生成された順） */
     additional_phase_effects(): AdditionalPhaseEffect[] {
-        return new Array<AdditionalPhaseEffect>(); // TODO:
+        return this.#game_objects.filter(
+            (go) => go instanceof AdditionalPhaseEffect
+        );
     }
     /** すべてのステップ追加効果（生成された順） */
     additional_step_effects(): AdditionalStepEffect[] {
-        return new Array<AdditionalStepEffect>(); // TODO:
+        return this.#game_objects.filter(
+            (go) => go instanceof AdditionalStepEffect
+        );
     }
 
     // ==================================================================
-    // MARK:state/プレイヤー
+    // MARK:GameState/プレイヤー
     /** すべてのプレイヤー */
-    get players(): Set<Player> {
+    players(): Set<Player> {
         return this.#players;
     }
     /** アクティブプレイヤー */
-    get active_player(): Player | undefined {
+    active_player(): Player | undefined {
         return this.#active_player_index === undefined
             ? undefined
             : this.#turn_order[this.#active_player_index];
     }
     /** 優先権を持つプレイヤー */
-    get player_with_priority(): Player | undefined {
+    player_with_priority(): Player | undefined {
         return this.#priority_player_index === undefined
             ? undefined
             : this.#turn_order[this.#priority_player_index];
@@ -169,57 +201,61 @@ class GameState {
     }
     /** 指定したプレイヤーからターン進行順で次のプレイヤー */
     next_player_of(player: Player): Player | undefined {
-        const idx = this.#turn_order.findIndex((value) => value === player);
-        return idx < this.#turn_order.length - 1
-            ? this.#turn_order[idx + 1]
-            : this.#turn_order[0];
-    }
-
-    // ==================================================================
-    // MARK: state/領域
-    /** 戦場 */
-    battlefield: Zone = this.zones(ZoneType.Battlefield)[0];
-    /** 手札（人数分） */
-    hand: Zone[] = this.zones(ZoneType.Hand);
-    /** ライブラリー（人数分） */
-    library: Zone[] = this.zones(ZoneType.Library);
-    /** 墓地（人数分） */
-    graveyard: Zone[] = this.zones(ZoneType.Graveyard);
-    /** 追放 */
-    exile: Zone = this.zones(ZoneType.Exile)[0];
-    /** スタック */
-    stack: Zone = this.zones(ZoneType.Stack)[0];
-    /** 統率（人数分） */
-    command: Zone[] = this.zones(ZoneType.Command);
-
-    /** 指定された種類の領域をすべて取得 */
-    zones(zonetype: ZoneType): Zone[] {
-        const array: Zone[] = [];
-        for (const zone of this.#zones) {
-            if (zone.zonetype === zonetype) {
-                array.push(zone);
-            }
-        }
-        return array;
-    }
-    /** 指定したプレイヤーの指定した種類の領域を取得 */
-    zone(zonetype: ZoneType, player?: Player): Zone | undefined {
-        const zones = this.zones(zonetype);
-        // 指定された領域が1つしかないならそれを返す
-        if (zones.length === 1) {
-            return zones[0];
+        const idx = this.#turn_order.indexOf(player);
+        if (idx < 0) {
+            return undefined;
         } else {
-            // 2つ以上あるなら最初の1個を返す
-            if (player === undefined) {
-                return zones[0];
-            } else {
-                zones.find((z) => z.owner === player);
-            }
+            return this.#turn_order[
+                idx + 1 < this.#turn_order.length ? idx + 1 : 0
+            ];
         }
     }
 
     // ==================================================================
-    // MARK: state/ターン
+    // MARK: GameState/領域
+    /** 戦場 */
+    battlefield(): Zone {
+        return this.zones([ZoneType.Battlefield])[0];
+    }
+    /** スタック */
+    stack(): Zone {
+        return this.zones([ZoneType.Stack])[0];
+    }
+    /** 追放 */
+    exile(): Zone {
+        return this.zones([ZoneType.Exile])[0];
+    }
+    /** 手札（人数分） */
+    hand(player: Player): Zone {
+        return this.zones([ZoneType.Hand], [player])[0];
+    }
+    /** ライブラリー（人数分） */
+    library(player: Player): Zone {
+        return this.zones([ZoneType.Library], [player])[0];
+    }
+    /** 墓地（人数分） */
+    graveyard(player: Player): Zone {
+        return this.zones([ZoneType.Graveyard], [player])[0];
+    }
+    /** 統率（人数分） */
+    command(player: Player): Zone {
+        return this.zones([ZoneType.Command], [player])[0];
+    }
+
+    /** 指定したプレイヤーの指定した種類の領域を取得 */
+    zones(zonetype: ZoneType[], owner?: Player[]): Zone[] {
+        return new Array(...this.#zones).filter(
+            (z) =>
+                zonetype.includes(z.zonetype) &&
+                (owner === undefined ||
+                    owner.length == 0 ||
+                    z.owner === undefined ||
+                    owner.includes(z.owner))
+        );
+    }
+
+    // ==================================================================
+    // MARK: GameState/ターン
     // TODO:
     get turn(): Turn {
         return this.#turn;
