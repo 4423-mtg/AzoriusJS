@@ -22,8 +22,7 @@ export {
 
 /** Referenceの解決に必要な値。 */
 type ReferenceParam = {
-    state: GameState;
-    history: Game;
+    game: Game;
     self: GameObject | undefined;
 };
 

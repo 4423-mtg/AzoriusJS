@@ -3,7 +3,7 @@
  */
 
 import { Game, GameState, Zone, ZoneType } from "./Game";
-import { GameObject, Card, Player } from "./GameObject";
+import { GameObject, Card, Player, StackedAbility } from "./GameObject";
 import {
     ReferenceParam,
     SingleRef,
@@ -12,9 +12,14 @@ import {
     Spec,
     resolve_single_spec,
 } from "./Reference";
+import { Phase, Step, Turn } from "./Turn";
 
 export {
     Instruction,
+    BeginNewTurn,
+    BeginNewPhaseAndStep,
+    BeginNewStep,
+    Resolve,
     Cast,
     Paying,
     MoveZone,
@@ -43,24 +48,58 @@ type PerformArgs = {
  * ゲーム中に実行されるときに`Reference`を通じて実際のゲーム内の情報を注入される
  */
 abstract class Instruction {
-    /** 生成済みのインスタンスの数 */
-    static instance_count = 0;
     /** InstructionのID (0始まり) */
-    readonly id: number;
+    // id: number;
 
-    /** このInstructionを指示したオブジェクト。実際の実行者とは別 */
-    instructor?: SingleSpec<GameObject>;
+    // constructor(id: number) {
+    //     this.id = id;
+    // }
 
-    constructor(args: { instructor?: SingleSpec<GameObject> }) {
-        this.id = Instruction.instance_count;
-        Instruction.instance_count += 1;
-        this.instructor = args.instructor;
-    }
-
-    abstract perform: (params: ReferenceParam) => GameState;
+    abstract perform: (new_state: GameState, params: ReferenceParam) => void;
 }
 
 // MARK:ルール上の処理 ************************************************
+class BeginNewTurn extends Instruction {
+    turn: Turn;
+
+    constructor(turn: Turn) {
+        super();
+        this.turn = turn;
+    }
+    perform = (new_state: GameState, params: ReferenceParam) => {
+        new_state.set_turn(this.turn);
+    };
+}
+class BeginNewPhaseAndStep extends Instruction {
+    phase: Phase;
+    step: Step | undefined;
+
+    constructor(phase: Phase, step: Step | undefined) {
+        super();
+        this.phase = phase;
+        this.step = step;
+    }
+    perform = (new_state: GameState, params: ReferenceParam) => {
+        new_state.set_phase(this.phase);
+        new_state.set_step(this.step);
+    };
+}
+class BeginNewStep extends Instruction {
+    step: Step | undefined;
+    constructor(step: Step | undefined) {
+        super();
+        this.step = step;
+    }
+    perform = (new_state: GameState, params: ReferenceParam) => {
+        new_state.set_step(this.step);
+    };
+}
+
+class Resolve extends Instruction {
+    resolved_object: Card | StackedAbility;
+
+    perform: (new_state: GameState, params: ReferenceParam) => void; // TODO:
+}
 
 // MARK: 唱える関連 ********************************
 /** 唱える */

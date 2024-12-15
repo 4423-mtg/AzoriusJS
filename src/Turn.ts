@@ -4,7 +4,15 @@ import { Player } from "./GameObject";
 
 /** ターン、フェイズ、ステップを表すオブジェクト */
 
-export { Turn, Phase, Step, PhaseKind, StepKind, next_phase_and_step };
+export {
+    Turn,
+    Phase,
+    Step,
+    PhaseKind,
+    StepKind,
+    next_phase_and_step,
+    first_step_of_phase,
+};
 
 /** フェイズの種別 */
 type PhaseKind =
@@ -58,6 +66,11 @@ function next_phase_and_step(
         (e) => e.phase === phasekind && e.step === stepkind
     );
     return turn_definition[index + 1];
+}
+
+/** そのフェイズの最初のステップを返す。 */
+function first_step_of_phase(phase_kind: PhaseKind): StepKind | undefined {
+    return turn_definition.find((e) => e.phase === phase_kind)?.step;
 }
 
 /** ターン */

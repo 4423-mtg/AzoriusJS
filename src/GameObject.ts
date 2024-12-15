@@ -6,13 +6,15 @@
 import { Zone } from "./Game";
 import { Ability, SpellAbility, TriggeredAbility } from "./Ability";
 import { Characteristics } from "./Characteristic";
-import { Instruction } from "./Instruction";
+import { Instruction, Resolve } from "./Instruction";
 import { MultiRef, ReferenceParam, SingleSpec } from "./Reference";
 import { Phase, Step, Turn } from "./Turn";
 
 export {
     GameObject,
     Card,
+    Spell,
+    is_spell,
     Status,
     StackedAbility,
     GeneratedEffect,
@@ -122,8 +124,15 @@ type SpellCharacteristic = {
     cast_by;
 
     // 解決処理
-    resolve: Instruction[]; // TODO: Resolveクラス(Instructionのサブクラス)になるだろう
+    resolve: Resolve;
 };
+
+type Spell = Card & SpellCharacteristic;
+
+function is_spell(card: Card): card is Spell {
+    // TODO: card instanceof SpellCharacteristic
+    return true;
+}
 
 // =================================================================
 // MARK: スタック上の能力
@@ -147,7 +156,7 @@ class StackedAbility extends GameObject {
     target: GameObject[];
     distribution: Map<GameObject, number>;
     paid_cost;
-    resolve: Instruction[];
+    resolve: Resolve;
 
     constructor(ability: Ability, controller: Player, source?: GameObject) {
         super();
@@ -252,7 +261,7 @@ class AdditionalTurnEffect extends GameObject {
     /** ターンを追加する条件 */
     condition: SingleSpec<boolean>;
     /** 追加しようとするターンを生成する */
-    generate: (params: ReferenceParam) => Turn;
+    generate_turn: (params: ReferenceParam) => Turn;
 }
 
 /** フェイズを追加する効果 */
@@ -260,7 +269,7 @@ class AdditionalPhaseEffect extends GameObject {
     /** フェイズを追加する条件 */
     condition: SingleSpec<boolean>;
     /** 追加しようとするフェイズを生成する */
-    generate: (params: ReferenceParam) => Phase;
+    generate_phase: (params: ReferenceParam) => Phase;
 }
 
 /** ステップを追加する効果 */
@@ -268,7 +277,7 @@ class AdditionalStepEffect extends GameObject {
     /** ステップを追加する条件 */
     condition: SingleSpec<boolean>;
     /** 追加しようとするステップを生成する */
-    generate: (params: ReferenceParam) => Step;
+    generate_step: (params: ReferenceParam) => Step;
 }
 // ターンを追加する
 // フェイズ、ステップを追加する

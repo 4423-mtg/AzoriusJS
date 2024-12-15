@@ -10,10 +10,25 @@ import {
     AdditionalPhaseEffect,
     AdditionalStepEffect,
     GeneratedEffect,
+    Spell,
+    is_spell,
 } from "./GameObject";
 import { DelayedTriggeredAbility } from "./Ability";
-import { Turn, Phase, Step, next_phase_and_step } from "./Turn";
-import { resolve_single_spec } from "./Reference";
+import {
+    Turn,
+    Phase,
+    Step,
+    next_phase_and_step,
+    first_step_of_phase,
+} from "./Turn";
+import { ReferenceParam, resolve_single_spec } from "./Reference";
+import {
+    BeginNewPhaseAndStep,
+    BeginNewStep,
+    BeginNewTurn,
+    Instruction,
+    Resolve,
+} from "./Instruction";
 
 export { GameInfo, GameState, Game, Zone, ZoneType };
 
@@ -25,25 +40,25 @@ class GameInfo {
     decks = []; // FIXME: サイドボード
     game_state: GameState = new GameState();
 
-    initGame(): void {
-        // FIXME:
-        // プレイヤーの初期化
-        state.game_state.players = state.players;
-        // 領域の初期化
-        state.game_state.zones.push(
-            ...state.game_state.players.flatMap((pl) =>
-                [
-                    ZoneType.Library,
-                    ZoneType.Hand,
-                    ZoneType.Graveyard,
-                    ZoneType.Command,
-                ].map((zt) => new Zone(zt, pl))
-            )
-        );
-        state.game_state.zones.push(new Zone(ZoneType.Battlefield));
-        state.game_state.zones.push(new Zone(ZoneType.Exile));
-        // TODO ライブラリーとサイドボード
-    }
+    // initGame(): void {
+    //     // FIXME:
+    //     // プレイヤーの初期化
+    //     state.game_state.players = state.players;
+    //     // 領域の初期化
+    //     state.game_state.zones.push(
+    //         ...state.game_state.players.flatMap((pl) =>
+    //             [
+    //                 ZoneType.Library,
+    //                 ZoneType.Hand,
+    //                 ZoneType.Graveyard,
+    //                 ZoneType.Command,
+    //             ].map((zt) => new Zone(zt, pl))
+    //         )
+    //     );
+    //     state.game_state.zones.push(new Zone(ZoneType.Battlefield));
+    //     state.game_state.zones.push(new Zone(ZoneType.Exile));
+    //     // TODO ライブラリーとサイドボード
+    // }
     constructor() {}
 }
 
@@ -111,14 +126,17 @@ class GameState {
         return this.card_in_zone([ZoneType.Battlefield]);
     }
     /** スタックのオブジェクト */
-    objects_on_stack(): (Card | StackedAbility)[] {
+    stacked_objects(): (Spell | StackedAbility)[] {
         return this.#game_objects
-            .filter((go) => go instanceof Card || go instanceof StackedAbility)
             .filter(
                 (go) =>
-                    (go instanceof Card &&
-                        go.zone.zonetype === ZoneType.Stack) ||
-                    !(go instanceof Card)
+                    (go instanceof Card && is_spell(go)) ||
+                    go instanceof StackedAbility
+            )
+            .filter(
+                (go) =>
+                    go instanceof StackedAbility ||
+                    go.zone.zonetype === ZoneType.Stack
             );
     }
     /** 追放領域のカード（トークンやコピーを含む） */
@@ -234,6 +252,17 @@ class GameState {
             ];
         }
     }
+
+    /** ターン順で、現在のアクティブ・プレイヤーの次のプレイヤー。
+     * アクティブ・プレイヤーが存在しないときは `undefined`
+     */
+    next_player_of_active_player(): Player | undefined {
+        const active_player = this.get_active_player();
+        return active_player !== undefined
+            ? this.next_player_of(active_player)
+            : undefined;
+    }
+
     get_turn_order(): Player[] {
         return this.#turn_order;
     }
@@ -308,7 +337,7 @@ class GameState {
     get_step(): Step | undefined {
         return this.#step;
     }
-    set_step(step: Step) {
+    set_step(step: Step | undefined) {
         this.#step = step;
     }
 
@@ -344,9 +373,15 @@ class Game {
                     this.current.cleanup_again())
             ) {
                 // スタックが空
-                if (this.current.objects_on_stack().length === 0) {
-                    // 次のフェイズやステップに移る。ターン起因処理も行う
+                if (this.current.stacked_objects().length === 0) {
+                    // 次のフェイズやステップに移る。
                     this.goto_next();
+                    // TODO: ターン起因処理
+                    // アクティブプレイヤーが優先権を得る
+                    const active_player = this.current.get_active_player();
+                    this.set_priority_to(
+                        active_player ?? this.current.get_turn_order()[0]
+                    );
                     continue;
                 }
                 // スタックが空でない
@@ -372,11 +407,11 @@ class Game {
      */
     goto_next(): void {
         // 移る先のフェイズやステップ、ターンを決める。追加ターンや追加のフェイズ・ステップを考慮する
-        const params = {
-            state: this.current,
-            history: this,
+        const params: ReferenceParam = {
+            game: this,
             self: undefined,
         };
+        /** 配列を反転した配列を新たに生成して返す。 */
         const toReversed = <T>(array: T[]) => Array.from(array).reverse();
 
         // ステップの追加があるならそれに移る
@@ -384,37 +419,22 @@ class Game {
             this.current.additional_step_effects()
         )) {
             if (resolve_single_spec(effect.condition, params)) {
-                // FIXME: ステップ・フェイズ・ターンの開始は Instruction である
-                // TODO: スキップは実際にそれに移ろうとしたタイミングで適用する (in goto_step, goto_phase, goto_turn)
-                this.goto_new_state((s) => {
-                    s.set_step(effect.generate(params));
-                    return s;
-                });
-                // TODO: ステップのターン起因処理？
-                // TODO: アクティブプレイヤーが優先権を得る
+                this.begin_new_step(effect.generate_step(params));
                 return;
             }
         }
-        // 次のステップがあるならそれに移る
+        // 同じフェイズに次のステップがあるならそれに移る
         const { phase: next_phase_kind, step: next_step_kind } =
             next_phase_and_step(
                 this.current.get_phase().kind,
                 this.current.get_step()?.kind
             );
-        if (next_step_kind !== undefined) {
-            const last_step = this.last_step();
-
-            this.goto_new_state((s) => {
-                s.set_step(
-                    new Step(
-                        last_step === undefined ? 0 : last_step.id + 1,
-                        next_step_kind
-                    )
-                );
-                return s;
-            });
-            // TODO: ステップのターン起因処理？
-            // TODO: アクティブプレイヤーが優先権を得る
+        if (next_phase_kind === this.current.get_phase().kind) {
+            this.begin_new_step(
+                next_step_kind !== undefined
+                    ? new Step(this.#get_new_step_id(), next_step_kind)
+                    : undefined
+            );
             return;
         }
         // フェイズの追加があるならそれに移る
@@ -422,73 +442,86 @@ class Game {
             this.current.additional_phase_effects()
         )) {
             if (resolve_single_spec(effect.condition, params)) {
-                this.goto_new_state((s) => {
-                    s.set_phase(effect.generate(params));
-                    return s;
-                });
-                // TODO: フェイズのターン起因処理？
-                // TODO: アクティブプレイヤーが優先権を得る
+                const new_phase = effect.generate_phase(params);
+                const new_step_kind = first_step_of_phase(new_phase.kind);
+                this.begin_new_phase_and_step(
+                    new_phase,
+                    new_step_kind !== undefined
+                        ? new Step(this.#get_new_step_id(), new_step_kind)
+                        : undefined
+                );
                 return;
             }
         }
         // 次のフェイズがあるなら、次のフェイズに移る
         if (next_phase_kind !== undefined) {
-            this.goto_new_state((s) => {
-                s.set_phase(
-                    new Phase(this.current.get_phase().id + 1, next_phase_kind)
-                );
-                // TODO: フェイズのターン起因処理？
-                // TODO: アクティブプレイヤーが優先権を得る
-                return s;
-            });
+            this.begin_new_phase_and_step(
+                new Phase(this.#get_new_phase_id(), next_phase_kind),
+                next_step_kind !== undefined
+                    ? new Step(this.#get_new_step_id(), next_step_kind)
+                    : undefined
+            );
+            return;
         }
         // ターンの追加があるならそれに移る
         for (const effect of toReversed(
             this.current.additional_turn_effects()
         )) {
             if (resolve_single_spec(effect.condition, params)) {
-                this.goto_new_state((s) => {
-                    // TODO: 追加ターンのオーナーをセット
-                    s.set_turn(effect.generate(params));
-                    return s;
-                });
-                // TODO: アクティブプレイヤーが優先権を得る
+                this.begin_new_turn(effect.generate_turn(params));
                 return;
             }
         }
-        // 次のターンに移る
-        // TODO: そのターンのオーナーをセット
-        this.goto_new_state((s) => {
-            const active_player = this.current.get_active_player();
-            const player_next =
-                active_player !== undefined
-                    ? this.current.next_player_of(active_player) ??
-                      this.current.get_turn_order()[0]
-                    : this.current.get_turn_order()[0];
-            s.set_turn(new Turn(this.current.get_turn().id + 1, player_next));
-            return s;
-        });
+        // 次のプレイヤーのターンに移る
+        this.begin_new_turn(
+            new Turn(
+                this.#get_new_turn_id(),
+                this.current.next_player_of_active_player() ??
+                    this.current.get_turn_order()[0]
+            )
+        );
         // TODO: アクティブプレイヤーが優先権を得る
+        // ターンを移る間に能力が誘発したり状況起因処理が必要になったりした場合、
+        // 通常通りそれらを処理してからアクティブプレイヤーが優先権を得る
+        // ただしアンタップ・ステップには優先権は発生しないのでアップキープになる
+        // アンタップステップにも誘発した場合アップキープに好きな順で積む
         return;
     }
 
-    /**
-     * 現在のゲームの状態のコピーである新しい `GameState` を生成し、
-     * それに `modifier`を適用したのちそれに移る。
-     * @param modifier `GameState` に対して加える変更を表す関数。
-     * @returns 変更を加えられた、ゲームの最新の状態を表す `GameState`。
-     * FIXME: Instruction？
-     */
-    goto_new_state(modifier: (state: GameState) => GameState): GameState {
-        const state_new = modifier(this.current.deepcopy());
-
+    /** `Instruction`を実行する。新しい`GameState`を生成し、移行する。 */
+    perform(instruction: Instruction, self: GameObject | undefined) {
+        const state_new = this.current.deepcopy();
+        // TODO: 置換効果、禁止効果など
+        instruction.perform(state_new, { game: this, self: self });
         this.#history.push(state_new);
-        return state_new;
     }
 
-    /** ゲーム中に一番最後に存在したステップ。 */
-    last_step(): Step | undefined {
-        // TODO:
+    /** 新しいターンを開始する。 */
+    begin_new_turn(turn: Turn) {
+        this.perform(new BeginNewTurn(turn), undefined);
+    }
+    /** 新しいフェイズ、ステップを開始する。 */
+    begin_new_phase_and_step(phase: Phase, step: Step | undefined) {
+        this.perform(new BeginNewPhaseAndStep(phase, step), undefined);
+    }
+    begin_new_step(step: Step | undefined) {
+        this.perform(new BeginNewStep(step), undefined);
+    }
+
+    #get_new_turn_id(): number {
+        return this.current.get_turn().id + 1;
+    }
+    #get_new_phase_id(): number {
+        return this.current.get_phase().id + 1;
+    }
+    #get_new_step_id(): number {
+        /** 配列を反転した配列を新たに生成して返す。 */
+        const toReversed = <T>(array: T[]) => Array.from(array).reverse();
+
+        const last_step = toReversed(this.#history)
+            .find((state) => state.get_step !== undefined)
+            ?.get_step();
+        return last_step !== undefined ? last_step.id + 1 : 0;
     }
 
     // will_skipped(arg: Step | Phase | Turn): boolean {}
@@ -496,25 +529,25 @@ class Game {
     /** プレイヤーが優先権を得る */ // FIXME:
     set_priority_to(player: Player): void {
         /* 状況起因処理と誘発 */
-        let ret = false;
-        let flag = true;
-        while (flag) {
-            // 何もなくなるまで繰り返す
-            flag = false;
-            /* 発生しなくなるまで状況起因処理を繰り返す */
-            while (state.state_based_action()) {
-                // なにかあったらtrue
-                flag = true;
-                ret = true;
-            }
-            /* 誘発していた能力をスタックに置く */
-            if (state.put_triggered_abilities_on_stack()) {
-                flag = true;
-                ret = true;
-            }
-        }
-        /* プレイヤーが優先権を得る */
-        state.player_with_priority = player;
+        // let ret = false;
+        // let flag = true;
+        // while (flag) {
+        //     // 何もなくなるまで繰り返す
+        //     flag = false;
+        //     /* 発生しなくなるまで状況起因処理を繰り返す */
+        //     while (state.state_based_action()) {
+        //         // なにかあったらtrue
+        //         flag = true;
+        //         ret = true;
+        //     }
+        //     /* 誘発していた能力をスタックに置く */
+        //     if (state.put_triggered_abilities_on_stack()) {
+        //         flag = true;
+        //         ret = true;
+        //     }
+        // }
+        // /* プレイヤーが優先権を得る */
+        // state.player_with_priority = player;
     }
 
     /** 状況起因処理 (1回) */
@@ -530,32 +563,33 @@ class Game {
 
     /** スタックを1つ解決する */
     resolve_stack(): void {
-        // TODO: 解決も Instruction
+        const stacked_obj = this.current.stacked_objects()[-1];
+        this.perform(stacked_obj.resolve, stacked_obj);
     }
 
     /** 優先権による行動。呪文を唱える、能力を起動する、特別な処理を行う、優先権をパスする */
     take_priority_action(): void {
-        let action: "cast" | "activate" | "take_special_action" | "pass" =
-            ask_action_to_player(); // TODO: ask_action_to_player()
-        // 呪文を唱える
-        if (action == "cast") {
-            // state.pass_count = 0;
-        }
-        // 能力を起動する
-        if (action == "activate") {
-            // state.pass_count = 0;
-        }
-        // 特別な処理を行う
-        if (action == "take_special_action") {
-            // state.pass_count = 0;
-        }
-        // 優先権をパスする
-        if (action == "pass") {
-            // state.set_priority_to(
-            //     state.get_next_player_of(state.player_with_priority)
-            // ); // TODO:
-            // state.pass_count++;
-        }
+        // let action: "cast" | "activate" | "take_special_action" | "pass" =
+        //     ask_action_to_player(); // TODO: ask_action_to_player()
+        // // 呪文を唱える
+        // if (action == "cast") {
+        //     // state.pass_count = 0;
+        // }
+        // // 能力を起動する
+        // if (action == "activate") {
+        //     // state.pass_count = 0;
+        // }
+        // // 特別な処理を行う
+        // if (action == "take_special_action") {
+        //     // state.pass_count = 0;
+        // }
+        // // 優先権をパスする
+        // if (action == "pass") {
+        //     // state.set_priority_to(
+        //     //     state.get_next_player_of(state.player_with_priority)
+        //     // ); // TODO:
+        //     // state.pass_count++;
+        // }
     }
 }
 
