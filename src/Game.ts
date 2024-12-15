@@ -72,7 +72,7 @@ class GameState {
     /** プレイヤー */
     #players: Set<Player>;
     /** プレイヤーのターン進行順 */
-    #turn_order: Player[]; // TODO: set_order()
+    #turn_order: Player[]; // TODO: get_order(), set_order()
     #active_player_index?: number;
     #priority_player_index?: number;
 
@@ -215,11 +215,11 @@ class GameState {
             ? undefined
             : this.#turn_order[this.#active_player_index];
     }
-    set_active_player() {
+    set_active_player(player: Player) {
         // TODO:
     }
     /** 優先権を持つプレイヤー */
-    player_with_priority(): Player | undefined {
+    get_player_with_priority(): Player | undefined {
         return this.#priority_player_index === undefined
             ? undefined
             : this.#turn_order[this.#priority_player_index];
@@ -321,7 +321,6 @@ class GameState {
 
     // ==================================================================
     // MARK: GameState/ターン
-    // TODO:
     get_turn(): Turn {
         return this.#turn;
     }
@@ -524,10 +523,12 @@ class Game {
         return last_step !== undefined ? last_step.id + 1 : 0;
     }
 
+    // TODO:
     // will_skipped(arg: Step | Phase | Turn): boolean {}
 
-    /** プレイヤーが優先権を得る */ // FIXME:
+    /** プレイヤーが優先権を得る */
     set_priority_to(player: Player): void {
+        // TODO:
         /* 状況起因処理と誘発 */
         // let ret = false;
         // let flag = true;
@@ -556,10 +557,14 @@ class Game {
     }
 
     /** 誘発した能力をスタックに置く */
-    put_triggered_abilities_on_stack(): void {}
+    put_triggered_abilities_on_stack(): void {
+        // TODO:
+    }
 
     /** 状況誘発 */
-    check_state_triggers(state: GameState): void {}
+    check_state_triggers(state: GameState): void {
+        // TODO:
+    }
 
     /** スタックを1つ解決する */
     resolve_stack(): void {
