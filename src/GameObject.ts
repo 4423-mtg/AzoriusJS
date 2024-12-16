@@ -38,8 +38,6 @@ abstract class GameObject {
     id: number;
     owner: Player;
     controller: Player;
-
-    constructor(args: {}) {}
 }
 
 // =================================================================
@@ -47,7 +45,7 @@ abstract class GameObject {
 /** カード */
 class Card extends GameObject {
     constructor(spec) {
-        super({});
+        super();
     }
 
     // ====印刷されている値 ====
@@ -56,7 +54,9 @@ class Card extends GameObject {
 
     // ==== ゲーム中に取る値 ====
     /** 現在の特性 */
-    get characteristics() {} // TODO: 領域や唱え方、代替の特性などに影響される
+    characteristics(): Characteristics {
+        // TODO: 領域や唱え方、代替の特性などに影響される
+    }
 
     // 領域
     zone: Zone;
@@ -278,6 +278,11 @@ class AdditionalStepEffect extends GameObject {
     condition: SingleSpec<boolean>;
     /** 追加しようとするステップを生成する */
     generate_step: (params: ReferenceParam) => Step;
+
+    constructor(generate_step: (params: ReferenceParam) => Step) {
+        super();
+        this.generate_step = generate_step;
+    }
 }
 // ターンを追加する
 // フェイズ、ステップを追加する

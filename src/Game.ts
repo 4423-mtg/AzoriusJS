@@ -228,6 +228,20 @@ class GameState {
         // TODO:
     }
 
+    /** ターン順 */
+    get_turn_order() {
+        return this.#turn_order;
+    }
+    /** ターン順を設定する。ゲームに存在しないプレイヤーが与えられた場合は無視する。 */
+    set_turn_order(players: Player[]) {
+        this.#turn_order = [];
+        players.forEach((pl) => {
+            if (this.players().has(pl)) {
+                this.#turn_order.push(pl);
+            }
+        });
+    }
+
     // TODO: これ統合できない？
     // FIXME: アクティブプレイヤーとは現在のターンのオーナーである
     /** アクティブプレイヤーから始めて各プレイヤーをターン進行順に並べた配列 */
@@ -261,19 +275,6 @@ class GameState {
         return active_player !== undefined
             ? this.next_player_of(active_player)
             : undefined;
-    }
-
-    get_turn_order(): Player[] {
-        return this.#turn_order;
-    }
-    /** ターン順を設定する。ゲームに存在しないプレイヤーが与えられた場合は無視する。 */
-    set_turn_order(players: Player[]) {
-        this.#turn_order = [];
-        players.forEach((pl) => {
-            if (this.players().has(pl)) {
-                this.#turn_order.push(pl);
-            }
-        });
     }
 
     // ==================================================================
@@ -406,10 +407,6 @@ class Game {
      */
     goto_next(): void {
         // 移る先のフェイズやステップ、ターンを決める。追加ターンや追加のフェイズ・ステップを考慮する
-        const params: ReferenceParam = {
-            game: this,
-            self: undefined,
-        };
         /** 配列を反転した配列を新たに生成して返す。 */
         const toReversed = <T>(array: T[]) => Array.from(array).reverse();
 
@@ -417,6 +414,10 @@ class Game {
         for (const effect of toReversed(
             this.current.additional_step_effects()
         )) {
+            const params: ReferenceParam = {
+                game: this,
+                self: effect,
+            };
             if (resolve_single_spec(effect.condition, params)) {
                 this.begin_new_step(effect.generate_step(params));
                 return;
@@ -440,6 +441,10 @@ class Game {
         for (const effect of toReversed(
             this.current.additional_phase_effects()
         )) {
+            const params: ReferenceParam = {
+                game: this,
+                self: effect,
+            };
             if (resolve_single_spec(effect.condition, params)) {
                 const new_phase = effect.generate_phase(params);
                 const new_step_kind = first_step_of_phase(new_phase.kind);
@@ -466,6 +471,10 @@ class Game {
         for (const effect of toReversed(
             this.current.additional_turn_effects()
         )) {
+            const params: ReferenceParam = {
+                game: this,
+                self: effect,
+            };
             if (resolve_single_spec(effect.condition, params)) {
                 this.begin_new_turn(effect.generate_turn(params));
                 return;
