@@ -3,7 +3,7 @@
  */
 "use strict";
 
-import { Zone } from "./Game";
+import { PlayerInfo, Zone } from "./Game";
 import { Ability, SpellAbility, TriggeredAbility } from "./Ability";
 import { Characteristics } from "./Characteristic";
 import { Instruction, Resolve } from "./Instruction";
@@ -302,12 +302,18 @@ type AdditionalEffect =
 // MARK: プレイヤー
 /** プレイヤー */
 class Player extends GameObject {
-    name?: string;
+    info: PlayerInfo;
     life: number;
     counters: Counter[];
     abilities: Ability[];
     /** 既に敗北しているかどうか */
-    is_losed: boolean = false;
+    is_lost: boolean = false;
+
+    constructor(info: PlayerInfo, life?: number) {
+        super();
+        this.info = info;
+        this.life = life ?? 20;
+    }
 
     equals(player: Player): boolean {
         return this.id === player.id;

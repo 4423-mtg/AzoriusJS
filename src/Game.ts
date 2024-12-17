@@ -30,47 +30,54 @@ import {
     Resolve,
 } from "./Instruction";
 
-export { GameInfo, GameState, Game, Zone, ZoneType };
+export { PlayerInfo, MatchInfo, GameState, Game, Zone, ZoneType };
 
-// MARK: Game
-class GameInfo {
-    /** ゲームを表すオブジェクト */
+type PlayerInfo = {
+    id: number;
+    name: string;
+    deck: Card[];
+    sideboard: Card[];
+};
+// MARK: MatchInfo
+class MatchInfo {
+    /** ゲームのメタ情報 */
     id: number = 0;
-    players: Set<Player>;
-    decks = []; // FIXME: サイドボード
-    game_state: GameState = new GameState();
 
-    // initGame(): void {
-    //     // FIXME:
-    //     // プレイヤーの初期化
-    //     state.game_state.players = state.players;
-    //     // 領域の初期化
-    //     state.game_state.zones.push(
-    //         ...state.game_state.players.flatMap((pl) =>
-    //             [
-    //                 ZoneType.Library,
-    //                 ZoneType.Hand,
-    //                 ZoneType.Graveyard,
-    //                 ZoneType.Command,
-    //             ].map((zt) => new Zone(zt, pl))
-    //         )
-    //     );
-    //     state.game_state.zones.push(new Zone(ZoneType.Battlefield));
-    //     state.game_state.zones.push(new Zone(ZoneType.Exile));
-    //     // TODO ライブラリーとサイドボード
-    // }
-    constructor() {}
+    player_info: Array<PlayerInfo>;
+
+    new_game(): Game {
+        const state = new GameState();
+        // プレイヤー
+        state.set_players(this.player_info.map((info) => new Player(info)));
+        // ターン順
+        state.set_turn_order(state.get_players());
+        // 領域
+        state.add_zone(new Zone(ZoneType.Battlefield));
+        state.add_zone(new Zone(ZoneType.Stack));
+        state.add_zone(new Zone(ZoneType.Exile));
+        state.get_players().forEach((player) => {
+            state.add_zone(new Zone(ZoneType.Hand, player));
+            state.add_zone(new Zone(ZoneType.Library, player));
+            state.add_zone(new Zone(ZoneType.Graveyard, player));
+            state.add_zone(new Zone(ZoneType.Command, player));
+        });
+        // カード、ターン等は Game.run() へ
+        // TODO: ゲーム開始時の手順 (Instruction)
+        // TODO: 血清の粉末、力線
+
+        const new_game = new Game(state);
+        // マッチ情報
+        new_game.match_info = this;
+        return new_game;
+    }
 }
 
 // MARK: GameState
 /** ゲームの状態 */
 // NOTE: GameState は immutable であってほしい
 class GameState {
-    /** ゲームのメタ情報 */
-    #game_meta: GameInfo;
-
     /** プレイヤー */
-    #players: Set<Player>;
+    #players: Player[];
     /** プレイヤーのターン進行順 */
     #turn_order: Player[]; // TODO: get_order(), set_order()
     #active_player_index?: number;
@@ -205,10 +212,12 @@ class GameState {
     // ==================================================================
     // MARK:GameState/プレイヤー
     /** すべてのプレイヤー */
-    players(): Set<Player> {
+    get_players(): Player[] {
         return this.#players;
     }
-    // add_player(player: Player) {}
+    set_players(players: Player[]) {
+        this.#players = players;
+    }
     /** アクティブプレイヤー */
     get_active_player(): Player | undefined {
         return this.#active_player_index === undefined
@@ -236,7 +245,7 @@ class GameState {
     set_turn_order(players: Player[]) {
         this.#turn_order = [];
         players.forEach((pl) => {
-            if (this.players().has(pl)) {
+            if (this.get_players().includes(pl)) {
                 this.#turn_order.push(pl);
             }
         });
@@ -319,6 +328,9 @@ class GameState {
                     owner.includes(z.owner))
         );
     }
+    add_zone(zone: Zone) {
+        this.#zones.add(zone);
+    }
 
     // ==================================================================
     // MARK: GameState/ターン
@@ -348,9 +360,11 @@ class GameState {
     }
 }
 
-// MARK: GameHistory
+// MARK: Game
 /** ゲームの履歴。実装は隠蔽する */
 class Game {
+    match_info: MatchInfo;
+
     #history: GameState[] = [];
 
     constructor(...state: GameState[]) {
@@ -368,7 +382,8 @@ class Game {
                 // 全員が連続で優先権をパスしている。
                 // クリンナップ・ステップではフラグが立っている場合のみ。
                 // アンタップ・ステップでは優先権は発生しないが、アンタップ・ステップでここに来ることはない。
-                this.current.pass_count() === this.current.players().size &&
+                this.current.pass_count() ===
+                    this.current.get_players().length &&
                 (this.current.get_step()?.kind !== "Cleanup" ||
                     this.current.cleanup_again())
             ) {
