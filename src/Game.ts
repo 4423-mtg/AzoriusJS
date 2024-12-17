@@ -20,6 +20,8 @@ import {
     Step,
     next_phase_and_step,
     first_step_of_phase,
+    PhaseKind,
+    StepKind,
 } from "./Turn";
 import { ReferenceParam, resolve_single_spec } from "./Reference";
 import {
@@ -62,8 +64,6 @@ class MatchInfo {
             state.add_zone(new Zone(ZoneType.Command, player));
         });
         // カード、ターン等は Game.run() へ
-        // TODO: ゲーム開始時の手順 (Instruction)
-        // TODO: 血清の粉末、力線
 
         const new_game = new Game(state);
         // マッチ情報
@@ -79,14 +79,14 @@ class GameState {
     /** プレイヤー */
     #players: Player[];
     /** プレイヤーのターン進行順 */
-    #turn_order: Player[]; // TODO: get_order(), set_order()
+    #turn_order: Player[];
     #active_player_index?: number;
     #priority_player_index?: number;
 
     /** 領域 */
     #zones: Set<Zone> = new Set<Zone>();
     /** すべてのオブジェクト */
-    #game_objects: GameObject[] = []; // TODO: Mapに変えるかも
+    #game_objects: GameObject[] = []; // Mapに変えるかも
 
     /** 現在のターン */
     #turn: Turn;
@@ -377,6 +377,8 @@ class Game {
 
     /** メインループ */
     run(): void {
+        // TODO: ゲーム開始時の手順 (Instruction)
+        // TODO: 血清の粉末、力線
         while (true) {
             if (
                 // 全員が連続で優先権をパスしている。
@@ -389,9 +391,14 @@ class Game {
             ) {
                 // スタックが空
                 if (this.current.stacked_objects().length === 0) {
+                    // TODO: 未使用のマナが消滅する
                     // 次のフェイズやステップに移る。
                     this.goto_next();
                     // TODO: ターン起因処理
+                    this.turn_based_action(
+                        this.current.get_phase().kind,
+                        this.current.get_step()?.kind
+                    );
                     // アクティブプレイヤーが優先権を得る
                     const active_player = this.current.get_active_player();
                     this.set_priority_to(
@@ -550,6 +557,45 @@ class Game {
     // TODO:
     // will_skipped(arg: Step | Phase | Turn): boolean {}
 
+    turn_based_action(phasekind: PhaseKind, stepkind: StepKind | undefined) {
+        // TODO:
+        if (phasekind === "Precombat Main") {
+            return;
+        }
+        switch (stepkind) {
+            case "Untap":
+                break;
+
+            case "Draw":
+                break;
+
+            case "Beginning of Combat":
+                break;
+
+            case "Declare Attackers":
+                break;
+
+            case "Declare Blockers":
+                break;
+
+            case "Combat Damage":
+                break;
+
+            case "Cleanup":
+                break;
+        }
+    }
+
+    /** 状況起因処理 (1回) */
+    state_based_action(): void {
+        // TODO: 状況起因処理は Instruction を含む
+    }
+
+    /** 誘発した能力をスタックに置く */
+    put_triggered_abilities_on_stack(): void {
+        // TODO:
+    }
+
     /** プレイヤーが優先権を得る */
     set_priority_to(player: Player): void {
         // TODO:
@@ -575,25 +621,9 @@ class Game {
         // state.player_with_priority = player;
     }
 
-    /** 状況起因処理 (1回) */
-    state_based_action(): void {
-        // TODO: 状況起因処理は Instruction を含む
-    }
-
-    /** 誘発した能力をスタックに置く */
-    put_triggered_abilities_on_stack(): void {
-        // TODO:
-    }
-
     /** 状況誘発 */
     check_state_triggers(state: GameState): void {
         // TODO:
-    }
-
-    /** スタックを1つ解決する */
-    resolve_stack(): void {
-        const stacked_obj = this.current.stacked_objects()[-1];
-        this.perform(stacked_obj.resolve, stacked_obj);
     }
 
     /** 優先権による行動。呪文を唱える、能力を起動する、特別な処理を行う、優先権をパスする */
@@ -619,6 +649,12 @@ class Game {
         //     // ); // TODO:
         //     // state.pass_count++;
         // }
+    }
+
+    /** スタックを1つ解決する */
+    resolve_stack(): void {
+        const stacked_obj = this.current.stacked_objects()[-1];
+        this.perform(stacked_obj.resolve, stacked_obj);
     }
 }
 
