@@ -138,6 +138,8 @@ function is_spell(card: Card): card is Spell {
 // MARK: スタック上の能力
 /** スタック上の能力 */
 class StackedAbility extends GameObject {
+    /** 領域 */
+    zone?: Zone;
     /** 発生源となった能力 */
     ability: Ability;
     /** 能力の発生源オブジェクト */

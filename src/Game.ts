@@ -80,7 +80,6 @@ class GameState {
     #players: Player[];
     /** プレイヤーのターン進行順 */
     #turn_order: Player[];
-    #active_player_index?: number;
     #priority_player_index?: number;
 
     /** 領域 */
@@ -166,6 +165,11 @@ class GameState {
     cards_in_command(player?: Player[]): Card[] {
         return this.card_in_zone([ZoneType.Command], player);
     }
+    /** 誘発してまだスタックに置かれていない誘発型能力 */
+    triggered_abilities_not_on_stack(): StackedAbility[] {
+        // TODO:
+        return [];
+    }
 
     /** すべての生成された効果 */
     generated_effects(): GeneratedEffect[] {
@@ -219,22 +223,26 @@ class GameState {
         this.#players = players;
     }
     /** アクティブプレイヤー */
-    get_active_player(): Player | undefined {
-        return this.#active_player_index === undefined
-            ? undefined
-            : this.#turn_order[this.#active_player_index];
-    }
-    set_active_player(player: Player) {
-        // TODO:
+    get_active_player(): Player {
+        return this.get_turn().active_player;
     }
     /** 優先権を持つプレイヤー */
-    get_player_with_priority(): Player | undefined {
-        return this.#priority_player_index === undefined
-            ? undefined
-            : this.#turn_order[this.#priority_player_index];
+    get_player_with_priority(): {
+        index: number | undefined;
+        player: Player | undefined;
+    } {
+        return this.#priority_player_index !== undefined
+            ? {
+                  index: this.#priority_player_index,
+                  player: this.#turn_order[this.#priority_player_index],
+              }
+            : {
+                  index: undefined,
+                  player: undefined,
+              };
     }
-    set_player_with_priority(player: Player) {
-        // TODO:
+    set_player_with_priority(index: number) {
+        this.#priority_player_index = index;
     }
 
     /** ターン順 */
@@ -251,19 +259,6 @@ class GameState {
         });
     }
 
-    // TODO: これ統合できない？
-    // FIXME: アクティブプレイヤーとは現在のターンのオーナーである
-    /** アクティブプレイヤーから始めて各プレイヤーをターン進行順に並べた配列 */
-    from_active_player(): Player[] | undefined {
-        if (this.#active_player_index === undefined) {
-            return undefined;
-        } else {
-            return new Array<Player>().concat(
-                this.#turn_order.slice(this.#active_player_index),
-                this.#turn_order.slice(0, this.#active_player_index - 1)
-            );
-        }
-    }
     /** 指定したプレイヤーからターン進行順で次のプレイヤー */
     next_player_of(player: Player): Player | undefined {
         const idx = this.#turn_order.indexOf(player);
@@ -275,15 +270,16 @@ class GameState {
             ];
         }
     }
-
-    /** ターン順で、現在のアクティブ・プレイヤーの次のプレイヤー。
-     * アクティブ・プレイヤーが存在しないときは `undefined`
-     */
-    next_player_of_active_player(): Player | undefined {
-        const active_player = this.get_active_player();
-        return active_player !== undefined
-            ? this.next_player_of(active_player)
-            : undefined;
+    /** 指定した順番を起点としてターン順に1周する、プレイヤーの配列 */
+    turn_order_from(index: number): Player[] {
+        if (index === 0) {
+            return this.#turn_order;
+        } else {
+            return new Array<Player>().concat(
+                this.#turn_order.slice(index),
+                this.#turn_order.slice(0, index - 1)
+            );
+        }
     }
 
     // ==================================================================
@@ -506,7 +502,7 @@ class Game {
         this.begin_new_turn(
             new Turn(
                 this.#get_new_turn_id(),
-                this.current.next_player_of_active_player() ??
+                this.current.next_player_of(this.current.get_active_player()) ??
                     this.current.get_turn_order()[0]
             )
         );
@@ -519,7 +515,7 @@ class Game {
     }
 
     /** `Instruction`を実行する。新しい`GameState`を生成し、移行する。 */
-    perform(instruction: Instruction, self: GameObject | undefined) {
+    let_to_perform(self: GameObject | undefined, instruction: Instruction) {
         const state_new = this.current.deepcopy();
         // TODO: 置換効果、禁止効果など
         instruction.perform(state_new, { game: this, self: self });
@@ -528,14 +524,14 @@ class Game {
 
     /** 新しいターンを開始する。 */
     begin_new_turn(turn: Turn) {
-        this.perform(new BeginNewTurn(turn), undefined);
+        this.let_to_perform(undefined, new BeginNewTurn(turn));
     }
     /** 新しいフェイズ、ステップを開始する。 */
     begin_new_phase_and_step(phase: Phase, step: Step | undefined) {
-        this.perform(new BeginNewPhaseAndStep(phase, step), undefined);
+        this.let_to_perform(undefined, new BeginNewPhaseAndStep(phase, step));
     }
     begin_new_step(step: Step | undefined) {
-        this.perform(new BeginNewStep(step), undefined);
+        this.let_to_perform(undefined, new BeginNewStep(step));
     }
 
     #get_new_turn_id(): number {
@@ -560,65 +556,95 @@ class Game {
     turn_based_action(phasekind: PhaseKind, stepkind: StepKind | undefined) {
         // TODO:
         if (phasekind === "Precombat Main") {
+            // 英雄譚にカウンターを置く
             return;
         }
         switch (stepkind) {
             case "Untap":
+                // アクティブプレイヤーのパーマネントがフェイズイン／フェイズアウトする
+                // 条件を満たしていれば昼夜が入れ替わる
+                // アンタップする
                 break;
 
             case "Draw":
+                // カードを引く
                 break;
 
             case "Beginning of Combat":
+                // 多人数戦の一部ルールのみ
                 break;
 
             case "Declare Attackers":
+                // 攻撃クリーチャーを指定する
                 break;
 
             case "Declare Blockers":
+                // ブロッククリーチャーを指定する
                 break;
 
             case "Combat Damage":
+                // APNAP順に戦闘ダメージの割り振りを宣言する
+                // すべての戦闘ダメージが同時に与えられる
                 break;
 
             case "Cleanup":
+                // アクティブプレイヤーは手札の上限を超えた分の手札を捨てる
+                // パーマネントのダメージを取り除き、ターン終了時までの効果を終了する
                 break;
         }
     }
 
-    /** 状況起因処理 (1回) */
-    state_based_action(): void {
-        // TODO: 状況起因処理は Instruction を含む
+    /** 状況起因処理 (1回)  戻り値は処理を実際に行ったなら true*/
+    state_based_action(): boolean {
+        // TODO: 状況起因処理は一つの Instruction で同時に処理される
+        // ライフが0以下なら敗北する
+        // 毒カウンター10以上なら敗北する
+        // 前回の状況起因処理以降にライブラリー0枚でカードを引こうとしたプレイヤーは敗北する
+        // 致死ダメージを負っているクリーチャーは破壊される
+        // タフネス0以下のクリーチャーは墓地に置かれる
+        // 忠誠度0のPWは墓地に置かれる
+        // 英雄譚が最終章以降かつスタックにそれからの章能力が置かれていないなら生け贄に捧げる
+        // バトルが守備カウンター0個で以下同文
+        // 不正なオーラは墓地に置かれる
+        // 不正な装備品・城砦ははずれる
+        // クリーチャーがなにかにつけられているならはずれる
+        // オーラや装備品や城砦でないパーマネントがなにかにつけられているならはずれる
+        // 戦場にないトークンは消滅する
+        // スタックにない呪文のコピーは消滅する
+        // +1カウンターと-1カウンターを相殺する
+        // レジェンドルール
+        return false; // TODO: 状況起因処理を実際に行ったなら true
     }
 
     /** 誘発した能力をスタックに置く */
     put_triggered_abilities_on_stack(): void {
-        // TODO:
+        // TODO: すでに誘発しているがまだスタックに置かれていない誘発型能力をスタックに置く
     }
 
     /** プレイヤーが優先権を得る */
-    set_priority_to(player: Player): void {
-        // TODO:
-        /* 状況起因処理と誘発 */
-        // let ret = false;
-        // let flag = true;
-        // while (flag) {
-        //     // 何もなくなるまで繰り返す
-        //     flag = false;
-        //     /* 発生しなくなるまで状況起因処理を繰り返す */
-        //     while (state.state_based_action()) {
-        //         // なにかあったらtrue
-        //         flag = true;
-        //         ret = true;
-        //     }
-        //     /* 誘発していた能力をスタックに置く */
-        //     if (state.put_triggered_abilities_on_stack()) {
-        //         flag = true;
-        //         ret = true;
-        //     }
-        // }
-        // /* プレイヤーが優先権を得る */
-        // state.player_with_priority = player;
+    set_priority_to(index: number): void {
+        while (true) {
+            // 発生しなくなるまで状況起因処理を繰り返す
+            let flag_sba = false;
+            while (true) {
+                flag_sba = this.state_based_action();
+                if (!flag_sba) {
+                    break;
+                }
+            }
+            // 誘発していた能力をスタックに置く
+            let flag_stack = false;
+            if (this.current.triggered_abilities_not_on_stack().length > 0) {
+                this.put_triggered_abilities_on_stack();
+                flag_stack = true;
+            }
+            // どちらも発生しなければ終わる
+            if (!flag_sba && !flag_stack) {
+                break;
+            }
+        }
+        /* プレイヤーが優先権を得る */
+        this.current.set_player_with_priority(index);
     }
 
     /** 状況誘発 */
@@ -654,7 +680,8 @@ class Game {
     /** スタックを1つ解決する */
     resolve_stack(): void {
         const stacked_obj = this.current.stacked_objects()[-1];
-        this.perform(stacked_obj.resolve, stacked_obj);
+        this.let_to_perform(stacked_obj, stacked_obj.resolve);
+        // 墓地に置くのは誰？
     }
 }
 
