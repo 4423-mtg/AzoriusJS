@@ -80,6 +80,9 @@ class GameState {
     #players: Player[];
     /** プレイヤーのターン進行順 */
     #turn_order: Player[];
+    /** 最後に通常のターンを行ったプレイヤーの、 turn_order でのインデックス。 */
+    #turn_order_index?: number;
+    /** 現在優先権を持っているプレイヤーの、 turn_order でのインデックス。 */
     #priority_player_index?: number;
 
     /** 領域 */
@@ -258,18 +261,11 @@ class GameState {
             }
         });
     }
-
-    /** 指定したプレイヤーからターン進行順で次のプレイヤー */
-    next_player_of(player: Player): Player | undefined {
-        const idx = this.#turn_order.indexOf(player);
-        if (idx < 0) {
-            return undefined;
-        } else {
-            return this.#turn_order[
-                idx + 1 < this.#turn_order.length ? idx + 1 : 0
-            ];
-        }
+    /** 最後に通常のターンを行ったプレイヤーのインデックス。 */
+    get_current_turn_order(): number | undefined {
+        return this.#turn_order_index;
     }
+
     /** 指定した順番を起点としてターン順に1周する、プレイヤーの配列 */
     turn_order_from(index: number): Player[] {
         if (index === 0) {
@@ -373,8 +369,7 @@ class Game {
 
     /** メインループ */
     run(): void {
-        // TODO: ゲーム開始時の手順 (Instruction)
-        // TODO: 血清の粉末、力線
+        // TODO: ゲーム開始時の手順 (Instruction)、血清の粉末、力線
         while (true) {
             if (
                 // 全員が連続で優先権をパスしている。
@@ -390,16 +385,20 @@ class Game {
                     // TODO: 未使用のマナが消滅する
                     // 次のフェイズやステップに移る。
                     this.goto_next();
-                    // TODO: ターン起因処理
+                    // ターン起因処理
                     this.turn_based_action(
                         this.current.get_phase().kind,
                         this.current.get_step()?.kind
                     );
                     // アクティブプレイヤーが優先権を得る
-                    const active_player = this.current.get_active_player();
-                    this.set_priority_to(
-                        active_player ?? this.current.get_turn_order()[0]
-                    );
+                    const active_player_first_index = this.current
+                        .get_turn_order()
+                        .indexOf(this.current.get_active_player());
+                    if (active_player_first_index >= 0) {
+                        this.set_priority_to(active_player_first_index);
+                    } else {
+                        this.set_priority_to(0);
+                    }
                     continue;
                 }
                 // スタックが空でない
@@ -498,12 +497,14 @@ class Game {
                 return;
             }
         }
-        // 次のプレイヤーのターンに移る
+        // ターン順で次のプレイヤーのターンに移る
+        const index = this.current.get_current_turn_order();
         this.begin_new_turn(
             new Turn(
                 this.#get_new_turn_id(),
-                this.current.next_player_of(this.current.get_active_player()) ??
-                    this.current.get_turn_order()[0]
+                this.current.get_turn_order()[
+                    index !== undefined ? index + 1 : 0
+                ]
             )
         );
         // TODO: アクティブプレイヤーが優先権を得る
@@ -613,7 +614,7 @@ class Game {
         // スタックにない呪文のコピーは消滅する
         // +1カウンターと-1カウンターを相殺する
         // レジェンドルール
-        return false; // TODO: 状況起因処理を実際に行ったなら true
+        return false; // 状況起因処理を実際に行ったなら true
     }
 
     /** 誘発した能力をスタックに置く */
@@ -672,7 +673,7 @@ class Game {
         // if (action == "pass") {
         //     // state.set_priority_to(
         //     //     state.get_next_player_of(state.player_with_priority)
-        //     // ); // TODO:
+        //     // );
         //     // state.pass_count++;
         // }
     }
