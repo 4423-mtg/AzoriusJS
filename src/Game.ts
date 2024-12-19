@@ -81,7 +81,7 @@ class GameState {
     /** プレイヤーのターン進行順 */
     #turn_order: Player[];
     /** 最後に通常のターンを行ったプレイヤーの、 turn_order でのインデックス。 */
-    #turn_order_index?: number;
+    #turn_order_latest?: number;
     /** 現在優先権を持っているプレイヤーの、 turn_order でのインデックス。 */
     #priority_player_index?: number;
 
@@ -263,7 +263,7 @@ class GameState {
     }
     /** 最後に通常のターンを行ったプレイヤーのインデックス。 */
     get_current_turn_order(): number | undefined {
-        return this.#turn_order_index;
+        return this.#turn_order_latest;
     }
 
     /** 指定した順番を起点としてターン順に1周する、プレイヤーの配列 */
@@ -276,6 +276,11 @@ class GameState {
                 this.#turn_order.slice(0, index - 1)
             );
         }
+    }
+    /** プレイヤーをAPNAP順で返す。 */
+    get_players_apnap(): Player[] {
+        const index = this.get_turn_order().indexOf(this.get_active_player());
+        return this.turn_order_from(index >= 0 ? index : 0);
     }
 
     // ==================================================================
@@ -522,6 +527,16 @@ class Game {
         instruction.perform(state_new, { game: this, self: self });
         this.#history.push(state_new);
     }
+    /** 複数の Instruction をまとめて一度に処理する。 */
+    let_to_perform_multi(
+        args: { self: GameObject | undefined; instruction: Instruction }[]
+    ) {
+        const state_new = this.current.deepcopy();
+        args.forEach((arg) => {
+            arg.instruction.perform(state_new, { game: this, self: arg.self });
+        });
+        this.#history.push(state_new);
+    }
 
     /** 新しいターンを開始する。 */
     begin_new_turn(turn: Turn) {
@@ -550,9 +565,6 @@ class Game {
             ?.get_step();
         return last_step !== undefined ? last_step.id + 1 : 0;
     }
-
-    // TODO:
-    // will_skipped(arg: Step | Phase | Turn): boolean {}
 
     turn_based_action(phasekind: PhaseKind, stepkind: StepKind | undefined) {
         // TODO:
@@ -619,7 +631,23 @@ class Game {
 
     /** 誘発した能力をスタックに置く */
     put_triggered_abilities_on_stack(): void {
-        // TODO: すでに誘発しているがまだスタックに置かれていない誘発型能力をスタックに置く
+        const abilities = this.current.triggered_abilities_not_on_stack();
+        const range = (num: number) =>
+            Array(num)
+                .fill(undefined)
+                .map((_, i) => i);
+
+        // 各プレイヤーごとに
+        for (const player of this.current.get_players_apnap()) {
+            // 自分の能力
+            let abi = abilities.filter((a) => a.controller === player);
+            // 好きな順でスタックに置く
+            while (abi.length > 0) {
+                const num = select_number(range(abi.length));
+                abi[num].zone = this.current.zones([ZoneType.Stack])[0];
+                abi = abi.filter((_, i) => i !== num);
+            }
+        }
     }
 
     /** プレイヤーが優先権を得る */
@@ -650,32 +678,16 @@ class Game {
 
     /** 状況誘発 */
     check_state_triggers(state: GameState): void {
-        // TODO:
+        // TODO: 誘発条件？
     }
 
     /** 優先権による行動。呪文を唱える、能力を起動する、特別な処理を行う、優先権をパスする */
     take_priority_action(): void {
-        // let action: "cast" | "activate" | "take_special_action" | "pass" =
-        //     ask_action_to_player(); // TODO: ask_action_to_player()
-        // // 呪文を唱える
-        // if (action == "cast") {
-        //     // state.pass_count = 0;
-        // }
-        // // 能力を起動する
-        // if (action == "activate") {
-        //     // state.pass_count = 0;
-        // }
-        // // 特別な処理を行う
-        // if (action == "take_special_action") {
-        //     // state.pass_count = 0;
-        // }
-        // // 優先権をパスする
-        // if (action == "pass") {
-        //     // state.set_priority_to(
-        //     //     state.get_next_player_of(state.player_with_priority)
-        //     // );
-        //     // state.pass_count++;
-        // }
+        // TODO:
+        // 1. 呪文を唱える
+        // 2. 能力を起動する
+        // 3. 特別な処理を行う（土地のプレイ）
+        // 4. パスする
     }
 
     /** スタックを1つ解決する */
