@@ -4,14 +4,15 @@ import { GameObject, Player } from "./GameObject";
 
 export {
     ReferenceParam,
-    Ref,
     SingleRef,
     MultiRef,
     Spec,
     SingleSpec,
     MultiSpec,
+    resolve_spec,
     resolve_single_spec,
     resolve_multi_spec,
+    resolve_spec_apply,
 };
 
 // export type ReferenceParams = {
@@ -36,51 +37,53 @@ type Referable =
     | undefined;
 
 // ==============================================================================
-class Ref<T extends Referable> {
-    ref: (params: ReferenceParam) => T | T[];
+type _Ref = { resolve: (params: ReferenceParam) => any };
 
-    constructor(ref: (params: ReferenceParam) => T | T[]) {
-        this.ref = ref;
-    }
-
-    resolve: (params: ReferenceParam) => T | T[] = (params) => this.ref(params);
-}
-
-class SingleRef<T extends Referable> extends Ref<T> {
-    declare ref: (params: ReferenceParam) => T;
+class SingleRef<T extends Referable> {
+    #ref: (params: ReferenceParam) => T;
 
     constructor(ref: (params: ReferenceParam) => T) {
-        super(ref);
+        this.#ref = ref;
     }
 
-    resolve: (params: ReferenceParam) => T = (params) => this.ref(params);
+    resolve: (params: ReferenceParam) => T = (params) => this.#ref(params);
 
     /** オーナー (GameObjectのみ)*/
     owner = new SingleRef((params: ReferenceParam) => {
-        const ret = this.ref(params);
+        const ret = this.#ref(params);
         return isGameObject(ret) ? ret.owner : undefined;
     });
 
     /** コントローラー (GameObjectのみ)*/
     controller = new SingleRef((params: ReferenceParam) => {
-        const ret = this.ref(params);
+        const ret = this.#ref(params);
         return isGameObject(ret) ? ret.controller : undefined;
     });
 }
 
-class MultiRef<T extends Referable> extends Ref<T> {
-    declare ref: (param: ReferenceParam) => T[];
+class MultiRef<T extends Referable> {
+    #ref: (param: ReferenceParam) => T[];
 
     constructor(ref: (param: ReferenceParam) => T[]) {
-        super(ref);
+        this.#ref = ref;
     }
 
-    resolve: (params: ReferenceParam) => T[] = (params) => this.ref(params);
+    resolve: (params: ReferenceParam) => T[] = (params) => this.#ref(params);
 }
 
 type SingleSpec<T extends Referable> = T | SingleRef<T>;
 type MultiSpec<T extends Referable> = SingleSpec<T>[] | MultiRef<T>;
 type Spec<T extends Referable> = SingleSpec<T> | MultiSpec<T>;
+
+function isSingleSpec<T extends Referable>(
+    spec: Spec<T>
+): spec is T | SingleRef<T> {
+    return !isMultiSpec(spec);
+}
+
+function isMultiSpec<T extends Referable>(spec: Spec<T>): spec is MultiSpec<T> {
+    return spec instanceof MultiRef || Array.isArray(spec);
+}
 
 // タイプガード ===============================================================
 function isGameObject(arg: any): arg is GameObject {
@@ -96,6 +99,19 @@ function isZone(arg: any): arg is Zone {
 }
 
 // Specの解決 ===============================================================
+function resolve_spec<T extends Referable>(
+    spec: Spec<T>,
+    params: ReferenceParam
+): T | T[] {
+    if (isSingleSpec<T>(spec)) {
+        return resolve_single_spec(spec, params);
+    } else if (isMultiSpec(spec)) {
+        return resolve_multi_spec(spec, params);
+    } else {
+        return spec;
+    }
+}
+
 function resolve_single_spec<T extends Referable>(
     spec: SingleSpec<T>,
     params: ReferenceParam
@@ -111,6 +127,17 @@ function resolve_multi_spec<T extends Referable>(
     } else {
         return spec.resolve(params);
     }
+}
+
+function resolve_spec_apply<T extends Referable, U>(
+    spec: Spec<T>,
+    params: ReferenceParam,
+    func: (resolved: T) => U
+): U | U[] {
+    const temp = resolve_spec(spec, params);
+    return Array.isArray(temp)
+        ? temp.map((eachtemp) => func(eachtemp))
+        : func(temp);
 }
 
 // ==============================================================================

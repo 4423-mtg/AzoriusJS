@@ -372,6 +372,7 @@ class Game {
         return this.#history[-1];
     }
 
+    // MARK: Game/メインループ
     /** メインループ */
     run(): void {
         // TODO: ゲーム開始時の手順 (Instruction)、血清の粉末、力線
@@ -396,11 +397,11 @@ class Game {
                         this.current.get_step()?.kind
                     );
                     // アクティブプレイヤーが優先権を得る
-                    const active_player_first_index = this.current
+                    const active_player_index = this.current
                         .get_turn_order()
                         .indexOf(this.current.get_active_player());
-                    if (active_player_first_index >= 0) {
-                        this.set_priority_to(active_player_first_index);
+                    if (active_player_index >= 0) {
+                        this.set_priority_to(active_player_index);
                     } else {
                         this.set_priority_to(0);
                     }
@@ -520,6 +521,7 @@ class Game {
         return;
     }
 
+    // MARK: Game/Instruction
     /** `Instruction`を実行する。新しい`GameState`を生成し、移行する。 */
     let_to_perform(self: GameObject | undefined, instruction: Instruction) {
         const state_new = this.current.deepcopy();
@@ -538,34 +540,45 @@ class Game {
         this.#history.push(state_new);
     }
 
+    // MARK: Game/ターン関連
     /** 新しいターンを開始する。 */
     begin_new_turn(turn: Turn) {
+        // BeginNewTurn という Instruction を生成して実行
         this.let_to_perform(undefined, new BeginNewTurn(turn));
     }
     /** 新しいフェイズ、ステップを開始する。 */
     begin_new_phase_and_step(phase: Phase, step: Step | undefined) {
+        // BeginNewPhaseAndStep という Instruction を生成して実行
         this.let_to_perform(undefined, new BeginNewPhaseAndStep(phase, step));
     }
+    /** 新しいステップを開始する。 */
     begin_new_step(step: Step | undefined) {
+        // BeginNewStep という Instruction を生成して実行
         this.let_to_perform(undefined, new BeginNewStep(step));
     }
-
+    /** 新しくターンを生成する際に、そのIDを取得する。（最後のターンのID + 1） */
     #get_new_turn_id(): number {
         return this.current.get_turn().id + 1;
     }
+    /** 新しくフェイズを生成する際に、そのIDを取得する。（最後のフェイズのID + 1） */
     #get_new_phase_id(): number {
         return this.current.get_phase().id + 1;
     }
+    /** 新しくステップを生成する際に、そのIDを取得する。（最後のステップのID + 1）
+     * 最後のステップが存在しないなら 0 を返す。
+     */
     #get_new_step_id(): number {
-        /** 配列を反転した配列を新たに生成して返す。 */
+        /** 配列を反転した配列を新たに生成して返す関数。 */
         const toReversed = <T>(array: T[]) => Array.from(array).reverse();
 
-        const last_step = toReversed(this.#history)
-            .find((state) => state.get_step !== undefined)
+        const latest_step = toReversed(this.#history)
+            .find((state) => state.get_step() !== undefined)
             ?.get_step();
-        return last_step !== undefined ? last_step.id + 1 : 0;
+        return latest_step !== undefined ? latest_step.id + 1 : 0;
     }
 
+    // MARK: Game/ターン起因
+    /** ターン起因処理を行う。 */
     turn_based_action(phasekind: PhaseKind, stepkind: StepKind | undefined) {
         // TODO:
         if (phasekind === "Precombat Main") {
@@ -607,6 +620,7 @@ class Game {
         }
     }
 
+    // MARK: Game/状況起因処理
     /** 状況起因処理 (1回)  戻り値は処理を実際に行ったなら true*/
     state_based_action(): boolean {
         // TODO: 状況起因処理は一つの Instruction で同時に処理される
@@ -629,7 +643,8 @@ class Game {
         return false; // 状況起因処理を実際に行ったなら true
     }
 
-    /** 誘発した能力をスタックに置く */
+    // MARK: Game/スタック置く
+    /** 誘発していた能力をスタックに置く */
     put_triggered_abilities_on_stack(): void {
         const abilities = this.current.triggered_abilities_not_on_stack();
         const range = (num: number) =>
@@ -640,17 +655,18 @@ class Game {
         // 各プレイヤーごとに
         for (const player of this.current.get_players_apnap()) {
             // 自分の能力
-            let abi = abilities.filter((a) => a.controller === player);
+            let abl = abilities.filter((a) => a.controller === player);
             // 好きな順でスタックに置く
-            while (abi.length > 0) {
-                const num = select_number(range(abi.length));
-                abi[num].zone = this.current.zones([ZoneType.Stack])[0];
-                abi = abi.filter((_, i) => i !== num);
+            while (abl.length > 0) {
+                const num = select_number(range(abl.length));
+                abl[num].zone = this.current.zones([ZoneType.Stack])[0];
+                abl = abl.filter((_, i) => i !== num);
             }
         }
     }
 
-    /** プレイヤーが優先権を得る */
+    // MARK: Game/優先権を得る
+    /** 状況起因処理と誘発チェックを行った後、プレイヤーが優先権を得る */
     set_priority_to(index: number): void {
         while (true) {
             // 発生しなくなるまで状況起因処理を繰り返す
@@ -676,11 +692,7 @@ class Game {
         this.current.set_player_with_priority(index);
     }
 
-    /** 状況誘発 */
-    check_state_triggers(state: GameState): void {
-        // TODO: 誘発条件？
-    }
-
+    // MARK: Game/行動
     /** 優先権による行動。呪文を唱える、能力を起動する、特別な処理を行う、優先権をパスする */
     take_priority_action(): void {
         // TODO:
@@ -690,15 +702,23 @@ class Game {
         // 4. パスする
     }
 
+    // MARK: Game/解決
     /** スタックを1つ解決する */
     resolve_stack(): void {
         const stacked_obj = this.current.stacked_objects()[-1];
         this.let_to_perform(stacked_obj, stacked_obj.resolve);
         // 墓地に置くのは誰？
     }
+
+    // MARK: Game/状況誘発
+    /** 状況誘発 */
+    check_state_triggers(state: GameState): void {
+        // TODO: 誘発条件？
+    }
 }
 
-/** 領域の種別 OK */
+// MARK: 領域
+/** 領域の種別 */
 class ZoneType {
     /** 領域の名前 */
     name: string;

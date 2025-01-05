@@ -25,6 +25,7 @@ export {
     AdditionalPhaseEffect,
     AdditionalStepEffect,
     Player,
+    Mana,
     Counter,
 };
 
@@ -169,14 +170,13 @@ class StackedAbility extends GameObject {
 }
 
 // =================================================================
-// MARK: 継続的効果と置換効果
 class GeneratedEffect extends GameObject {}
 
+// MARK: 継続的効果
 /** 継続的効果
  * 1. 特性や値を変更する効果
  * 2. 手続きを修整する効果
  */
-
 class ContinuousEffect extends GeneratedEffect {
     // 1. 期間
 }
@@ -234,6 +234,7 @@ class ContinuousEffect extends GeneratedEffect {
 //     }
 // }
 
+// MARK: 置換効果
 /** 置換効果 */
 class ReplacementEffect extends GeneratedEffect {
     // /** 置換対象の手続きに該当するかどうかをチェックする関数 */
@@ -257,7 +258,7 @@ class ReplacementEffect extends GeneratedEffect {
 }
 
 // =================================================================
-// MARK: 追加ターン
+// MARK: 追加ターン効果
 /** ターンを追加する効果 */
 class AdditionalTurnEffect extends GameObject {
     /** ターンを追加する条件 */
@@ -321,6 +322,10 @@ class Player extends GameObject {
         return this.id === player.id;
     }
 }
+
+// =================================================================
+// MARK: マナ
+class Mana {}
 
 // =================================================================
 // MARK: カウンター

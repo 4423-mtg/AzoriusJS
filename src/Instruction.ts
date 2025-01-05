@@ -1,4 +1,5 @@
 "use strict";
+import { CardType } from "./Characteristic";
 /** 効果やルールによってゲーム中に行われる指示。
  */
 
@@ -12,6 +13,9 @@ import {
     Spec,
     resolve_single_spec,
     resolve_multi_spec,
+    resolve_spec,
+    resolve_spec_apply,
+    MultiRef,
 } from "./Reference";
 import { Phase, Step, Turn } from "./Turn";
 
@@ -53,10 +57,16 @@ abstract class Instruction {
     id: number;
 
     /** `Instrction`を実際に実行する。渡された`GameState`に変更を加える。 */
-    abstract perform: (new_state: GameState, params: ReferenceParam) => void;
+    abstract perform: (
+        self: GameObject | undefined,
+        new_state: GameState,
+        game: Game
+    ) => void;
 }
 
-// TODO: Instructionの入れ子について考える
+// - Instruction は入れ子になることがある。
+//   - どのような入れ子になるかは各 Instruction が各自定義する。
+// - 種類の異なる Instruction が同時に実行されることがある。
 
 // MARK:ルール上の処理 ************************************************
 class BeginNewTurn extends Instruction {
@@ -66,7 +76,11 @@ class BeginNewTurn extends Instruction {
         super();
         this.turn = turn;
     }
-    perform = (new_state: GameState, params: ReferenceParam) => {
+    perform = (
+        self: GameObject | undefined,
+        new_state: GameState,
+        game: Game
+    ) => {
         new_state.set_turn(this.turn);
     };
 }
@@ -79,7 +93,11 @@ class BeginNewPhaseAndStep extends Instruction {
         this.phase = phase;
         this.step = step;
     }
-    perform = (new_state: GameState, params: ReferenceParam) => {
+    perform = (
+        self: GameObject | undefined,
+        new_state: GameState,
+        game: Game
+    ) => {
         new_state.set_phase(this.phase);
         new_state.set_step(this.step);
     };
@@ -90,7 +108,11 @@ class BeginNewStep extends Instruction {
         super();
         this.step = step;
     }
-    perform = (new_state: GameState, params: ReferenceParam) => {
+    perform = (
+        self: GameObject | undefined,
+        new_state: GameState,
+        game: Game
+    ) => {
         new_state.set_step(this.step);
     };
 }
@@ -98,7 +120,11 @@ class BeginNewStep extends Instruction {
 class Resolve extends Instruction {
     resolved_object: Card | StackedAbility;
 
-    perform: (new_state: GameState, params: ReferenceParam) => void; // TODO:
+    perform = (
+        self: GameObject | undefined,
+        new_state: GameState,
+        game: Game
+    ) => {}; // TODO:
 }
 
 // MARK: 唱える関連 ********************************
@@ -111,7 +137,11 @@ class Cast extends Instruction {
         this.casted = object;
     }
 
-    perform = (new_state: GameState, params: ReferenceParam) => {
+    perform = (
+        self: GameObject | undefined,
+        new_state: GameState,
+        game: Game
+    ) => {
         // 1. スタックに移動させる
         // 2. モードやコストの支払い方を選ぶ
         // 3. 対象を選ぶ
@@ -142,7 +172,11 @@ class Paying extends Instruction {
         this.costs = costs;
     }
 
-    perform = (new_state: GameState, params: ReferenceParam) => {
+    perform = (
+        self: GameObject | undefined,
+        new_state: GameState,
+        game: Game
+    ) => {
         // TODO: 複数のコストは好きな順番で支払える
         // return this.costs.reduce((p: ReferenceParam, current: Instruction) => {
         //     let _p = p;
@@ -153,40 +187,76 @@ class Paying extends Instruction {
 }
 
 // MARK:キーワードでない処理 ********************************
+type _MoveSpec = {
+    moved: Spec<GameObject>;
+    dest: (obj: GameObject) => SingleRef<Zone>;
+};
 /** 領域を移動させる */
 class MoveZone extends Instruction {
     /** 移動させるオブジェクトと、移動先領域の組。 */
-    movespecs: {
-        /** 移動させるオブジェクト */
-        moved: SingleSpec<GameObject>;
-        /** 移動先の領域 */
-        dest: SingleSpec<Zone>;
-    }[];
+    movespecs: _MoveSpec[];
 
     constructor(
-        movespecs: {
-            /** 移動させるオブジェクト */
-            moved: SingleSpec<GameObject>;
-            /** 移動先の領域 */
-            dest: SingleSpec<Zone>;
-        }[]
+        /** 移動させるオブジェクトと、移動先領域の組。 */
+        movespecs: _MoveSpec[]
     ) {
         super();
         this.movespecs = movespecs;
     }
 
-    perform = (new_state: GameState, params: ReferenceParam) => {
-        const new_params = { ...params, state: new_state };
+    perform = (
+        self: GameObject | undefined,
+        new_state: GameState,
+        game: Game
+    ) => {
+        const params = { game: game, self: self };
         // 各 spec について
-        this.movespecs.forEach((each_spec) => {
-            // object_specを解決
-            const obj = resolve_single_spec(each_spec.moved, new_params);
-            const zone = resolve_single_spec(each_spec.dest, new_params);
-            obj.zone = zone;
+        this.movespecs.forEach((movespec) => {
+            // 領域移動操作
+            const _movezone = (resolved: GameObject) => {
+                // new_state から同じオブジェクトを探す
+                const obj_new = new_state
+                    .all_game_objects()
+                    .find((o) => o.id == resolved.id);
+                // それが Card か StackedAbility であれば領域を移動する
+                if (
+                    obj_new instanceof Card ||
+                    obj_new instanceof StackedAbility
+                ) {
+                    // 移動先の領域を解決して移動する
+                    obj_new.zone = resolve_single_spec<Zone>(
+                        movespec.dest(obj_new),
+                        params
+                    );
+                }
+            };
+
+            // 移動されるオブジェクトを解決し、それぞれについて移動操作を行う
+            resolve_spec_apply(movespec.moved, params, _movezone);
         });
         return new_state;
     };
 }
+
+// test
+const evacuation = new MoveZone([
+    {
+        moved: new MultiRef<Card>((params) => {
+            return params.game.current
+                .permanents()
+                .filter((c) =>
+                    c.characteristics().card_types?.includes(CardType.Creature)
+                );
+        }),
+        dest: (obj) =>
+            new SingleRef<Zone>((params) => {
+                return params.game.current.zones(
+                    [ZoneType.Hand],
+                    [obj.owner]
+                )[0];
+            }),
+    },
+]);
 
 /** カードを引く */
 class Drawing extends Instruction {
