@@ -69,6 +69,7 @@ abstract class Instruction {
 // - 種類の異なる Instruction が同時に実行されることがある。
 
 // MARK:ルール上の処理 ************************************************
+/** 新しいターンを開始する */
 class BeginNewTurn extends Instruction {
     turn: Turn;
 
@@ -84,6 +85,8 @@ class BeginNewTurn extends Instruction {
         new_state.set_turn(this.turn);
     };
 }
+
+/** 新しいフェイズとステップを開始する */
 class BeginNewPhaseAndStep extends Instruction {
     phase: Phase;
     step: Step | undefined;
@@ -102,6 +105,8 @@ class BeginNewPhaseAndStep extends Instruction {
         new_state.set_step(this.step);
     };
 }
+
+/** 新しいステップを開始する */
 class BeginNewStep extends Instruction {
     step: Step | undefined;
     constructor(step: Step | undefined) {
@@ -117,6 +122,7 @@ class BeginNewStep extends Instruction {
     };
 }
 
+/** 呪文や能力を解決する。マナ能力を含む */
 class Resolve extends Instruction {
     resolved_object: Card | StackedAbility;
 
@@ -187,22 +193,40 @@ class Paying extends Instruction {
 }
 
 // MARK:キーワードでない処理 ********************************
-type _MoveSpec = {
-    moved: Spec<GameObject>;
-    dest: (obj: GameObject) => SingleRef<Zone>;
+type MoveSpec = {
+    moved: Spec<Card | StackedAbility>;
+    dest: (obj: Card | StackedAbility) => SingleRef<Zone>;
 };
 /** 領域を移動させる */
 class MoveZone extends Instruction {
     /** 移動させるオブジェクトと、移動先領域の組。 */
-    movespecs: _MoveSpec[];
+    movespecs: MoveSpec[];
 
     constructor(
         /** 移動させるオブジェクトと、移動先領域の組。 */
-        movespecs: _MoveSpec[]
+        movespecs: MoveSpec[]
     ) {
         super();
         this.movespecs = movespecs;
     }
+
+    /** 単一のオブジェクトを移動する操作 */
+    #move = (
+        obj: Card | StackedAbility,
+        new_state: GameState,
+        dest: (_: Card | StackedAbility) => SingleRef<Zone>,
+        params: ReferenceParam
+    ) => {
+        // 移動後のオブジェクトを取得する
+        // FIXME: IDが同じなら型も同じであることを明示できるようにする
+        const obj_new = new_state
+            .all_game_objects()
+            .find((o) => o.id === obj.id);
+        // 領域を変更する
+        if (obj_new instanceof Card || obj_new instanceof StackedAbility) {
+            obj_new.zone = resolve_single_spec(dest(obj_new), params);
+        }
+    };
 
     perform = (
         self: GameObject | undefined,
@@ -212,36 +236,23 @@ class MoveZone extends Instruction {
         const params = { game: game, self: self };
         // 各 spec について
         this.movespecs.forEach((movespec) => {
-            // 領域移動操作
-            const _movezone = (resolved: GameObject) => {
-                // new_state から同じオブジェクトを探す
-                const obj_new = new_state
-                    .all_game_objects()
-                    .find((o) => o.id == resolved.id);
-                // それが Card か StackedAbility であれば領域を移動する
-                if (
-                    obj_new instanceof Card ||
-                    obj_new instanceof StackedAbility
-                ) {
-                    // 移動先の領域を解決して移動する
-                    obj_new.zone = resolve_single_spec<Zone>(
-                        movespec.dest(obj_new),
-                        params
-                    );
-                }
-            };
-
             // 移動されるオブジェクトを解決し、それぞれについて移動操作を行う
-            resolve_spec_apply(movespec.moved, params, _movezone);
+            const moved_obj = ([] as (Card | StackedAbility)[]).concat(
+                resolve_spec(movespec.moved, params)
+            );
+
+            moved_obj.forEach((o) =>
+                this.#move(o, new_state, movespec.dest, params)
+            );
         });
         return new_state;
     };
 }
 
-// test
+// test ok
 const evacuation = new MoveZone([
     {
-        moved: new MultiRef<Card>((params) => {
+        moved: new MultiRef((params) => {
             return params.game.current
                 .permanents()
                 .filter((c) =>
