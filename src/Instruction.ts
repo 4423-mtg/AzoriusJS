@@ -30,7 +30,7 @@ export {
     MoveZone,
     Drawing,
     DealingDamage,
-    GainingLife,
+    GainLife as GainingLife,
     Tapping,
     Exile,
     Sacrifice,
@@ -39,22 +39,19 @@ export {
     Milling,
 };
 
-/** `Instruction`の実行関数`perform()`の引数 */
-type PerformArgs = {
-    /** 実行前の状態 */
-    state: GameState;
-    /** 履歴 */
-    history: Game;
-    // /** 対象物 */
-    // objective?: GameObject[];
-};
-
 /** 処理指示を表すクラス。効果やターン起因処理、状況起因処理などの行う指示
  * ゲーム中に実行されるときに`Reference`を通じて実際のゲーム内の情報を注入される
  */
 abstract class Instruction {
     /** InstructionのID (0始まり) */
     id: number;
+    controller: SingleSpec<Player>;
+    performer: Spec<Player>;
+
+    constructor(controller: SingleSpec<Player>, performer?: Spec<Player>) {
+        this.controller = controller;
+        this.performer = performer == undefined ? controller : performer;
+    }
 
     /** 指示を実際に実行する。引数として渡された`GameState`を単に変更するだけでよい。 */
     abstract perform: (
@@ -69,7 +66,7 @@ abstract class Instruction {
 // - 種類の異なる Instruction が同時に実行されることがある。
 
 // MARK:ルール上の処理 ************************************************
-/** 新しいターンを開始する */
+/** 新しいターンを開始する */ // OK:
 class BeginNewTurn extends Instruction {
     turn: Turn;
 
@@ -86,7 +83,7 @@ class BeginNewTurn extends Instruction {
     };
 }
 
-/** 新しいフェイズとステップを開始する */
+/** 新しいフェイズとステップを開始する */ // OK:
 class BeginNewPhaseAndStep extends Instruction {
     phase: Phase;
     step: Step | undefined;
@@ -106,7 +103,7 @@ class BeginNewPhaseAndStep extends Instruction {
     };
 }
 
-/** 新しいステップを開始する */
+/** 新しいステップを開始する */ // OK:
 class BeginNewStep extends Instruction {
     step: Step | undefined;
     constructor(step: Step | undefined) {
@@ -130,7 +127,7 @@ class Resolve extends Instruction {
         new_state: GameState,
         self: GameObject | undefined,
         game: Game
-    ) => {}; // TODO:
+    ) => {};
 }
 
 // MARK: 唱える関連 ********************************
@@ -192,22 +189,23 @@ class Paying extends Instruction {
     };
 }
 
-// MARK:キーワードでない処理 ********************************
+// MARK: 非キーワード ********************************
 type MoveSpec = {
     moved: Spec<Card | StackedAbility>;
-    dest: (obj: Card | StackedAbility) => SingleRef<Zone>;
+    dest: SingleSpec<Zone> | ((obj: Card | StackedAbility) => SingleSpec<Zone>);
 };
-/** 領域を移動させる */
-// OK:
+/** 領域を移動させる */ // OK:
 class MoveZone extends Instruction {
     /** 移動させるオブジェクトと、移動先領域の組。 */
     movespecs: MoveSpec[];
 
     constructor(
+        controller: SingleSpec<Player>,
         /** 移動させるオブジェクトと、移動先領域の組。 */
-        movespecs: MoveSpec[]
+        movespecs: MoveSpec[],
+        performer?: Spec<Player>
     ) {
-        super();
+        super(controller, performer);
         this.movespecs = movespecs;
     }
 
@@ -220,9 +218,7 @@ class MoveZone extends Instruction {
     ) => {
         // 移動後のオブジェクトを取得する
         // FIXME: IDが同じなら型も同じであることを明示できるようにする
-        const obj_new = new_state
-            .all_game_objects()
-            .find((o) => o.id === obj.id);
+        const obj_new = new_state.game_objects().find((o) => o.id === obj.id);
         // 領域を変更する
         if (obj_new instanceof Card || obj_new instanceof StackedAbility) {
             obj_new.zone = resolve_single_spec(dest(obj_new), params);
@@ -251,31 +247,39 @@ class MoveZone extends Instruction {
 }
 
 // test ok
-const Evacuation = new MoveZone([
-    {
-        moved: new MultiRef((params) => {
-            return params.game.current
-                .permanents()
-                .filter((c) =>
-                    c.characteristics().card_types?.includes(CardType.Creature)
-                );
-        }),
-        dest: (obj) =>
-            new SingleRef<Zone>((params) => {
-                return params.game.current.zones(
-                    [ZoneType.Hand],
-                    [obj.owner]
-                )[0];
+const Evacuation = new MoveZone(
+    this.controller,
+    [
+        {
+            moved: new MultiRef((params) => {
+                return params.game.current
+                    .permanents()
+                    .filter((c) =>
+                        c
+                            .characteristics()
+                            .card_types?.includes(CardType.Creature)
+                    );
             }),
-    },
-]);
+            dest: (obj) =>
+                new SingleRef<Zone>((params) => {
+                    return params.game.current.zones(
+                        [ZoneType.Hand],
+                        [obj.owner]
+                    )[0];
+                }),
+        },
+    ],
+    this.performer
+);
 
-/** カードを引く */ // TODO:
+/** カードを引く */
 class Drawing extends Instruction {
     number: SingleSpec<number>;
     player: MultiSpec<Player>;
 
     constructor(number: SingleSpec<number>, player: MultiSpec<Player>) {
+        // FIXME: 追加の変数があるものはプレイヤーごとに変数が違う場合があるため、
+        // FIXME: 引数定義の仕方を変える必要がある
         super();
         this.number = number;
         this.player = player;
@@ -307,18 +311,18 @@ class Drawing extends Instruction {
 }
 // 托鉢するものは置換処理の方で特別扱いする
 
-/** ダメージを与える */ // TODO:
+/** ダメージを与える */ // FIXME:
 class DealingDamage extends Instruction {
     /** ダメージを与える先のオブジェクト */
     objectives: MultiSpec<Card | Player>;
     /** ダメージの量 */
-    amount: undefined; // TODO: 割り振り
+    amount: undefined;
     /** ダメージの発生源であるオブジェクト */
     source: SingleSpec<Card>;
 
     constructor(
         objectives: MultiSpec<Card | Player>,
-        amount: undefined, // TODO:
+        amount: undefined,
         source: SingleSpec<Card>
     ) {
         super();
@@ -327,42 +331,46 @@ class DealingDamage extends Instruction {
         this.source = source;
     }
 
-    perform = (new_state: GameState, params: ReferenceParam) => {
-        // 参照の解決
-        // let objs: (GameObject | Player)[] = this.objectives.flatMap((o) => {
-        //     return o instanceof GameObject || o instanceof Player
-        //         ? o
-        //         : o.execute(args);
-        // });
-        // // 個数のチェック
-        // if (objs.length >= 2) {
-        //     const each_dealings = new DoingSimultaneously(
-        //         objs.map(
-        //             (o) => new DealingDamage([o], this.amount, this.source)
-        //         )
-        //     );
-        //     // それぞれに同時にダメージ
-        //     return each_dealings.perform(args);
-        // } else {
-        //     const new_state = args.state.deepcopy();
-        //     // ダメージ処理。パーマネントはダメージ、プレイヤーはライフ減少
-        //     // 絆魂 --> 回復Instruction
-        //     // 最後の情報
-        //     if (objs[0] instanceof Player) {
-        //         // ライフ減少　感染は毒カウンター --> カウンター配置Instruction
-        //     } else if (objs[0] instanceof GameObject) {
-        //         // ダメージを負う　感染は-1/-1カウンター
-        //     }
-        //     return new_state;
-        // }
-    };
+    perform = (
+        new_state: GameState,
+        self: GameObject | undefined,
+        game: Game
+    ) => {};
+    // 参照の解決
+    // let objs: (GameObject | Player)[] = this.objectives.flatMap((o) => {
+    //     return o instanceof GameObject || o instanceof Player
+    //         ? o
+    //         : o.execute(args);
+    // });
+    // // 個数のチェック
+    // if (objs.length >= 2) {
+    //     const each_dealings = new DoingSimultaneously(
+    //         objs.map(
+    //             (o) => new DealingDamage([o], this.amount, this.source)
+    //         )
+    //     );
+    //     // それぞれに同時にダメージ
+    //     return each_dealings.perform(args);
+    // } else {
+    //     const new_state = args.state.deepcopy();
+    //     // ダメージ処理。パーマネントはダメージ、プレイヤーはライフ減少
+    //     // 絆魂 --> 回復Instruction
+    //     // 最後の情報
+    //     if (objs[0] instanceof Player) {
+    //         // ライフ減少　感染は毒カウンター --> カウンター配置Instruction
+    //     } else if (objs[0] instanceof GameObject) {
+    //         // ダメージを負う　感染は-1/-1カウンター
+    //     }
+    //     return new_state;
+    // }
 }
 
-/** ライフを得る */ // TODO:
-class GainingLife extends Instruction {
+/** ライフを得る */
+class GainLife extends Instruction {
     specs: { player: MultiSpec<Player>; amount_spec: SingleSpec<number> }[];
 
     constructor(
+        controller: SingleSpec<Player>,
         specs: {
             player: MultiSpec<Player>;
             amount_spec: SingleSpec<number>;
@@ -372,27 +380,30 @@ class GainingLife extends Instruction {
         this.specs = specs;
     }
 
-    perform = (new_state: GameState, params: ReferenceParam) => {
-        // const new_params = { ...params, state: new_state };
-        // this.specs.forEach((each_spec) => {
-        //     const player = resolve_multi_spec<Player>(
-        //         each_spec.player,
-        //         new_params
-        //     );
-        // });
-        // const am =
-        //     this.amount_spec instanceof ValueReference
-        //         ? this.amount_spec.execute(params)
-        //         : this.amount_spec;
-        // if (this.perform instanceof Player) {
-        //     const new_state = params.state.deepcopy();
-        //     // new_stateのperformerどうやってとる？
-        //     // (this.performer as Player).life += am;
-        //     return new_state;
-        // } else {
-        //     throw Error("player undefined");
-        // }
-    };
+    perform = (
+        new_state: GameState,
+        self: GameObject | undefined,
+        game: Game
+    ) => {};
+    // const new_params = { ...params, state: new_state };
+    // this.specs.forEach((each_spec) => {
+    //     const player = resolve_multi_spec<Player>(
+    //         each_spec.player,
+    //         new_params
+    //     );
+    // });
+    // const am =
+    //     this.amount_spec instanceof ValueReference
+    //         ? this.amount_spec.execute(params)
+    //         : this.amount_spec;
+    // if (this.perform instanceof Player) {
+    //     const new_state = params.state.deepcopy();
+    //     // new_stateのperformerどうやってとる？
+    //     // (this.performer as Player).life += am;
+    //     return new_state;
+    // } else {
+    //     throw Error("player undefined");
+    // }
 }
 
 /** カウンターを置く・得る */
@@ -415,37 +426,40 @@ class GainingLife extends Instruction {
 /** 裏向きにする・表向きにする */
 
 // MARK: 常盤木 *****************************************
-/** タップ */ // TODO:
+/** タップ */
 class Tapping extends Instruction {
-    refs_objects: MultiSpec<GameObject>; // TODO: ここも再考を要する
-    performer?: MultiSpec<Player>;
+    tapped: MultiSpec<GameObject>; // TODO: ここも再考を要する
+
     constructor(
+        controller: SingleSpec<Player>,
         permanents: MultiSpec<GameObject>,
-        performer?: MultiSpec<Player>
+        performer?: Spec<Player>
     ) {
-        super();
-        this.refs_objects = permanents;
-        this.performer = performer;
+        super(controller, performer);
+        this.tapped = permanents;
     }
 
-    perform = (new_state: GameState, params: ReferenceParam) => {
-        // // まずstateをコピーする。このstateを変更して返す
-        // this.refs_objects.forEach((ref) => {
-        //     // コピーしたstateを渡して参照を解決する
-        //     const objects = ref({ ...params, state: new_state });
-        //     // stateを変更する
-        //     objects.forEach((obj) => {
-        //         // パーマネントであればタップする
-        //         if (obj.is_permanent()) {
-        //             obj.status.tapped = true;
-        //         } else {
-        //             throw Error("Referenced object is not a permanent.");
-        //         }
-        //     });
-        // });
-        // // 変更した新しいstateを返す
-        // return new_state;
-    };
+    perform = (
+        new_state: GameState,
+        self: GameObject | undefined,
+        game: Game
+    ) => {};
+    // // まずstateをコピーする。このstateを変更して返す
+    // this.refs_objects.forEach((ref) => {
+    //     // コピーしたstateを渡して参照を解決する
+    //     const objects = ref({ ...params, state: new_state });
+    //     // stateを変更する
+    //     objects.forEach((obj) => {
+    //         // パーマネントであればタップする
+    //         if (obj.is_permanent()) {
+    //             obj.status.tapped = true;
+    //         } else {
+    //             throw Error("Referenced object is not a permanent.");
+    //         }
+    //     });
+    // });
+    // // 変更した新しいstateを返す
+    // return new_state;
 }
 
 /** アンタップ */
@@ -453,36 +467,222 @@ class Tapping extends Instruction {
 //     permanents: ValueReference[];
 // }
 
-/** 破壊する */
-// class Destroying extends Instruction {
-//     refs_objects = [];
-// }
-
-/** 追放する */ // TODO:
+/** 追放する */ // OK:
 class Exile extends MoveZone {
-    constructor(exiled: Spec<GameObject>) {
-        super();
-        // this.movespecs = this.movespecs.map((spec) => ({
-        //     moved: spec.moved,
-        //     dest: new SingleRef<Zone>((param: { state: GameState }) =>
-        //         param.state.get_zone(ZoneType.Exile)
-        //     ),
-        // }));
+    constructor(
+        controller: SingleSpec<Player>,
+        exiled: Spec<Card | StackedAbility>[],
+        performer: Spec<Player>
+    ) {
+        // destが追放領域固定のMoveZone
+        super(
+            controller,
+            exiled.map((ex) => ({
+                moved: ex,
+                dest: new SingleRef<Zone>(
+                    (params: ReferenceParam) =>
+                        params.game.current.zones([ZoneType.Exile])[0]
+                ),
+            })),
+            performer
+        );
     }
 }
 
-/** 生け贄に捧げる */ // TODO:
-class Sacrifice extends MoveZone {
-    constructor(args: ConstructorParameters<typeof MoveZone>[number]) {
-        // FIXME: そもそも移動先を指定する必要がないので MoveZoneの使い回しではいけない
-        // super(args);
-        // this.movespecs = this.movespecs.map((spec) => ({
-        //     moved: spec.moved,
-        //     dest: new SingleRef<Zone>((param: { state: GameState }) =>
-        //         param.state.get_zone(ZoneType.Graveyard, spec.moved.owner)
-        //     ),
-        // }));
+/** 破壊する */ // OK:
+class Destroy extends Instruction {
+    destroyed: Spec<Card>[];
+
+    constructor(
+        controller: SingleSpec<Player>,
+        destroyed: Spec<Card>[],
+        performer?: Spec<Player>
+    ) {
+        super(controller, performer);
+        this.destroyed = destroyed;
     }
+
+    perform = (
+        new_state: GameState,
+        self: GameObject | undefined,
+        game: Game
+    ) => {
+        // 移動先が墓地の MoveZone を生成して perform する
+        const movezone = new MoveZone(
+            this.controller,
+            this.destroyed.map((sac) => ({
+                moved: sac,
+                dest: (obj) =>
+                    new SingleRef<Zone>(
+                        (params: ReferenceParam) =>
+                            params.game.current.zones(
+                                [ZoneType.Graveyard],
+                                [obj.owner]
+                            )[0]
+                    ),
+            })),
+            this.performer
+        );
+        movezone.perform(new_state, self, game);
+    };
+}
+
+/** 打ち消す */ // OK:
+class Countering extends Instruction {
+    countered: Spec<Card | StackedAbility>[];
+
+    constructor(
+        controller: SingleSpec<Player>,
+        countered: Spec<Card | StackedAbility>[],
+        performer: Spec<Player>
+    ) {
+        super(controller, performer);
+        this.countered = countered;
+    }
+
+    perform = (
+        new_state: GameState,
+        self: GameObject | undefined,
+        game: Game
+    ) => {
+        // 移動先が墓地の MoveZone を生成して perform する
+        const movezone = new MoveZone(
+            this.controller,
+            this.countered.map((sac) => ({
+                moved: sac,
+                dest: (obj) =>
+                    new SingleRef<Zone>(
+                        (params: ReferenceParam) =>
+                            params.game.current.zones(
+                                [ZoneType.Graveyard],
+                                [obj.owner]
+                            )[0]
+                    ),
+            })),
+            this.performer
+        );
+        movezone.perform(new_state, self, game);
+    };
+}
+
+/** 生け贄に捧げる */ // OK:
+class Sacrifice extends Instruction {
+    sacrificed: Spec<Card>[];
+
+    constructor(
+        controller: SingleSpec<Player>,
+        sacrificed: Spec<Card>[],
+        performer?: Spec<Player>
+    ) {
+        super(controller, performer);
+        this.sacrificed = sacrificed;
+    }
+
+    perform = (
+        new_state: GameState,
+        self: GameObject | undefined,
+        game: Game
+    ) => {
+        // 移動先が墓地の MoveZone を生成して perform する
+        const movezone = new MoveZone(
+            this.controller,
+            this.sacrificed.map((sac) => ({
+                moved: sac,
+                dest: (obj) =>
+                    new SingleRef<Zone>(
+                        (params: ReferenceParam) =>
+                            params.game.current.zones(
+                                [ZoneType.Graveyard],
+                                [obj.owner]
+                            )[0]
+                    ),
+            })),
+            this.performer
+        );
+        movezone.perform(new_state, self, game);
+    };
+}
+
+/** 捨てる */ // OK:
+class Discarding extends Instruction {
+    discarded: Spec<Card>;
+
+    constructor(
+        controller: SingleSpec<Player>,
+        discarded: Spec<Card>,
+        performer?: Spec<Player>
+    ) {
+        super(controller, performer);
+        this.discarded = discarded;
+    }
+
+    perform = (
+        new_state: GameState,
+        self: GameObject | undefined,
+        game: Game
+    ) => {
+        // 移動先が墓地の MoveZone を生成して perform する
+        const movezone = new MoveZone(
+            this.controller,
+            [
+                {
+                    moved: this.discarded,
+                    dest: (obj) =>
+                        new SingleRef<Zone>(
+                            (params: ReferenceParam) =>
+                                params.game.current.zones(
+                                    [ZoneType.Graveyard],
+                                    [obj.owner]
+                                )[0]
+                        ),
+                },
+            ],
+            this.performer
+        );
+        movezone.perform(new_state, self, game);
+    };
+}
+
+/** 切削する */ // OK:
+class Milling extends Instruction {
+    n: SingleSpec<number>;
+
+    constructor(
+        controller: SingleSpec<Player>,
+        n: SingleSpec<number>,
+        performer?: Spec<Player>
+    ) {
+        super(controller, performer);
+        this.n = n;
+    }
+
+    perform = (
+        new_state: GameState,
+        self: GameObject | undefined,
+        game: Game
+    ) => {
+        const movezone = new MoveZone(
+            this.controller,
+            [
+                {
+                    moved: new MultiRef<Card>(
+                        (param: ReferenceParam) =>
+                            param.game.current.cards_in_library() // FIXME: 上からN枚
+                    ),
+                    dest: (obj) =>
+                        new SingleRef<Zone>(
+                            (params: ReferenceParam) =>
+                                params.game.current.zones(
+                                    [ZoneType.Graveyard],
+                                    [obj.owner]
+                                )[0]
+                        ),
+                },
+            ],
+            this.performer
+        );
+        movezone.perform(new_state, self, game);
+    };
 }
 
 /** 探す */
@@ -493,18 +693,10 @@ class Sacrifice extends MoveZone {
 /** 切り直す */
 // class Shuffling extends Instruction {}
 
-/** 捨てる */ // TODO:
-class Discarding extends MoveZone {
-    discarded_cards = [];
-}
-
 /** 公開する */
 // class Revealing extends Instruction {
 //     revealed_objects = [];
 // }
-
-/** 打ち消す */ // TODO:
-class Countering extends MoveZone {}
 
 /** 生成する */
 // class Creating extends Instruction {}
@@ -515,10 +707,11 @@ class Countering extends MoveZone {}
 // class Unattaching extends Instruction {}
 /** 格闘を行う */
 // class Fighting extends Instruction {}
-/** 切削する */ // TODO:
-class Milling extends MoveZone {}
+
 /** 占術を行う */
 // class Scrying extends Instruction {}
+/** 諜報を行う */
+// class Surveiling extends Instruction {}
 /** 倍にする */
 // class Doubling extends Instruction {}
 /** 交換する */
@@ -529,6 +722,3 @@ class Milling extends MoveZone {}
 
 /** 再生する */
 // class Regenerating extends Instruction {}
-
-/** 諜報を行う */
-// class Surveiling extends Instruction {}
