@@ -56,10 +56,10 @@ abstract class Instruction {
     /** InstructionのID (0始まり) */
     id: number;
 
-    /** `Instrction`を実際に実行する。渡された`GameState`に変更を加える。 */
+    /** 指示を実際に実行する。引数として渡された`GameState`を単に変更するだけでよい。 */
     abstract perform: (
-        self: GameObject | undefined,
         new_state: GameState,
+        self: GameObject | undefined,
         game: Game
     ) => void;
 }
@@ -78,8 +78,8 @@ class BeginNewTurn extends Instruction {
         this.turn = turn;
     }
     perform = (
-        self: GameObject | undefined,
         new_state: GameState,
+        self: GameObject | undefined,
         game: Game
     ) => {
         new_state.set_turn(this.turn);
@@ -97,8 +97,8 @@ class BeginNewPhaseAndStep extends Instruction {
         this.step = step;
     }
     perform = (
-        self: GameObject | undefined,
         new_state: GameState,
+        self: GameObject | undefined,
         game: Game
     ) => {
         new_state.set_phase(this.phase);
@@ -114,8 +114,8 @@ class BeginNewStep extends Instruction {
         this.step = step;
     }
     perform = (
-        self: GameObject | undefined,
         new_state: GameState,
+        self: GameObject | undefined,
         game: Game
     ) => {
         new_state.set_step(this.step);
@@ -127,8 +127,8 @@ class Resolve extends Instruction {
     resolved_object: Card | StackedAbility;
 
     perform = (
-        self: GameObject | undefined,
         new_state: GameState,
+        self: GameObject | undefined,
         game: Game
     ) => {}; // TODO:
 }
@@ -144,8 +144,8 @@ class Cast extends Instruction {
     }
 
     perform = (
-        self: GameObject | undefined,
         new_state: GameState,
+        self: GameObject | undefined,
         game: Game
     ) => {
         // 1. スタックに移動させる
@@ -179,8 +179,8 @@ class Paying extends Instruction {
     }
 
     perform = (
-        self: GameObject | undefined,
         new_state: GameState,
+        self: GameObject | undefined,
         game: Game
     ) => {
         // TODO: 複数のコストは好きな順番で支払える
@@ -198,6 +198,7 @@ type MoveSpec = {
     dest: (obj: Card | StackedAbility) => SingleRef<Zone>;
 };
 /** 領域を移動させる */
+// OK:
 class MoveZone extends Instruction {
     /** 移動させるオブジェクトと、移動先領域の組。 */
     movespecs: MoveSpec[];
@@ -229,16 +230,16 @@ class MoveZone extends Instruction {
     };
 
     perform = (
-        self: GameObject | undefined,
         new_state: GameState,
+        self: GameObject | undefined,
         game: Game
     ) => {
-        const params = { game: game, self: self };
+        const params: ReferenceParam = { game: game, self: self };
         // 各 spec について
         this.movespecs.forEach((movespec) => {
             // 移動されるオブジェクトを解決し、それぞれについて移動操作を行う
             const moved_obj = ([] as (Card | StackedAbility)[]).concat(
-                resolve_spec(movespec.moved, params)
+                resolve_spec<Card | StackedAbility>(movespec.moved, params)
             );
 
             moved_obj.forEach((o) =>
@@ -250,7 +251,7 @@ class MoveZone extends Instruction {
 }
 
 // test ok
-const evacuation = new MoveZone([
+const Evacuation = new MoveZone([
     {
         moved: new MultiRef((params) => {
             return params.game.current
@@ -269,7 +270,7 @@ const evacuation = new MoveZone([
     },
 ]);
 
-/** カードを引く */
+/** カードを引く */ // TODO:
 class Drawing extends Instruction {
     number: SingleSpec<number>;
     player: MultiSpec<Player>;
@@ -280,27 +281,33 @@ class Drawing extends Instruction {
         this.player = player;
     }
 
-    perform = (new_state: GameState, params: ReferenceParam) => {
-        /** 「カードを1枚引く」をN個作る */
-        // const number_of_cards =
-        //     typeof this.number === "number"
-        //         ? this.number
-        //         : this.number.execute(args);
-        // let instructions: Instruction[] = [];
-        // for (let i = 0; i < number_of_cards; i++) {
-        //     instructions.push(
-        //         new MoveZone(
-        //             [top_of_library(this.performer)],
-        //             args.state.get_zone("Hand", this.performer) // 領域をどうやってとる？
-        //         )
-        //     );
-        // }
-        // return Instruction.performArray(instructions, args);
-    };
+    perform = (
+        new_state: GameState,
+        self: GameObject | undefined,
+        game: Game
+    ) => {};
+
+    // perform = (new_state: GameState, params: ReferenceParam) => {
+    //     /** 「カードを1枚引く」をN個作る */
+    //     // const number_of_cards =
+    //     //     typeof this.number === "number"
+    //     //         ? this.number
+    //     //         : this.number.execute(args);
+    //     // let instructions: Instruction[] = [];
+    //     // for (let i = 0; i < number_of_cards; i++) {
+    //     //     instructions.push(
+    //     //         new MoveZone(
+    //     //             [top_of_library(this.performer)],
+    //     //             args.state.get_zone("Hand", this.performer) // 領域をどうやってとる？
+    //     //         )
+    //     //     );
+    //     // }
+    //     // return Instruction.performArray(instructions, args);
+    // };
 }
 // 托鉢するものは置換処理の方で特別扱いする
 
-/** ダメージを与える */
+/** ダメージを与える */ // TODO:
 class DealingDamage extends Instruction {
     /** ダメージを与える先のオブジェクト */
     objectives: MultiSpec<Card | Player>;
@@ -351,7 +358,7 @@ class DealingDamage extends Instruction {
     };
 }
 
-/** ライフを得る */
+/** ライフを得る */ // TODO:
 class GainingLife extends Instruction {
     specs: { player: MultiSpec<Player>; amount_spec: SingleSpec<number> }[];
 
@@ -408,7 +415,7 @@ class GainingLife extends Instruction {
 /** 裏向きにする・表向きにする */
 
 // MARK: 常盤木 *****************************************
-/** タップ */
+/** タップ */ // TODO:
 class Tapping extends Instruction {
     refs_objects: MultiSpec<GameObject>; // TODO: ここも再考を要する
     performer?: MultiSpec<Player>;
@@ -451,7 +458,7 @@ class Tapping extends Instruction {
 //     refs_objects = [];
 // }
 
-/** 追放する */
+/** 追放する */ // TODO:
 class Exile extends MoveZone {
     constructor(exiled: Spec<GameObject>) {
         super();
@@ -464,7 +471,7 @@ class Exile extends MoveZone {
     }
 }
 
-/** 生け贄に捧げる */ // TODO
+/** 生け贄に捧げる */ // TODO:
 class Sacrifice extends MoveZone {
     constructor(args: ConstructorParameters<typeof MoveZone>[number]) {
         // FIXME: そもそも移動先を指定する必要がないので MoveZoneの使い回しではいけない
@@ -486,7 +493,7 @@ class Sacrifice extends MoveZone {
 /** 切り直す */
 // class Shuffling extends Instruction {}
 
-/** 捨てる */
+/** 捨てる */ // TODO:
 class Discarding extends MoveZone {
     discarded_cards = [];
 }
@@ -496,7 +503,7 @@ class Discarding extends MoveZone {
 //     revealed_objects = [];
 // }
 
-/** 打ち消す */
+/** 打ち消す */ // TODO:
 class Countering extends MoveZone {}
 
 /** 生成する */
@@ -508,7 +515,7 @@ class Countering extends MoveZone {}
 // class Unattaching extends Instruction {}
 /** 格闘を行う */
 // class Fighting extends Instruction {}
-/** 切削する */
+/** 切削する */ // TODO:
 class Milling extends MoveZone {}
 /** 占術を行う */
 // class Scrying extends Instruction {}

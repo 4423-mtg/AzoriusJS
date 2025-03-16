@@ -358,7 +358,7 @@ class GameState {
 }
 
 // MARK: Game
-/** ゲームの履歴。実装は隠蔽する */
+/** ゲーム全体。ゲームのすべての断面を持つ。 */
 class Game {
     match_info: MatchInfo;
 
@@ -523,19 +523,19 @@ class Game {
 
     // MARK: Game/Instruction
     /** `Instruction`を実行する。新しい`GameState`を生成し、移行する。 */
-    let_to_perform(self: GameObject | undefined, instruction: Instruction) {
+    perform(self: GameObject | undefined, instruction: Instruction) {
         const state_new = this.current.deepcopy();
         // TODO: 置換効果、禁止効果など
-        instruction.perform(state_new, { game: this, self: self });
+        instruction.perform(state_new, self, this);
         this.#history.push(state_new);
     }
     /** 複数の Instruction をまとめて一度に処理する。 */
-    let_to_perform_multi(
+    perform_multi(
         args: { self: GameObject | undefined; instruction: Instruction }[]
     ) {
         const state_new = this.current.deepcopy();
         args.forEach((arg) => {
-            arg.instruction.perform(state_new, { game: this, self: arg.self });
+            arg.instruction.perform(state_new, arg.self, this);
         });
         this.#history.push(state_new);
     }
@@ -544,17 +544,17 @@ class Game {
     /** 新しいターンを開始する。 */
     begin_new_turn(turn: Turn) {
         // BeginNewTurn という Instruction を生成して実行
-        this.let_to_perform(undefined, new BeginNewTurn(turn));
+        this.perform(undefined, new BeginNewTurn(turn));
     }
     /** 新しいフェイズ、ステップを開始する。 */
     begin_new_phase_and_step(phase: Phase, step: Step | undefined) {
         // BeginNewPhaseAndStep という Instruction を生成して実行
-        this.let_to_perform(undefined, new BeginNewPhaseAndStep(phase, step));
+        this.perform(undefined, new BeginNewPhaseAndStep(phase, step));
     }
     /** 新しいステップを開始する。 */
     begin_new_step(step: Step | undefined) {
         // BeginNewStep という Instruction を生成して実行
-        this.let_to_perform(undefined, new BeginNewStep(step));
+        this.perform(undefined, new BeginNewStep(step));
     }
     /** 新しくターンを生成する際に、そのIDを取得する。（最後のターンのID + 1） */
     #get_new_turn_id(): number {
@@ -706,7 +706,7 @@ class Game {
     /** スタックを1つ解決する */
     resolve_stack(): void {
         const stacked_obj = this.current.stacked_objects()[-1];
-        this.let_to_perform(stacked_obj, stacked_obj.resolve);
+        this.perform(stacked_obj, stacked_obj.resolve);
         // 墓地に置くのは誰？
     }
 

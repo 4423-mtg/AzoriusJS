@@ -129,6 +129,7 @@ function resolve_multi_spec<T extends Referable>(
     }
 }
 
+/** `spec`を`params`で解決し、得られたオブジェクトを`func`に引数として渡す。 */
 function resolve_spec_apply<T extends Referable, U>(
     spec: Spec<T>,
     params: ReferenceParam,
