@@ -12,6 +12,7 @@ import {
     GeneratedEffect,
     Spell,
     is_spell,
+    GameObjectType,
 } from "./GameObject";
 import { DelayedTriggeredAbility } from "./Ability";
 import {
@@ -23,7 +24,7 @@ import {
     PhaseKind,
     StepKind,
 } from "./Turn";
-import { ReferenceParam, resolve_single_spec } from "./Reference";
+import { ReferenceParam, resolve_single_spec, SingleSpec } from "./Reference";
 import {
     BeginNewPhaseAndStep,
     BeginNewStep,
@@ -52,12 +53,12 @@ class MatchInfo {
         // プレイヤー
         state.set_players(this.player_info.map((info) => new Player(info)));
         // ターン順
-        state.set_turn_order(state.get_players());
+        state.set_turn_order(state.players());
         // 領域
         state.add_zone(new Zone(ZoneType.Battlefield));
         state.add_zone(new Zone(ZoneType.Stack));
         state.add_zone(new Zone(ZoneType.Exile));
-        state.get_players().forEach((player) => {
+        state.players().forEach((player) => {
             state.add_zone(new Zone(ZoneType.Hand, player));
             state.add_zone(new Zone(ZoneType.Library, player));
             state.add_zone(new Zone(ZoneType.Graveyard, player));
@@ -77,7 +78,7 @@ class MatchInfo {
 // NOTE: GameState は immutable であってほしい
 class GameState {
     /** プレイヤー */
-    #players: Player[];
+    // #players: Player[];
     /** プレイヤーのターン進行順 */
     #turn_order: Player[];
     /** 最後に通常のターンを行ったプレイヤーの、 turn_order でのインデックス。 */
@@ -112,118 +113,64 @@ class GameState {
 
     // ==================================================================
     // MARK: GameState/object
-    add_game_object(...objects: GameObject[]) {
-        this.#game_objects.push(...objects);
-    }
-    all_game_objects(): GameObject[] {
-        return this.#game_objects;
+    // /** オブジェクトを追加 */
+    // add_game_object(...objects: GameObject[]) {
+    //     this.#game_objects.push(...objects);
+    // }
+    /** すべてのオブジェクト */
+    game_objects<T extends GameObject>(query: {
+        type: new (..._: any[]) => T;
+        controller?: Player;
+        owner?: Player;
+        zone?: { type: ZoneType; owner?: Player };
+    }): T[] {
+        function _typeguard(obj: GameObject): obj is T {
+            if (Array.isArray(query.type)) {
+                return query.type.some((t) => obj instanceof t);
+            } else {
+                return obj instanceof query.type;
+            }
+        }
+
+        return this.#game_objects.filter(_typeguard).filter((obj) => {
+            const b1 =
+                query.controller === undefined ||
+                obj.controller.id === query.controller.id;
+            const b2 =
+                query.owner === undefined || obj.owner.id === query.owner.id;
+            const b3 =
+                query.zone === undefined ||
+                ((obj instanceof Card || obj instanceof StackedAbility) &&
+                    obj.zone?.zonetype === query.zone.type &&
+                    obj.zone.owner?.id === query.zone.owner?.id);
+            return b1 && b2 && b3;
+        });
     }
 
-    /** すべての領域にあるすべてのカード（トークンやコピーを含む） */
-    allCard(): Card[] {
-        return this.#game_objects.filter((go) => go instanceof Card);
-    }
-    /** 指定した領域にあるすべてのカード（トークンやコピーを含む） */
-    card_in_zone(zonetype: ZoneType[], player?: Player[]) {
-        return this.allCard().filter((card) =>
-            this.zones(zonetype, player).includes(card.zone)
-        );
-    }
-
-    /** パーマネント */
-    permanents(): Card[] {
-        return this.card_in_zone([ZoneType.Battlefield]);
-    }
-    /** スタックのオブジェクト */
-    stacked_objects(): (Spell | StackedAbility)[] {
+    stacked_objects(): (Card | StackedAbility)[] {
+        // FIXME: スタックでは順序がある
         return this.#game_objects
             .filter(
-                (go) =>
-                    (go instanceof Card && is_spell(go)) ||
-                    go instanceof StackedAbility
+                (obj) => obj instanceof Card || obj instanceof StackedAbility
             )
-            .filter(
-                (go) =>
-                    go instanceof StackedAbility ||
-                    go.zone.zonetype === ZoneType.Stack
-            );
+            .filter((obj) => obj.zone?.zonetype === ZoneType.Stack);
     }
-    /** 追放領域のカード（トークンやコピーを含む） */
-    cards_in_exile(): Card[] {
-        return this.card_in_zone([ZoneType.Exile]);
-    }
-    /** 手札のカード（トークンやコピーを含む） */
-    cards_in_hand(player?: Player[]): Card[] {
-        return this.card_in_zone([ZoneType.Hand], player);
-    }
-    /** ライブラリーのカード（トークンを含む） */
-    cards_in_library(player?: Player[]): Card[] {
-        return this.card_in_zone([ZoneType.Library], player);
-    }
-    /** 墓地のカード（トークンを含む） */
-    cards_in_graveyard(player?: Player[]): Card[] {
-        return this.card_in_zone([ZoneType.Graveyard], player);
-    }
-    /** 統率領域のカード（トークンを含む） */
-    cards_in_command(player?: Player[]): Card[] {
-        return this.card_in_zone([ZoneType.Command], player);
-    }
+
     /** 誘発してまだスタックに置かれていない誘発型能力 */
-    triggered_abilities_not_on_stack(): StackedAbility[] {
-        // TODO:
-        return [];
-    }
-
-    /** すべての生成された効果 */
-    generated_effects(): GeneratedEffect[] {
-        return this.#game_objects.filter((go) => go instanceof GeneratedEffect);
-    }
-
-    /** すべての継続的効果 */
-    continuous_effects(): ContinuousEffect[] {
-        return this.#game_objects.filter(
-            (go) => go instanceof ContinuousEffect
-        );
-    }
-    /** すべての遅延誘発型能力 */
-    delayed_triggered_abilities(): DelayedTriggeredAbility[] {
-        return this.#game_objects.filter(
-            (go) => go instanceof DelayedTriggeredAbility
-        );
-    }
-    /** すべての置換効果 */
-    replacement_effects(): ReplacementEffect[] {
-        return this.#game_objects.filter(
-            (go) => go instanceof ReplacementEffect
-        );
-    }
-    /** すべてのターン追加効果（生成された順） */
-    additional_turn_effects(): AdditionalTurnEffect[] {
-        return this.#game_objects.filter(
-            (go) => go instanceof AdditionalTurnEffect
-        );
-    }
-    /** すべてのフェイズ追加効果（生成された順） */
-    additional_phase_effects(): AdditionalPhaseEffect[] {
-        return this.#game_objects.filter(
-            (go) => go instanceof AdditionalPhaseEffect
-        );
-    }
-    /** すべてのステップ追加効果（生成された順） */
-    additional_step_effects(): AdditionalStepEffect[] {
-        return this.#game_objects.filter(
-            (go) => go instanceof AdditionalStepEffect
-        );
-    }
+    // triggered_abilities_not_stacked(): StackedAbility[] {
+    //     return this.game_objects({ type: StackedAbility }).filter(
+    //         (ability) => ability.zone === undefined
+    //     );
+    // }
 
     // ==================================================================
     // MARK:GameState/プレイヤー
     /** すべてのプレイヤー */
-    get_players(): Player[] {
-        return this.#players;
+    players(): Player[] {
+        return this.game_objects({ type: Player });
     }
     set_players(players: Player[]) {
-        this.#players = players;
+        players.forEach((pl) => this.#game_objects.push(pl));
     }
     /** アクティブプレイヤー */
     get_active_player(): Player {
@@ -256,7 +203,7 @@ class GameState {
     set_turn_order(players: Player[]) {
         this.#turn_order = [];
         players.forEach((pl) => {
-            if (this.get_players().includes(pl)) {
+            if (this.players().includes(pl)) {
                 this.#turn_order.push(pl);
             }
         });
@@ -381,8 +328,7 @@ class Game {
                 // 全員が連続で優先権をパスしている。
                 // クリンナップ・ステップではフラグが立っている場合のみ。
                 // アンタップ・ステップでは優先権は発生しないが、アンタップ・ステップでここに来ることはない。
-                this.current.pass_count() ===
-                    this.current.get_players().length &&
+                this.current.pass_count() === this.current.players().length &&
                 (this.current.get_step()?.kind !== "Cleanup" ||
                     this.current.cleanup_again())
             ) {
@@ -435,7 +381,7 @@ class Game {
 
         // ステップの追加があるならそれに移る
         for (const effect of toReversed(
-            this.current.additional_step_effects()
+            this.current.game_objects({ type: AdditionalStepEffect })
         )) {
             const params: ReferenceParam = {
                 game: this,
@@ -462,7 +408,7 @@ class Game {
         }
         // フェイズの追加があるならそれに移る
         for (const effect of toReversed(
-            this.current.additional_phase_effects()
+            this.current.game_objects({ type: AdditionalPhaseEffect })
         )) {
             const params: ReferenceParam = {
                 game: this,
@@ -492,7 +438,7 @@ class Game {
         }
         // ターンの追加があるならそれに移る
         for (const effect of toReversed(
-            this.current.additional_turn_effects()
+            this.current.game_objects({ type: AdditionalTurnEffect })
         )) {
             const params: ReferenceParam = {
                 game: this,
@@ -646,7 +592,9 @@ class Game {
     // MARK: Game/スタック置く
     /** 誘発していた能力をスタックに置く */
     put_triggered_abilities_on_stack(): void {
-        const abilities = this.current.triggered_abilities_not_on_stack();
+        const abilities = this.current
+            .game_objects({ type: StackedAbility })
+            .filter((ab) => ab.zone?.zonetype !== ZoneType.Stack);
         const range = (num: number) =>
             Array(num)
                 .fill(undefined)
@@ -679,7 +627,12 @@ class Game {
             }
             // 誘発していた能力をスタックに置く
             let flag_stack = false;
-            if (this.current.triggered_abilities_not_on_stack().length > 0) {
+            if (
+                this.current
+                    .game_objects({ type: StackedAbility })
+                    .filter((ab) => ab.zone?.zonetype !== ZoneType.Stack)
+                    .length > 0
+            ) {
                 this.put_triggered_abilities_on_stack();
                 flag_stack = true;
             }

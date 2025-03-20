@@ -20,7 +20,6 @@ export {
     GeneratedEffect,
     ContinuousEffect,
     ReplacementEffect,
-    AdditionalEffect,
     AdditionalTurnEffect,
     AdditionalPhaseEffect,
     AdditionalStepEffect,
@@ -260,7 +259,7 @@ class ReplacementEffect extends GeneratedEffect {
 // =================================================================
 // MARK: 追加ターン効果
 /** ターンを追加する効果 */
-class AdditionalTurnEffect extends GameObject {
+class AdditionalTurnEffect extends GeneratedEffect {
     /** ターンを追加する条件 */
     condition: SingleSpec<boolean>;
     /** 追加しようとするターンを生成する */
@@ -268,7 +267,7 @@ class AdditionalTurnEffect extends GameObject {
 }
 
 /** フェイズを追加する効果 */
-class AdditionalPhaseEffect extends GameObject {
+class AdditionalPhaseEffect extends GeneratedEffect {
     /** フェイズを追加する条件 */
     condition: SingleSpec<boolean>;
     /** 追加しようとするフェイズを生成する */
@@ -276,7 +275,7 @@ class AdditionalPhaseEffect extends GameObject {
 }
 
 /** ステップを追加する効果 */
-class AdditionalStepEffect extends GameObject {
+class AdditionalStepEffect extends GeneratedEffect {
     /** ステップを追加する条件 */
     condition: SingleSpec<boolean>;
     /** 追加しようとするステップを生成する */
@@ -294,12 +293,6 @@ class AdditionalStepEffect extends GameObject {
 // 現在がメインフェイズならこの後にフェイズを追加する（連続突撃）
 // ターンを追加するが、そのターンの終了ステップに敗北
 // 開始フェイズと、N個のアップキープを追加する（オベカ）
-
-/** 追加のターン、フェイズ、ステップ */
-type AdditionalEffect =
-    | AdditionalTurnEffect
-    | AdditionalPhaseEffect
-    | AdditionalStepEffect;
 
 // ==================================================================
 // MARK: プレイヤー
