@@ -1,5 +1,5 @@
 "use strict";
-import { Game, GameState } from "./Game";
+import { Game, GameState } from "./Game.js";
 /** オブジェクトが持つ能力
  * 起動型能力、誘発型能力、呪文能力、常在型能力
  */
@@ -9,8 +9,8 @@ import {
     GameObject,
     Player,
     StackedAbility,
-} from "./GameObject";
-import { Instruction } from "./Instruction";
+} from "./GameObject.js";
+import { Instruction } from "./Instruction.js";
 
 export {
     Ability,

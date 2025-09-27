@@ -1,7 +1,7 @@
-import type { Ability } from "../../Ability.js";
-import type { Color } from "../../Characteristic.js";
-import type { Player } from "../../GameObject.js";
-import type { MultiRef, SingleRef } from "../../Reference.js";
+import type { Ability } from "./Ability.js";
+import type { Color } from "./Characteristic.js";
+import type { Player } from "./GameObject.js";
+import type { MultiRef, SingleRef } from "../Turn/Reference.js";
 import { Layer } from "./layer.js";
 
 /** 継続的効果 */

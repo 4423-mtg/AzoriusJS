@@ -16,7 +16,7 @@ import {
     resolve_spec,
     resolve_spec_apply,
     MultiRef,
-} from "./Reference";
+} from "./Reference.js";
 import { Phase, Step, Turn } from "./Turn";
 
 export {
@@ -50,7 +50,7 @@ abstract class Instruction {
 
     constructor(controller: SingleSpec<Player>, performer?: Spec<Player>) {
         this.controller = controller;
-        this.performer = performer == undefined ? controller : performer;
+        this.performer = performer ?? controller;
     }
 
     /** 指示を実際に実行する。引数として渡された`GameState`を単に変更するだけでよい。 */
@@ -70,8 +70,9 @@ abstract class Instruction {
 class BeginNewTurn extends Instruction {
     turn: Turn;
 
-    constructor(turn: Turn) {
-        super();
+    constructor(p: [...ConstructorParameters<typeof Instruction>, turn: Turn]) {
+        const [controller, performer, turn] = p;
+        super(controller, performer);
         this.turn = turn;
     }
     perform = (
@@ -197,7 +198,7 @@ type MoveSpec = {
 /** 領域を移動させる */ // OK:
 class MoveZone extends Instruction {
     /** 移動させるオブジェクトと、移動先領域の組。 */
-    movespecs: MoveSpec[];
+    object_specs: MoveSpec[];
 
     constructor(
         controller: SingleSpec<Player>,
@@ -206,7 +207,7 @@ class MoveZone extends Instruction {
         performer?: Spec<Player>
     ) {
         super(controller, performer);
-        this.movespecs = movespecs;
+        this.object_specs = movespecs;
     }
 
     /** 単一のオブジェクトを移動する操作 */
@@ -232,7 +233,7 @@ class MoveZone extends Instruction {
     ) => {
         const params: ReferenceParam = { game: game, self: self };
         // 各 spec について
-        this.movespecs.forEach((movespec) => {
+        this.object_specs.forEach((movespec) => {
             // 移動されるオブジェクトを解決し、それぞれについて移動操作を行う
             const moved_obj = ([] as (Card | StackedAbility)[]).concat(
                 resolve_spec<Card | StackedAbility>(movespec.moved, params)
@@ -479,9 +480,8 @@ class Exile extends MoveZone {
             controller,
             exiled.map((ex) => ({
                 moved: ex,
-                dest: new SingleRef<Zone>(
-                    (params: ReferenceParam) =>
-                        params.game.current.zones([ZoneType.Exile])[0]
+                dest: new SingleRef<Zone>((params: ReferenceParam) =>
+                    params.game.current.exile()
                 ),
             })),
             performer
@@ -667,7 +667,7 @@ class Milling extends Instruction {
                 {
                     moved: new MultiRef<Card>(
                         (param: ReferenceParam) =>
-                            param.game.current.cards_in_library() // FIXME: 上からN枚
+                            param.game.current.game_objects() // FIXME: 上からN枚
                     ),
                     dest: (obj) =>
                         new SingleRef<Zone>(

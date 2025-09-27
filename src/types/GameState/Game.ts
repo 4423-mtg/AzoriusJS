@@ -12,9 +12,8 @@ import {
     GeneratedEffect,
     Spell,
     is_spell,
-    GameObjectType,
-} from "./GameObject";
-import { DelayedTriggeredAbility } from "./Ability";
+} from "../GameObject/GameObject.js";
+import { DelayedTriggeredAbility } from "../GameObject/Ability.js";
 import {
     Turn,
     Phase,
@@ -23,15 +22,19 @@ import {
     first_step_of_phase,
     PhaseKind,
     StepKind,
-} from "./Turn";
-import { ReferenceParam, resolve_single_spec, SingleSpec } from "./Reference";
+} from "../Turn/Turn.js";
+import {
+    ReferenceParam,
+    resolve_single_spec,
+    SingleSpec,
+} from "../Turn/Reference.js";
 import {
     BeginNewPhaseAndStep,
     BeginNewStep,
     BeginNewTurn,
     Instruction,
     Resolve,
-} from "./Instruction";
+} from "../Turn/Instruction.js";
 
 export { PlayerInfo, MatchInfo, GameState, Game, Zone, ZoneType };
 

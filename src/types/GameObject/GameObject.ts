@@ -3,12 +3,12 @@
  */
 "use strict";
 
-import { PlayerInfo, Zone } from "./Game";
-import { Ability, SpellAbility, TriggeredAbility } from "./Ability";
-import { Characteristics } from "./Characteristic";
-import { Instruction, Resolve } from "./Instruction";
-import { MultiRef, ReferenceParam, SingleSpec } from "./Reference";
-import { Phase, Step, Turn } from "./Turn";
+import { PlayerInfo, Zone } from "./Game.js";
+import { Ability, SpellAbility, TriggeredAbility } from "./Ability.js";
+import { Characteristics } from "./Characteristic.js";
+import { Instruction, Resolve } from "../Turn/Instruction.js";
+import { MultiRef, ReferenceParam, SingleSpec } from "../Turn/Reference.js";
+import { Phase, Step, Turn } from "../Turn/Turn.js";
 
 export {
     GameObject,
@@ -41,7 +41,7 @@ abstract class GameObject {
 }
 
 // =================================================================
-// MARK: カード
+// MARK: Card
 /** カード */
 class Card extends GameObject {
     constructor(spec) {
@@ -135,7 +135,7 @@ function is_spell(card: Card): card is Spell {
 }
 
 // =================================================================
-// MARK: スタック上の能力
+// MARK: StackedAbliity
 /** スタック上の能力 */
 class StackedAbility extends GameObject {
     /** 領域 */
@@ -171,7 +171,7 @@ class StackedAbility extends GameObject {
 // =================================================================
 class GeneratedEffect extends GameObject {}
 
-// MARK: 継続的効果
+// MARK: ContinuousEffect
 /** 継続的効果
  * 1. 特性や値を変更する効果
  * 2. 手続きを修整する効果
@@ -233,7 +233,7 @@ class ContinuousEffect extends GeneratedEffect {
 //     }
 // }
 
-// MARK: 置換効果
+// MARK: ReplacementEffect
 /** 置換効果 */
 class ReplacementEffect extends GeneratedEffect {
     // /** 置換対象の手続きに該当するかどうかをチェックする関数 */
@@ -257,7 +257,7 @@ class ReplacementEffect extends GeneratedEffect {
 }
 
 // =================================================================
-// MARK: 追加ターン効果
+// MARK: AdditionalTurnEffect
 /** ターンを追加する効果 */
 class AdditionalTurnEffect extends GeneratedEffect {
     /** ターンを追加する条件 */
@@ -295,7 +295,7 @@ class AdditionalStepEffect extends GeneratedEffect {
 // 開始フェイズと、N個のアップキープを追加する（オベカ）
 
 // ==================================================================
-// MARK: プレイヤー
+// MARK: Player
 /** プレイヤー */
 class Player extends GameObject {
     info: PlayerInfo;
@@ -317,11 +317,11 @@ class Player extends GameObject {
 }
 
 // =================================================================
-// MARK: マナ
+// MARK: Mana
 class Mana {}
 
 // =================================================================
-// MARK: カウンター
+// MARK: Counter
 class Counter {
     name: string;
     instructions?: Instruction[];
