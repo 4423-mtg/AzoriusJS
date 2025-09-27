@@ -14,7 +14,7 @@ export class LayerType {
         ) {
             (this.layer = layer), (this.sublayer = sublayer);
         } else {
-            throw new TypeError("Layer class constructer");
+            throw new TypeError("Layer class constructer"); // FIXME:
         }
     }
 

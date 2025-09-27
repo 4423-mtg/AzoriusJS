@@ -11,11 +11,13 @@ export class Player extends GameObject {
     life: number;
     counters: Counter[] = [];
     abilities: Ability[] = [];
-    /** 既に敗北しているかどうか */
-    is_lost: boolean = false;
+
+    /** 勝敗 */
+    won: boolean = false;
+    lost: boolean = false;
 
     constructor(info: PlayerInfo, life?: number) {
-        super();
+        super(); // TODO: プレイヤーのオーナー・コントローラー？
         this.info = info;
         this.life = life ?? 20;
     }

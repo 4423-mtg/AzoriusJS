@@ -1,7 +1,6 @@
 "use strict";
 import type { Card } from "./Card/Card.js";
 import type { Player } from "./Player.js";
-import type { SpellCharacteristic } from "./Characteristics/Characteristic.js";
 
 /** ゲーム内のオブジェクト。
  * ルール上の「オブジェクト」の他に、継続的効果や遅延誘発型能力など、
@@ -18,11 +17,4 @@ export abstract class GameObject {
         this.owner = owner;
         this.controller = controller ?? this.owner;
     }
-}
-
-export type Spell = Card & SpellCharacteristic;
-
-export function is_spell(card: Card): card is Spell {
-    // TODO: card instanceof SpellCharacteristic
-    return true;
 }

@@ -1,3 +1,6 @@
+import type { GameObject } from "../GameObject.js";
+import type { Card } from "./Card.js";
+
 /** 呪文としての特性 */
 export type SpellCharacteristic = {
     // 2. 呪文の選択
@@ -20,3 +23,10 @@ export type SpellCharacteristic = {
     // 解決処理
     resolve: Resolve;
 };
+
+export type Spell = Card & SpellCharacteristic;
+
+export function is_spell(card: Card): card is Spell {
+    // TODO: card instanceof SpellCharacteristic
+    return true;
+}
