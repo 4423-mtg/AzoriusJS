@@ -1,8 +1,13 @@
-import type { Ability, StaticAbility } from "./Ability.js";
-import type { CardType, Color, Subtype, Supertype } from "./Characteristic.js";
-import type { Player, Spell, StackedAbility } from "./GameObject.js";
-import type { MultiRef, SingleRef } from "../Turn/Reference.js";
+import type { Spell } from "../GameObject.js";
+import type { Player } from "../Player.js";
+import type { Ability, StaticAbility } from "../Ability.js";
+import type { StackedAbility } from "../StackedAbility.js";
+import type { Color } from "../Characteristics/Color.js";
+import type { CardType } from "../Characteristics/CardType.js";
+import type { Subtype } from "../Characteristics/Subtype.js";
+import type { Supertype } from "../Characteristics/Supertype.js";
 import { LayerType } from "./LayerType.js";
+import type { SingleSpec, MultiSpec } from "../../Turn/Reference.js";
 
 /** 特性変更 */
 export abstract class LayerInstance {
@@ -26,14 +31,14 @@ export class ModifyingLayer1a extends LayerInstance {
 
 /** 1b: 裏向きであることによるコピー可能な値の変更 */
 export class ModifyingLayer1b extends LayerInstance {
-    // TODO:
+    // TODO: コピー可能な値
 }
 
 /** 2: コントローラー変更 */
 export class ModifyingLayer2 extends LayerInstance {
-    controller: SingleRef<Player>;
+    controller: SingleSpec<Player>;
 
-    constructor(controller: SingleRef<Player>, option?: LayerOptions) {
+    constructor(controller: SingleSpec<Player>, option?: LayerOptions) {
         super(LayerType.Layer2, option);
         this.controller = controller;
     }
@@ -46,13 +51,13 @@ export class ModifyingLayer3 extends LayerInstance {
 
 /** 4: カードタイプ・サブタイプ・特殊タイプ変更 */
 export class ModifyingLayer4 extends LayerInstance {
-    delete: MultiRef<CardType | Subtype | Supertype> | undefined;
-    additinal: MultiRef<CardType | Subtype | Supertype> | undefined;
+    delete: MultiSpec<CardType | Subtype | Supertype> | undefined;
+    additinal: MultiSpec<CardType | Subtype | Supertype> | undefined;
 
     constructor(
         args: {
-            delete?: MultiRef<CardType | Subtype | Supertype>;
-            additinal?: MultiRef<CardType | Subtype | Supertype>;
+            delete?: MultiSpec<CardType | Subtype | Supertype>;
+            additinal?: MultiSpec<CardType | Subtype | Supertype>;
         },
         option?: LayerOptions
     ) {
@@ -64,9 +69,9 @@ export class ModifyingLayer4 extends LayerInstance {
 
 /** 5: 色変更 */
 export class ModifyingLayer5 extends LayerInstance {
-    colors: MultiRef<Color>;
+    colors: MultiSpec<Color>;
 
-    constructor(colors: MultiRef<Color>, option?: LayerOptions) {
+    constructor(colors: MultiSpec<Color>, option?: LayerOptions) {
         super(LayerType.Layer5, option);
         this.colors = colors;
     }
@@ -74,9 +79,9 @@ export class ModifyingLayer5 extends LayerInstance {
 
 /** 6: 能力の追加/除去、能力を持つことの禁止 */
 export class ModifyingLayer6 extends LayerInstance {
-    abilities: MultiRef<Ability>;
+    abilities: MultiSpec<Ability>;
 
-    constructor(abilities: MultiRef<Ability>, option?: LayerOptions) {
+    constructor(abilities: MultiSpec<Ability>, option?: LayerOptions) {
         super(LayerType.Layer6, option);
         this.abilities = abilities;
     }
@@ -84,12 +89,12 @@ export class ModifyingLayer6 extends LayerInstance {
 
 /** 7a: PTを定義する特性定義能力 */
 export class ModifyingLayer7a extends LayerInstance {
-    power_definition: SingleRef<number>;
-    toughness_definition: SingleRef<number>;
+    power_definition: SingleSpec<number>;
+    toughness_definition: SingleSpec<number>;
 
     constructor(
-        power_definition: SingleRef<number>,
-        toughness_definition: SingleRef<number>,
+        power_definition: SingleSpec<number>,
+        toughness_definition: SingleSpec<number>,
         option?: LayerOptions
     ) {
         super(LayerType.Layer7a, option);
@@ -100,12 +105,12 @@ export class ModifyingLayer7a extends LayerInstance {
 
 /** 7b: 基本のPT */
 export class ModifyingLayer7b extends LayerInstance {
-    power: SingleRef<number>;
-    toughness: SingleRef<number>;
+    power: SingleSpec<number>;
+    toughness: SingleSpec<number>;
 
     constructor(
-        power: SingleRef<number>,
-        toughness: SingleRef<number>,
+        power: SingleSpec<number>,
+        toughness: SingleSpec<number>,
         option: LayerOptions
     ) {
         super(LayerType.Layer7b, option);
@@ -116,12 +121,12 @@ export class ModifyingLayer7b extends LayerInstance {
 
 /** 7c: PT修整 */
 export class ModifyingLayer7c extends LayerInstance {
-    power_offset: SingleRef<number>;
-    toughness_offset: SingleRef<number>;
+    power_offset: SingleSpec<number>;
+    toughness_offset: SingleSpec<number>;
 
     constructor(
-        power_offset: SingleRef<number>,
-        toughness_offset: SingleRef<number>,
+        power_offset: SingleSpec<number>,
+        toughness_offset: SingleSpec<number>,
         option?: LayerOptions
     ) {
         super(LayerType.Layer7c, option);

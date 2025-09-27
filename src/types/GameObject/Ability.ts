@@ -1,31 +1,18 @@
 "use strict";
-import { Game, GameState } from "./Game.js";
+import { Game, GameState } from "../GameState/Game.js";
 /** オブジェクトが持つ能力
  * 起動型能力、誘発型能力、呪文能力、常在型能力
  */
 
-import {
-    ContinuousEffect,
-    GameObject,
-    Player,
-    StackedAbility,
-} from "./GameObject.js";
-import { Instruction } from "./Instruction.js";
-
-export {
-    Ability,
-    ActivatedAbility,
-    TriggeredAbility,
-    DelayedTriggeredAbility,
-    SpellAbility,
-    StaticAbility,
-    KeywordAbility,
-};
+import { GameObject } from "./GameObject.js";
+import { Instruction } from "../Turn/Instruction.js";
+import type { Player } from "./Player.js";
+import type { ContinuousEffect } from "./ContinuousEffect.js";
 
 // ==============================================================================
 
 /** オブジェクトが持つ能力。スタックに乗る方ではない。 */
-class Ability {
+export class Ability {
     static id = 0; // 能力オブジェクトID
     id: number; // 能力オブジェクトID。関連している能力などに
     text: string; // ルール文章
@@ -42,7 +29,7 @@ class Ability {
 type Constraint = any; // FIXME
 
 /** オブジェクトの起動型能力 */
-class ActivatedAbility extends Ability {
+export class ActivatedAbility extends Ability {
     costs: Instruction[] = []; // 起動コスト
     instructions: Instruction[]; // 効果
     constraints?: Constraint[] = []; // 起動制限
@@ -76,7 +63,7 @@ class ActivatedAbility extends Ability {
 
 // ==============================================================================
 /** オブジェクトの持つ誘発型能力 */
-class TriggeredAbility extends Ability {
+export class TriggeredAbility extends Ability {
     #checker: InstructionChecker; // 誘発判定
     instructions: Instruction[]; // 効果
     constraints?: Constraint[] = []; // 誘発制限
@@ -148,11 +135,11 @@ class TriggeredAbility extends Ability {
     }
 }
 
-class DelayedTriggeredAbility extends TriggeredAbility {}
+export class DelayedTriggeredAbility extends TriggeredAbility {}
 
 // ==============================================================================
 /** オブジェクトの持つ呪文能力 */
-class SpellAbility extends Ability {
+export class SpellAbility extends Ability {
     /** 効果処理 */
     instructions: Instruction[];
 
@@ -179,7 +166,7 @@ class SpellAbility extends Ability {
 
 // ==============================================================================
 /** オブジェクトの常在型能力 */
-class StaticAbility extends Ability {
+export class StaticAbility extends Ability {
     /** 効果。単一の能力が複数の継続的効果を持つこともある（キーワード能力など） */
     effects: ContinuousEffect[] = [];
 
@@ -192,7 +179,7 @@ class StaticAbility extends Ability {
 /** キーワード能力 */
 // 起動型能力とそうでない能力を含むキーワード能力もある（レベル・クラス棒
 // 起動型能力を２つ持つ能力もある（換装
-class KeywordAbility extends Ability {
+export class KeywordAbility extends Ability {
     name: string; // キーワード能力名
     abilities: Ability[] = []; // 構成する各能力
 

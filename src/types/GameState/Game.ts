@@ -9,7 +9,6 @@ import {
     AdditionalTurnEffect,
     AdditionalPhaseEffect,
     AdditionalStepEffect,
-    GeneratedEffect,
     Spell,
     is_spell,
 } from "../GameObject/GameObject.js";
