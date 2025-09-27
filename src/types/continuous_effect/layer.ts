@@ -22,22 +22,25 @@ export class Layer {
         return this.layer === obj.layer && this.sublayer === obj.sublayer;
     }
 
-    static Layer1a = new Layer("1", "a");
-    static Layer1b = new Layer("1", "b");
-    static Layer2 = new Layer("2");
-    static Layer3 = new Layer("3");
-    static Layer4 = new Layer("4");
-    static Layer5 = new Layer("5");
-    static Layer6 = new Layer("6");
-    static Layer7a = new Layer("7", "a");
-    static Layer7b = new Layer("7", "b");
-    static Layer7c = new Layer("7", "c");
-    static Layer7d = new Layer("7", "d");
+    static readonly Layer1a = new Layer("1", "a");
+    static readonly Layer1b = new Layer("1", "b");
+    static readonly Layer2 = new Layer("2");
+    static readonly Layer3 = new Layer("3");
+    static readonly Layer4 = new Layer("4");
+    static readonly Layer5 = new Layer("5");
+    static readonly Layer6 = new Layer("6");
+    static readonly Layer7a = new Layer("7", "a");
+    static readonly Layer7b = new Layer("7", "b");
+    static readonly Layer7c = new Layer("7", "c");
+    static readonly Layer7d = new Layer("7", "d");
 }
 
 const _layer = ["1", "2", "3", "4", "5", "6", "7"] as const;
 const _sublayer = ["a", "b", "c", "d", undefined] as const;
-const _layerLiteral: { layer: string; sublayer: string | undefined }[] = [
+const _layerLiteral: readonly {
+    layer: string;
+    sublayer: string | undefined;
+}[] = [
     { layer: "1", sublayer: "a" },
     { layer: "1", sublayer: "b" },
     { layer: "2", sublayer: undefined },
