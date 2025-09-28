@@ -1,4 +1,3 @@
-"use strict";
 import {
     GameObject,
     Player,
@@ -137,9 +136,10 @@ class GameState {
         return this.#game_objects.filter(_typeguard).filter((obj) => {
             const b1 =
                 query.controller === undefined ||
-                obj.controller.id === query.controller.id;
+                obj.controller.object_id === query.controller.id;
             const b2 =
-                query.owner === undefined || obj.owner.id === query.owner.id;
+                query.owner === undefined ||
+                obj.owner.object_id === query.owner.id;
             const b3 =
                 query.zone === undefined ||
                 ((obj instanceof Card || obj instanceof StackedAbility) &&

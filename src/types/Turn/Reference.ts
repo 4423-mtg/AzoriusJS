@@ -1,4 +1,3 @@
-"use strict";
 import { Game, GameState, Zone } from "./Game";
 import { GameObject, Player } from "./GameObject";
 

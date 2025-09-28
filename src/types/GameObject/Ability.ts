@@ -1,4 +1,3 @@
-"use strict";
 import { Game, GameState } from "../GameState/Game.js";
 /** オブジェクトが持つ能力
  * 起動型能力、誘発型能力、呪文能力、常在型能力
@@ -7,7 +6,7 @@ import { Game, GameState } from "../GameState/Game.js";
 import { GameObject } from "./GameObject.js";
 import { Instruction } from "../Turn/Instruction.js";
 import type { Player } from "./Player.js";
-import type { ContinuousEffect } from "./ContinuousEffect.js";
+import type { ContinuousEffect } from "./GeneratedEffect/ContinuousEffect.js";
 
 // ==============================================================================
 

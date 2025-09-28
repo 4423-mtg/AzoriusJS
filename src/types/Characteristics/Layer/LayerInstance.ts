@@ -1,13 +1,13 @@
-import type { Spell } from "../GameObject.js";
-import type { Player } from "../Player.js";
-import type { Ability, StaticAbility } from "../Ability.js";
-import type { StackedAbility } from "../StackedAbility.js";
-import type { Color } from "../Characteristics/Color.js";
-import type { CardType } from "../Characteristics/CardType.js";
-import type { Subtype } from "../Characteristics/Subtype.js";
-import type { Supertype } from "../Characteristics/Supertype.js";
+import type { Player } from "../../GameObject/Player.js";
+import type { Ability, StaticAbility } from "../../GameObject/Ability.js";
+import type { StackedAbility } from "../../GameObject/StackedAbility.js";
+import type { Color } from "../Color.js";
+import type { CardType } from "../CardType.js";
+import type { Subtype } from "../Subtype.js";
+import type { Supertype } from "../Supertype.js";
 import { LayerType } from "./LayerType.js";
 import type { SingleSpec, MultiSpec } from "../../Turn/Reference.js";
+import type { Spell } from "../../GameObject/Card/Spell.js";
 
 /** 特性変更 */
 export abstract class LayerInstance {

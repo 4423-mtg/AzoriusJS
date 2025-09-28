@@ -1,5 +1,3 @@
-"use strict";
-
 import { Player } from "./GameObject";
 
 /** ターン、フェイズ、ステップを表すオブジェクト */

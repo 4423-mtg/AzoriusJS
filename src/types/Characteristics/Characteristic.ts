@@ -1,11 +1,9 @@
-"use strict";
-
 import type { ManaSymbol } from "./Symbol.js";
 import type { Color } from "./Color.js";
 import type { CardType } from "./CardType.js";
 import type { Subtype } from "./Subtype.js";
 import type { Supertype } from "./Supertype.js";
-import type { Ability } from "../Ability.js";
+import type { Ability } from "../GameObject/Ability.js";
 
 // CR 109.3 オブジェクトの特性とは、
 // 名前、マナ・コスト、色、色指標、
@@ -32,6 +30,22 @@ export type Defense = Value;
 export type HandModifier = Value;
 /** ライフ補正子 */
 export type LifeModifier = Value;
+
+export type Printed = {
+    name?: ObjectName;
+    manaCost?: ManaSymbol[];
+    colorIdentity?: Color[];
+    cardType?: CardType[];
+    subtype?: Subtype[];
+    supertypes?: Supertype[];
+    text?: string;
+    power?: Power;
+    toughness?: Toughness;
+    loyalty?: Loyalty;
+    defense?: Defense;
+    hand_modifier?: HandModifier;
+    life_modifier?: LifeModifier;
+};
 
 /** 特性 */
 export type Characteristics = {

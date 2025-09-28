@@ -1,4 +1,4 @@
-import type { Color } from "./Characteristics/Color.js";
+import type { Color } from "../Characteristics/Color.js";
 
 export type ManaType = Color | "C";
 

@@ -1,4 +1,3 @@
-"use strict";
 import { CardType } from "./Characteristic";
 /** 効果やルールによってゲーム中に行われる指示。
  */
