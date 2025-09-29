@@ -1,9 +1,7 @@
-// MARK: Player
-
-import type { PlayerInfo } from "../GameState/Game.js";
 import { GameObject } from "./GameObject.js";
 import type { Ability } from "./Ability.js";
 import type { Counter } from "./Counter.js";
+import type { PlayerInfo } from "../GameState/Match.js";
 
 /** プレイヤー */
 export class Player extends GameObject {

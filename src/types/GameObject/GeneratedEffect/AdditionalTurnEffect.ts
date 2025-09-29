@@ -1,4 +1,4 @@
-import type { ReferenceParam, SingleSpec } from "../../Turn/Reference.js";
+import type { ReferenceParam, SingleSpec } from "../../Reference.js";
 import type { Phase, Step, Turn } from "../../Turn/Turn.js";
 
 /** ターンを追加する効果 */

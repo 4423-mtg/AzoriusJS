@@ -6,7 +6,7 @@ import type { CardType } from "../CardType.js";
 import type { Subtype } from "../Subtype.js";
 import type { Supertype } from "../Supertype.js";
 import { LayerType } from "./LayerType.js";
-import type { SingleSpec, MultiSpec } from "../../Turn/Reference.js";
+import type { SingleSpec, MultiSpec } from "../../Reference.js";
 import type { Spell } from "../../GameObject/Card/Spell.js";
 
 /** 特性変更 */

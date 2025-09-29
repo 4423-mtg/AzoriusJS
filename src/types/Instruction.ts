@@ -15,7 +15,7 @@ import {
     resolve_spec,
     resolve_spec_apply,
     MultiRef,
-} from "./Reference.js";
+} from "../../Reference.js";
 import { Phase, Step, Turn } from "./Turn";
 
 export {

@@ -1,6 +1,6 @@
 import { GameObject } from "../GameObject.js";
 import { Player } from "../Player.js";
-import type { Zone } from "../../GameState/Game.js";
+import type { Zone } from "../../GameState/Zone.js";
 import type {
     Characteristics,
     Printed,
@@ -53,6 +53,9 @@ export class Card extends GameObject {
         // - 適用順は１つ適用する事に再計算する
         // - 第4種・第6種は能力を失わせるので、第5種・第7種の適用開始時に発生源の能力が失われていないかチェックする。
         //   その能力からの継続的効果をすでに適用しているならそのまま適用し、していないならもうその能力からの効果は適用しない
+
+        // - 依存のチェックはすべてのオブジェクトを確認する必要がある -> GameStateでやる
+
         return {};
     }
 }
