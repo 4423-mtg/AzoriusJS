@@ -16,10 +16,9 @@ import { Card } from "../GameObject/Card/Card.js";
 import type { Phase, Step, Turn } from "../Turn/Turn.js";
 
 export class GameState {
-    /** プレイヤー */
-    // #players: Player[];
     /** プレイヤーのターン進行順 */
     #turn_order: Player[];
+    getNextPlayer(player: Player): Player {} // TODO:
     /** 最後に通常のターンを行ったプレイヤーの、 turn_order でのインデックス。 */
     #turn_order_latest?: number;
     /** 現在優先権を持っているプレイヤーの、 turn_order でのインデックス。 */
@@ -28,7 +27,7 @@ export class GameState {
     /** 領域 */
     #zones: Set<Zone> = new Set<Zone>();
     /** すべてのオブジェクト */
-    #game_objects: GameObject[] = []; // Mapに変えるかも
+    gameObjects: GameObject[] = []; // Mapに変えるかも
 
     /** 現在のターン */
     #turn: Turn;
@@ -57,44 +56,44 @@ export class GameState {
     //     this.#game_objects.push(...objects);
     // }
     /** すべてのオブジェクト */ // FIXME:
-    getGameObjects<T extends GameObject>(query: {
-        type: new (..._: any[]) => T;
-        controller?: Player;
-        owner?: Player;
-        zone?: { type: ZoneType; owner?: Player };
-    }): T[] {
-        function _typeguard(obj: GameObject): obj is T {
-            if (Array.isArray(query.type)) {
-                return query.type.some((t) => obj instanceof t);
-            } else {
-                return obj instanceof query.type;
-            }
-        }
+    // getGameObjects<T extends GameObject>(query: {
+    //     type: new (..._: any[]) => T;
+    //     controller?: Player;
+    //     owner?: Player;
+    //     zone?: { type: ZoneType; owner?: Player };
+    // }): T[] {
+    //     function _typeguard(obj: GameObject): obj is T {
+    //         if (Array.isArray(query.type)) {
+    //             return query.type.some((t) => obj instanceof t);
+    //         } else {
+    //             return obj instanceof query.type;
+    //         }
+    //     }
 
-        return this.#game_objects.filter(_typeguard).filter((obj) => {
-            const b1 =
-                query.controller === undefined ||
-                obj.controller.object_id === query.controller.id;
-            const b2 =
-                query.owner === undefined ||
-                obj.owner.object_id === query.owner.id;
-            const b3 =
-                query.zone === undefined ||
-                ((obj instanceof Card || obj instanceof StackedAbility) &&
-                    obj.zone?.zonetype === query.zone.type &&
-                    obj.zone.owner?.id === query.zone.owner?.id);
-            return b1 && b2 && b3;
-        });
-    }
+    //     return this.gameObjects.filter(_typeguard).filter((obj) => {
+    //         const b1 =
+    //             query.controller === undefined ||
+    //             obj.controller.object_id === query.controller.id;
+    //         const b2 =
+    //             query.owner === undefined ||
+    //             obj.owner.object_id === query.owner.id;
+    //         const b3 =
+    //             query.zone === undefined ||
+    //             ((obj instanceof Card || obj instanceof StackedAbility) &&
+    //                 obj.zone?.zonetype === query.zone.type &&
+    //                 obj.zone.owner?.id === query.zone.owner?.id);
+    //         return b1 && b2 && b3;
+    //     });
+    // }
 
-    stacked_objects(): (Card | StackedAbility)[] {
-        // FIXME: スタックでは順序がある
-        return this.#game_objects
-            .filter(
-                (obj) => obj instanceof Card || obj instanceof StackedAbility
-            )
-            .filter((obj) => obj.zone?.zonetype === Stack);
-    }
+    // stacked_objects(): (Card | StackedAbility)[] {
+    //     // FIXME: スタックでは順序がある
+    //     return this.gameObjects
+    //         .filter(
+    //             (obj) => obj instanceof Card || obj instanceof StackedAbility
+    //         )
+    //         .filter((obj) => obj.zone?.zonetype === Stack);
+    // }
 
     /** 誘発してまだスタックに置かれていない誘発型能力 */
     // triggered_abilities_not_stacked(): StackedAbility[] {
@@ -107,10 +106,10 @@ export class GameState {
     // MARK:GameState/プレイヤー
     /** すべてのプレイヤー */
     players(): Player[] {
-        return this.getGameObjects({ type: Player });
+        return this.gameObjects.filter((obj) => obj instanceof Player);
     }
     set_players(players: Player[]) {
-        players.forEach((pl) => this.#game_objects.push(pl));
+        players.forEach((pl) => this.gameObjects.push(pl));
     }
     /** アクティブプレイヤー */
     get_active_player(): Player {
@@ -174,47 +173,49 @@ export class GameState {
     // MARK: GameState/領域
     /** 戦場 */
     get battlefield(): Zone[] {
-        return this.getZone(Battlefield);
+        return this.getZone({ zoneType: Battlefield });
     }
     /** スタック */
     get stack(): Zone[] {
-        return this.getZone(Stack);
+        return this.getZone({ zoneType: Stack });
     }
     /** 追放 */
     get exile(): Zone[] {
-        return this.getZone(Exile);
+        return this.getZone({ zoneType: Exile });
     }
     /** 手札（人数分） */
     get hand(): Zone[] {
-        return this.getZone(Hand);
+        return this.getZone({ zoneType: Hand });
     }
     /** ライブラリー（人数分） */
     get library(): Zone[] {
-        return this.getZone(Library);
+        return this.getZone({ zoneType: Library });
     }
     /** 墓地（人数分） */
     get graveyard(): Zone[] {
-        return this.getZone(Graveyard);
+        return this.getZone({ zoneType: Graveyard });
     }
     /** 統率（人数分） */
     get command(): Zone[] {
-        return this.getZone(Command);
+        return this.getZone({ zoneType: Command });
     }
     /** 領域の種類とオーナーを指定して領域を取得 */
-    getZone(
-        zoneType: ZoneType | ZoneType[],
-        owner?: Player | Player[]
-    ): Zone[] {
+    getZone(arg: {
+        zoneType?: ZoneType | ZoneType[];
+        owner?: Player | Player[];
+    }): Zone[] {
         const cond1: (z: Zone) => boolean = (z) =>
-            Array.isArray(zoneType)
-                ? zoneType.includes(z.zoneType)
-                : z.zoneType === zoneType;
-        const cond2: (z: Zone) => boolean = (z) =>
-            owner === undefined
+            arg.zoneType === undefined
                 ? true
-                : Array.isArray(owner)
-                ? z.owner !== undefined && owner.includes(z.owner)
-                : z.owner === owner;
+                : Array.isArray(arg.zoneType)
+                ? arg.zoneType.includes(z.zoneType)
+                : z.zoneType === arg.zoneType;
+        const cond2: (z: Zone) => boolean = (z) =>
+            arg.owner === undefined
+                ? true
+                : Array.isArray(arg.owner)
+                ? z.owner !== undefined && arg.owner.includes(z.owner)
+                : z.owner === arg.owner;
 
         return new Array(...this.#zones).filter((z) => cond1(z) && cond2(z));
     }

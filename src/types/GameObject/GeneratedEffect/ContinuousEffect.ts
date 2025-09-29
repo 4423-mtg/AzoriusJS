@@ -1,4 +1,4 @@
-import type { GameObject } from "../GameObject.js";
+import { GameObject } from "../GameObject.js";
 import type { Player } from "../Player.js";
 import type { GameState } from "../../GameState/GameState.js";
 import type { LayerInstance } from "../../Characteristics/Layer/LayerInstance.js";
@@ -6,7 +6,7 @@ import type { MultiSpec } from "../../Reference.js";
 import type { Instruction } from "../../Instruction.js";
 
 /** 継続的効果 */
-export class ContinuousEffect {
+export class ContinuousEffect extends GameObject {
     source: any;
     effects: LayerInstance[] = [];
 }
