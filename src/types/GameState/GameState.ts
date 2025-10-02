@@ -12,9 +12,15 @@ import {
 import type { GameObject } from "../GameObject/GameObject.js";
 import { Player } from "../GameObject/Player.js";
 import type { Phase, Step, Turn } from "../Turn/Turn.js";
+import { ModifyingLayer1a } from "../Characteristics/Layer/LayerInstance.js";
+import type { Characteristics } from "../Characteristics/Characteristic.js";
 
 export class GameState {
-    constructor() {}
+    timestamp: Timestamp;
+
+    constructor(timestamp: Timestamp) {
+        this.timestamp = timestamp;
+    }
 
     /* ========================================================== */
     // MARK: オブジェクト
@@ -213,22 +219,56 @@ export class GameState {
     }
 
     // ==================================================================
+    // MARK: その他
+    // ==================================================================
     /** ディープコピー */
     deepcopy(): GameState {
         return new GameState(); // TODO:
     }
-    // ==================================================================
-    getCharacteristics() {
+    getCharacteristics(): Map<number, Characteristics> {
+        const appliedSource = [];
+        // 第1a種
+        const effects_1a: ModifyingLayer1a[] = this.getGameObjects().filter(
+            (ef) => ef instanceof ModifyingLayer1a
+        );
+        // 特性定義能力を適用
+        // 1a種すべてをすべての順序で適用してみて依存をチェック
+        // 依存があってループしているならタイムスタンプ順で適用、ループしていないなら依存順で適用、依存がないならタイムスタンプ順で適用
+        // - 適用順は１つ適用する事に再計算する
+
+        // 第1b種
+        // 第2種
+        // 第3種
+        // 第4種
+        // 能力無効チェック (その能力からの継続的効果をすでに適用しているならそのまま適用し、していないならもうその能力からの効果は適用しない)
+        // 第5種
+        // 第6種
+        // 能力無効チェック (その能力からの継続的効果をすでに適用しているならそのまま適用し、していないならもうその能力からの効果は適用しない)
+        // 第7a種
+        // 第7b種
+        // 第7c種
+        // 第7d種
+
         // TODO: 領域や唱え方、代替の特性などに影響される
-        // 継続的効果を種類別順に解決する
-        // ContinuousEffect > レイヤー順で適用
-        // 各レイヤーごとに
         // 1. 特性定義能力を適用
         // 2. LayerInstanceの参照をすべて解決してすべての順序で適用してみて、依存をチェック
         // 3. 依存があってループしているならタイムスタンプ順で適用、ループしていないなら依存順で適用、依存がないならタイムスタンプ順で適用
         // - 適用順は１つ適用する事に再計算する
-        // - 第4種・第6種は能力を失わせるので、第5種・第7種の適用開始時に発生源の能力が失われていないかチェックする。
-        //   その能力からの継続的効果をすでに適用しているならそのまま適用し、していないならもうその能力からの効果は適用しない
-        // - 依存のチェックはすべてのオブジェクトを確認する必要がある -> GameStateでやる
+    }
+}
+
+export class Timestamp {
+    id: number;
+    static latestId = -1;
+
+    constructor() {
+        this.id = ++Timestamp.latestId;
+    }
+
+    equals(other: Timestamp): boolean {
+        return this.compareTo(other) === 0;
+    }
+    compareTo(other: Timestamp): number {
+        return this.id < other.id ? -1 : this.id === other.id ? 0 : 1;
     }
 }

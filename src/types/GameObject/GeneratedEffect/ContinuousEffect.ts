@@ -1,6 +1,6 @@
 import { GameObject } from "../GameObject.js";
 import type { Player } from "../Player.js";
-import type { GameState } from "../../GameState/GameState.js";
+import type { GameState, Timestamp } from "../../GameState/GameState.js";
 import type { LayerInstance } from "../../Characteristics/Layer/LayerInstance.js";
 import type { MultiSpec } from "../../Reference.js";
 import type { Instruction } from "../../Instruction.js";
@@ -8,7 +8,7 @@ import type { Instruction } from "../../Instruction.js";
 /** 継続的効果 */
 export class ContinuousEffect extends GameObject {
     source: any;
-    effects: LayerInstance[] = [];
+    timestamp: Timestamp;
 }
 
 /** 継続的効果
@@ -22,7 +22,7 @@ export class ModifyCharacteristics extends ContinuousEffect {
     /** 影響を及ぼすオブジェクト */
     affected_objects: MultiSpec<GameObject> = [];
     /** 特性変更 */
-    layer_instance: LayerInstance[] = [];
+    layers: LayerInstance[] = [];
 }
 
 /** 手続きを変更する継続的効果 */
