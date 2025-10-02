@@ -49,9 +49,9 @@ export class Game {
                 // 全員が連続で優先権をパスしている。
                 // クリンナップ・ステップではフラグが立っている場合のみ。
                 // アンタップ・ステップでは優先権は発生しないが、アンタップ・ステップでここに来ることはない。
-                this.current.pass_count() === this.current.players().length &&
+                this.current.passCount() === this.current.getPlayers().length &&
                 (this.current.getStep()?.kind !== "Cleanup" ||
-                    this.current.cleanup_again())
+                    this.current.cleanupAgain())
             ) {
                 // スタックが空
                 if (this.current.stacked_objects().length === 0) {
@@ -65,8 +65,8 @@ export class Game {
                     );
                     // アクティブプレイヤーが優先権を得る
                     const active_player_index = this.current
-                        .get_turn_order()
-                        .indexOf(this.current.get_active_player());
+                        .getTurnOrder()
+                        .indexOf(this.current.activePlayer());
                     if (active_player_index >= 0) {
                         this.set_priority_to(active_player_index);
                     } else {
@@ -171,13 +171,11 @@ export class Game {
             }
         }
         // ターン順で次のプレイヤーのターンに移る
-        const index = this.current.get_current_turn_order();
+        const index = this.current.getCurrentTurnOrder();
         this.begin_new_turn(
             new Turn(
                 this.#get_new_turn_id(),
-                this.current.get_turn_order()[
-                    index !== undefined ? index + 1 : 0
-                ]
+                this.current.getTurnOrder()[index !== undefined ? index + 1 : 0]
             )
         );
         // TODO: アクティブプレイヤーが優先権を得る
@@ -322,7 +320,7 @@ export class Game {
                 .map((_, i) => i);
 
         // 各プレイヤーごとに
-        for (const player of this.current.get_players_apnap()) {
+        for (const player of this.current.getPlayersByAPNAPOrder()) {
             // 自分の能力
             let abl = abilities.filter((a) => a.controller === player);
             // 好きな順でスタックに置く
@@ -362,7 +360,7 @@ export class Game {
             }
         }
         /* プレイヤーが優先権を得る */
-        this.current.set_player_with_priority(index);
+        this.current.setPlayerWithPriority(index);
     }
 
     // MARK: Game/行動

@@ -11,166 +11,94 @@ import {
 } from "./Zone.js";
 import type { GameObject } from "../GameObject/GameObject.js";
 import { Player } from "../GameObject/Player.js";
-import { StackedAbility } from "../GameObject/StackedAbility.js";
-import { Card } from "../GameObject/Card/Card.js";
 import type { Phase, Step, Turn } from "../Turn/Turn.js";
 
 export class GameState {
-    /** プレイヤーのターン進行順 */
-    #turn_order: Player[];
-    getNextPlayer(player: Player): Player {} // TODO:
-    /** 最後に通常のターンを行ったプレイヤーの、 turn_order でのインデックス。 */
-    #turn_order_latest?: number;
-    /** 現在優先権を持っているプレイヤーの、 turn_order でのインデックス。 */
-    #priority_player_index?: number;
+    constructor() {}
 
-    /** 領域 */
-    #zones: Set<Zone> = new Set<Zone>();
+    /* ========================================================== */
+    // MARK: オブジェクト
+    /* ========================================================== */
     /** すべてのオブジェクト */
-    gameObjects: GameObject[] = []; // Mapに変えるかも
+    #gameObjects: GameObject[] = []; // Mapに変えるかも
 
-    /** 現在のターン */
-    #turn: Turn;
-    /** 現在のフェイズ */
-    #phase: Phase;
-    /** 現在のステップ */
-    #step?: Step;
-
-    /** 優先権を連続でパスしたプレイヤーの数 */
-    #pass_count: number = 0;
-    pass_count(): number {
-        return this.#pass_count;
+    /** すべてのオブジェクト */
+    getGameObjects(): GameObject[] {
+        return [...this.#gameObjects];
     }
-    /** クリンナップをもう一度行うかどうか。
-     * クリンナップの間に状況起因処理か能力の誘発があった場合、
-     * そのクリンナップでは優先権が発生するとともに、追加のクリンナップが発生する。 */
-    #cleanup_again = false;
-    cleanup_again(): boolean {
-        return this.#cleanup_again;
+    /** オブジェクトを追加 */
+    addGameObject(object: GameObject) {
+        this.#gameObjects.push(object);
     }
 
-    // ==================================================================
-    // MARK: GameState/object
-    // /** オブジェクトを追加 */
-    // add_game_object(...objects: GameObject[]) {
-    //     this.#game_objects.push(...objects);
-    // }
-    /** すべてのオブジェクト */ // FIXME:
-    // getGameObjects<T extends GameObject>(query: {
-    //     type: new (..._: any[]) => T;
-    //     controller?: Player;
-    //     owner?: Player;
-    //     zone?: { type: ZoneType; owner?: Player };
-    // }): T[] {
-    //     function _typeguard(obj: GameObject): obj is T {
-    //         if (Array.isArray(query.type)) {
-    //             return query.type.some((t) => obj instanceof t);
-    //         } else {
-    //             return obj instanceof query.type;
-    //         }
-    //     }
-
-    //     return this.gameObjects.filter(_typeguard).filter((obj) => {
-    //         const b1 =
-    //             query.controller === undefined ||
-    //             obj.controller.object_id === query.controller.id;
-    //         const b2 =
-    //             query.owner === undefined ||
-    //             obj.owner.object_id === query.owner.id;
-    //         const b3 =
-    //             query.zone === undefined ||
-    //             ((obj instanceof Card || obj instanceof StackedAbility) &&
-    //                 obj.zone?.zonetype === query.zone.type &&
-    //                 obj.zone.owner?.id === query.zone.owner?.id);
-    //         return b1 && b2 && b3;
-    //     });
-    // }
-
-    // stacked_objects(): (Card | StackedAbility)[] {
-    //     // FIXME: スタックでは順序がある
-    //     return this.gameObjects
-    //         .filter(
-    //             (obj) => obj instanceof Card || obj instanceof StackedAbility
-    //         )
-    //         .filter((obj) => obj.zone?.zonetype === Stack);
-    // }
-
-    /** 誘発してまだスタックに置かれていない誘発型能力 */
-    // triggered_abilities_not_stacked(): StackedAbility[] {
-    //     return this.game_objects({ type: StackedAbility }).filter(
-    //         (ability) => ability.zone === undefined
-    //     );
-    // }
-
-    // ==================================================================
-    // MARK:GameState/プレイヤー
-    /** すべてのプレイヤー */
-    players(): Player[] {
-        return this.gameObjects.filter((obj) => obj instanceof Player);
+    /* ========================================================== */
+    // MARK: プレイヤー
+    /* ========================================================== */
+    getPlayers(): Player[] {
+        return this.getGameObjects().filter((obj) => obj instanceof Player);
     }
-    set_players(players: Player[]) {
-        players.forEach((pl) => this.gameObjects.push(pl));
-    }
-    /** アクティブプレイヤー */
-    get_active_player(): Player {
-        return this.getTurn().active_player;
-    }
-    /** 優先権を持つプレイヤー */
-    get_player_with_priority(): {
-        index: number | undefined;
-        player: Player | undefined;
-    } {
-        return this.#priority_player_index !== undefined
-            ? {
-                  index: this.#priority_player_index,
-                  player: this.#turn_order[this.#priority_player_index],
-              }
-            : {
-                  index: undefined,
-                  player: undefined,
-              };
-    }
-    set_player_with_priority(index: number) {
-        this.#priority_player_index = index;
+    addPlayers(player: Player) {
+        this.addGameObject(player);
     }
 
+    /** プレイヤーのターン進行順 */
+    #turnOrder: Player[] = [];
     /** ターン順 */
-    get_turn_order() {
-        return this.#turn_order;
-    }
-    /** ターン順を設定する。ゲームに存在しないプレイヤーが与えられた場合は無視する。 */
-    set_turn_order(players: Player[]) {
-        this.#turn_order = [];
-        players.forEach((pl) => {
-            if (this.players().includes(pl)) {
-                this.#turn_order.push(pl);
-            }
-        });
-    }
-    /** 最後に通常のターンを行ったプレイヤーのインデックス。 */
-    get_current_turn_order(): number | undefined {
-        return this.#turn_order_latest;
-    }
-
-    /** 指定した順番を起点としてターン順に1周する、プレイヤーの配列 */
-    turn_order_from(index: number): Player[] {
-        if (index === 0) {
-            return this.#turn_order;
+    getTurnOrder(startIndex?: number): Player[] {
+        if (startIndex === undefined) {
+            return [...this.#turnOrder];
+        } else if (startIndex > this.#turnOrder.length - 1) {
+            throw new RangeError("Index Out of Range", { cause: startIndex });
         } else {
             return new Array<Player>().concat(
-                this.#turn_order.slice(index),
-                this.#turn_order.slice(0, index - 1)
+                this.#turnOrder.slice(startIndex),
+                this.#turnOrder.slice(0, startIndex - 1)
             );
         }
     }
-    /** プレイヤーをAPNAP順で返す。 */
-    get_players_apnap(): Player[] {
-        const index = this.get_turn_order().indexOf(this.get_active_player());
-        return this.turn_order_from(index >= 0 ? index : 0);
+    /** ターン順を設定する。 */
+    setTurnOrder(players: Player[]) {
+        const nonExistent = players.filter(
+            (pl) => !this.getPlayers().includes(pl)
+        );
+        if (nonExistent.length > 0) {
+            throw new Error("that player doesn't exist", {
+                cause: nonExistent,
+            });
+        } else {
+            this.#turnOrder = players;
+        }
     }
 
-    // ==================================================================
-    // MARK: GameState/領域
+    /* ========================================================== */
+    // MARK: 領域
+    /* ========================================================== */
+    /** 領域 */
+    #zones: Zone[] = [];
+
+    /** 領域の種類とオーナーを指定して領域を取得 */
+    getZone(arg: {
+        zoneType?: ZoneType | ZoneType[];
+        owner?: Player | Player[];
+    }): Zone[] {
+        const cond1: (z: Zone) => boolean = (z) =>
+            arg.zoneType === undefined
+                ? true
+                : Array.isArray(arg.zoneType)
+                ? arg.zoneType.includes(z.zoneType)
+                : z.zoneType === arg.zoneType;
+        const cond2: (z: Zone) => boolean = (z) =>
+            arg.owner === undefined
+                ? true
+                : Array.isArray(arg.owner)
+                ? z.owner !== undefined && arg.owner.includes(z.owner)
+                : z.owner === arg.owner;
+        return this.#zones.filter((z) => cond1(z) && cond2(z));
+    }
+    /** 領域を追加 */
+    addZone(zone: Zone) {
+        this.#zones.push(zone);
+    }
     /** 戦場 */
     get battlefield(): Zone[] {
         return this.getZone({ zoneType: Battlefield });
@@ -199,39 +127,24 @@ export class GameState {
     get command(): Zone[] {
         return this.getZone({ zoneType: Command });
     }
-    /** 領域の種類とオーナーを指定して領域を取得 */
-    getZone(arg: {
-        zoneType?: ZoneType | ZoneType[];
-        owner?: Player | Player[];
-    }): Zone[] {
-        const cond1: (z: Zone) => boolean = (z) =>
-            arg.zoneType === undefined
-                ? true
-                : Array.isArray(arg.zoneType)
-                ? arg.zoneType.includes(z.zoneType)
-                : z.zoneType === arg.zoneType;
-        const cond2: (z: Zone) => boolean = (z) =>
-            arg.owner === undefined
-                ? true
-                : Array.isArray(arg.owner)
-                ? z.owner !== undefined && arg.owner.includes(z.owner)
-                : z.owner === arg.owner;
 
-        return new Array(...this.#zones).filter((z) => cond1(z) && cond2(z));
-    }
-    addZone(zone: Zone) {
-        this.#zones.add(zone);
-    }
+    /* ========================================================== */
+    // MARK: ターン・フェイズ
+    /* ========================================================== */
+    /** 現在のターン */
+    #turn: Turn | undefined;
+    /** 現在のフェイズ */
+    #phase: Phase | undefined;
+    /** 現在のステップ */
+    #step: Step | undefined;
 
-    // ==================================================================
-    // MARK: GameState/ターン // FIXME: getter/setter?
-    getTurn(): Turn {
+    getTurn(): Turn | undefined {
         return this.#turn;
     }
     setTurn(turn: Turn) {
         this.#turn = turn;
     }
-    getPhase(): Phase {
+    getPhase(): Phase | undefined {
         return this.#phase;
     }
     setPhase(phase: Phase) {
@@ -243,10 +156,79 @@ export class GameState {
     setStep(step: Step | undefined) {
         this.#step = step;
     }
+    /** 優先権を連続でパスしたプレイヤーの数 */
+    #passCount: number = 0;
+    /** 優先権を連続でパスしたプレイヤーの数 */
+    get passCount(): number {
+        return this.#passCount;
+    }
+    /** クリンナップをもう一度行うかどうか。
+     * クリンナップの間に状況起因処理か能力の誘発があった場合、
+     * そのクリンナップでは優先権が発生するとともに、追加のクリンナップが発生する。 */
+    #cleanupAgain = false;
+    /** クリンナップをもう一度行うかどうか。
+     * クリンナップの間に状況起因処理か能力の誘発があった場合、
+     * そのクリンナップでは優先権が発生するとともに、追加のクリンナップが発生する。 */
+    get cleanupAgain(): boolean {
+        return this.#cleanupAgain;
+    }
+    /** アクティブプレイヤー */
+    #activePlayerIndex: number | undefined;
+    /** アクティブプレイヤー */
+    get activePlayerIndex(): number | undefined {
+        return this.#activePlayerIndex;
+    }
+    set activePlayerIndex(index: number | undefined) {
+        this.#activePlayerIndex = index;
+    }
+    /** 現在優先権を持っているプレイヤーの、 turn_order でのインデックス。 */
+    #priorityPlayerIndex?: number | undefined;
+    /** 優先権を持つプレイヤー */
+    get playerWithPriority(): number | undefined {
+        return this.#priorityPlayerIndex;
+    }
+    set playerWithPriority(index: number | undefined) {
+        this.#priorityPlayerIndex = index;
+    }
+    /** 最後に通常のターンを行ったプレイヤーの、 turn_order でのインデックス。 */
+    #currentTurnOrderIndex?: number | undefined;
+    /** 最後に通常のターンを行ったプレイヤーのインデックス。 */
+    get currentTurnOrder(): number | undefined {
+        return this.#currentTurnOrderIndex;
+    }
+    set currentTurnOrder(index: number | undefined) {
+        this.#currentTurnOrderIndex = index;
+    }
+    /** プレイヤーをAPNAP順で返す。 */
+    getPlayersByAPNAPOrder(): Player[] {
+        const activePlayer = this.getTurn()?.active_player;
+        if (activePlayer === undefined) {
+            throw new Error("No Active Player");
+        } else {
+            const activePlayerIndex = this.getTurnOrder().findIndex((pl) =>
+                pl.equals(activePlayer)
+            );
+            return this.getTurnOrder(activePlayerIndex);
+        }
+    }
 
     // ==================================================================
     /** ディープコピー */
     deepcopy(): GameState {
         return new GameState(); // TODO:
+    }
+    // ==================================================================
+    getCharacteristics() {
+        // TODO: 領域や唱え方、代替の特性などに影響される
+        // 継続的効果を種類別順に解決する
+        // ContinuousEffect > レイヤー順で適用
+        // 各レイヤーごとに
+        // 1. 特性定義能力を適用
+        // 2. LayerInstanceの参照をすべて解決してすべての順序で適用してみて、依存をチェック
+        // 3. 依存があってループしているならタイムスタンプ順で適用、ループしていないなら依存順で適用、依存がないならタイムスタンプ順で適用
+        // - 適用順は１つ適用する事に再計算する
+        // - 第4種・第6種は能力を失わせるので、第5種・第7種の適用開始時に発生源の能力が失われていないかチェックする。
+        //   その能力からの継続的効果をすでに適用しているならそのまま適用し、していないならもうその能力からの効果は適用しない
+        // - 依存のチェックはすべてのオブジェクトを確認する必要がある -> GameStateでやる
     }
 }

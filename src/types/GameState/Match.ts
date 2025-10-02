@@ -23,13 +23,13 @@ export class MatchInfo {
     newGame(): Game {
         const state = new GameState();
         // プレイヤー
-        state.set_players(this.playerInfo.map((info) => new Player(info)));
+        state.setPlayers(this.playerInfo.map((info) => new Player(info)));
         // ターン順
-        state.set_turn_order(state.players());
+        state.setTurnOrder(state.getPlayers());
         // 領域
         zoneTypes.forEach((type) => {
             if (type.hasOwner) {
-                state.players().forEach((player) => {
+                state.getPlayers().forEach((player) => {
                     state.addZone(
                         new Zone(type, type.hasOwner ? player : undefined)
                     );

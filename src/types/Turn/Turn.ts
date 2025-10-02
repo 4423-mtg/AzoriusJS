@@ -1,6 +1,6 @@
-import { Player } from "./GameObject";
-
 /** ターン、フェイズ、ステップを表すオブジェクト */
+
+import type { Player } from "../GameObject/Player.js";
 
 export {
     Turn,

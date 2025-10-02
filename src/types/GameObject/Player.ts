@@ -21,6 +21,6 @@ export class Player extends GameObject {
     }
 
     equals(player: Player): boolean {
-        return this.object_id === player.object_id;
+        return this.objectId === player.objectId;
     }
 }
