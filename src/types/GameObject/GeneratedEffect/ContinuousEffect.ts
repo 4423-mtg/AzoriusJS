@@ -29,7 +29,7 @@ export type ContinuousEffectOptions = {
 
 // ↓ 何でもいいのでは...
 
-/** 値や特性を変更する継続的効果 */
+/** 値や特性を変更する継続的効果 TODO: 2025-12-13 */
 export class ModifyCharacteristics extends ContinuousEffect {
     /** 影響を及ぼすオブジェクト */
     affected_objects: MultiSpec<GameObject> = [];
