@@ -5,14 +5,16 @@ import type { Player } from "./Player.js";
  * 「ゲームの状態」に含まれるもの全般。 */
 export abstract class GameObject {
     objectId: number;
-    owner: Player;
-    controller: Player;
+    owner: Player | undefined;
+    controller: Player | undefined;
 
-    private static id_latest = 0;
+    private static id_latest = -1;
 
-    constructor(owner: Player, controller?: Player) {
+    constructor(option?: GameObjectOptions) {
         this.objectId = ++GameObject.id_latest;
-        this.owner = owner;
-        this.controller = controller ?? this.owner;
+        this.owner = option?.owner;
+        this.controller = option?.controller;
     }
 }
+
+export type GameObjectOptions = { owner?: Player; controller?: Player };

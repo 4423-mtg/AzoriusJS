@@ -1,4 +1,4 @@
-import { GameObject } from "../GameObject.js";
+import { GameObject, type GameObjectOptions } from "../GameObject.js";
 import type { Player } from "../Player.js";
 import type { GameState, Timestamp } from "../../GameState/GameState.js";
 import type { LayerInstance } from "../../Characteristics/Layer/LayerInstance.js";
@@ -7,15 +7,27 @@ import type { Instruction } from "../../Instruction.js";
 
 /** 継続的効果 */
 export class ContinuousEffect extends GameObject {
-    source: any;
-    timestamp: Timestamp;
+    source: any | undefined;
+    timestamp: Timestamp | undefined;
+
+    constructor(options?: GameObjectOptions & ContinuousEffectOptions) {
+        super(options);
+        this.source = options?.source;
+        this.timestamp = options?.timestamp;
+    }
 }
+export type ContinuousEffectOptions = {
+    source?: any;
+    timestamp?: Timestamp;
+};
 
 /** 継続的効果
  * 1. 特性や値を変更する効果
  * 2. 手続きを修整する効果
  * 3. 手続きを禁止する効果
  */
+
+// ↓ 何でもいいのでは...
 
 /** 値や特性を変更する継続的効果 */
 export class ModifyCharacteristics extends ContinuousEffect {

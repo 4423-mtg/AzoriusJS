@@ -1,32 +1,58 @@
-import type { ReferenceParam, SingleSpec } from "../../Reference.js";
+import type { QueryParam, SingleSpec } from "../../Reference.js";
 import type { Phase, Step, Turn } from "../../Turn/Turn.js";
+import { GameObject, type GameObjectOptions } from "../GameObject.js";
 
 /** ターンを追加する効果 */
-export class AdditionalTurnEffect {
+export class AdditionalTurnEffect extends GameObject {
     /** ターンを追加する条件 */
     condition: SingleSpec<boolean>;
     /** 追加しようとするターンを生成する */
-    generate_turn: (params: ReferenceParam) => Turn;
+    generateTurn: (params: QueryParam) => Turn;
+
+    constructor(
+        condition: SingleSpec<boolean>,
+        generateTurn: (params: QueryParam) => Turn,
+        options: GameObjectOptions
+    ) {
+        super(options);
+        this.condition = condition;
+        this.generateTurn = generateTurn;
+    }
 }
 
 /** フェイズを追加する効果 */
-export class AdditionalPhaseEffect {
+export class AdditionalPhaseEffect extends GameObject {
     /** フェイズを追加する条件 */
     condition: SingleSpec<boolean>;
     /** 追加しようとするフェイズを生成する */
-    generate_phase: (params: ReferenceParam) => Phase;
+    generatePhase: (params: QueryParam) => Phase;
+
+    constructor(
+        condition: SingleSpec<boolean>,
+        generatePhase: (params: QueryParam) => Phase,
+        options: GameObjectOptions
+    ) {
+        super(options);
+        this.condition = condition;
+        this.generatePhase = generatePhase;
+    }
 }
 
 /** ステップを追加する効果 */
-export class AdditionalStepEffect {
+export class AdditionalStepEffect extends GameObject {
     /** ステップを追加する条件 */
     condition: SingleSpec<boolean>;
     /** 追加しようとするステップを生成する */
-    generate_step: (params: ReferenceParam) => Step;
+    generateStep: (params: QueryParam) => Step;
 
-    constructor(generate_step: (params: ReferenceParam) => Step) {
-        super();
-        this.generate_step = generate_step;
+    constructor(
+        condition: SingleSpec<boolean>,
+        generateStep: (params: QueryParam) => Step,
+        options: GameObjectOptions
+    ) {
+        super(options);
+        this.condition = condition;
+        this.generateStep = generateStep;
     }
 }
 // ターンを追加する
