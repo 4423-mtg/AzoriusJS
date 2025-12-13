@@ -1,81 +1,105 @@
-import { GameObject, type GameObjectOptions } from "../GameObject.js";
+import {
+    createGameObject,
+    type GameObject,
+    type GameObjectParameter,
+} from "../GameObject.js";
 import type { Player } from "../Player.js";
-import type { GameState, Timestamp } from "../../GameState/GameState.js";
+import { Timestamp, type GameState } from "../../GameState/GameState.js";
 import type { LayerInstance } from "../../Characteristics/Layer/LayerInstance.js";
 import type { MultiSpec } from "../../Reference.js";
 import type { Instruction } from "../../Instruction.js";
 
 /** 継続的効果 */
-export class ContinuousEffect extends GameObject {
-    source: any | undefined;
+export type ContinuousEffect = GameObject & ContinuousEffectProperty;
+// プロパティ
+export type ContinuousEffectProperty = {
+    source: GameObject | undefined | string; // FIXME: 一時的にstringを追加
     timestamp: Timestamp | undefined;
+};
+// 作成時の引数
+export type ContinuousEffectParameter = Partial<ContinuousEffectProperty>;
 
-    constructor(options?: GameObjectOptions & ContinuousEffectOptions) {
-        super(options);
-        this.source = options?.source;
-        this.timestamp = options?.timestamp;
-    }
+// ========================================================================
+/** 値や特性を変更する継続的効果 */
+export type ModifyCharacteristicsEffect = ContinuousEffect &
+    ModifyCharacteristicsEffectProperty;
+// プロパティ
+export type ModifyCharacteristicsEffectProperty = {
+    /** 影響を及ぼすオブジェクト */
+    affectedObjects: MultiSpec<GameObject>;
+    /** 特性変更 */
+    layers: LayerInstance[];
+};
+// 作成時の引数
+export type ModifyCharacteristicsEffectParameter =
+    Partial<ModifyCharacteristicsEffectProperty>;
+
+/** 値や特性を変更する継続的効果を作成する */
+export function createModifyCharacteristics(
+    parameters: GameObjectParameter &
+        ContinuousEffectParameter &
+        ModifyCharacteristicsEffectParameter
+): ModifyCharacteristicsEffect {
+    const obj = createGameObject(parameters);
+    return {
+        ...obj,
+        source: parameters?.source,
+        timestamp: parameters?.timestamp,
+        affectedObjects: parameters?.affectedObjects ?? [],
+        layers: parameters?.layers ?? [],
+    };
 }
-export type ContinuousEffectOptions = {
-    source?: any;
-    timestamp?: Timestamp;
+
+// ========================================================================
+/** 手続きを変更する継続的効果 */
+export type ModifyProcedureEffect = ContinuousEffect &
+    ModifyProcedureEffectParameter;
+export type ModifyProcedureEffectParameter = {
+    /** 変更対象の手続きに該当するかどうかをチェックする関数 */
+    check: InstructionChecker | undefined;
+    /** 変更後の処理 */
+    replace: Instruction | ((...arg: unknown[]) => Instruction) | undefined; // FIXME: 2025-12-14
 };
 
-/** 継続的効果
- * 1. 特性や値を変更する効果
- * 2. 手続きを修整する効果
- * 3. 手続きを禁止する効果
- */
-
-// ↓ 何でもいいのでは...
-
-/** 値や特性を変更する継続的効果 TODO: 2025-12-13 */
-export class ModifyCharacteristics extends ContinuousEffect {
-    /** 影響を及ぼすオブジェクト */
-    affected_objects: MultiSpec<GameObject> = [];
-    /** 特性変更 */
-    layers: LayerInstance[] = [];
+export function createModifyingProcedureEffect(
+    parameters?: GameObjectParameter &
+        ContinuousEffectParameter &
+        ModifyProcedureEffectParameter
+): ModifyProcedureEffect {
+    const obj = createGameObject(parameters);
+    return {
+        ...obj,
+        source: parameters?.source,
+        timestamp: parameters?.timestamp,
+        check: parameters?.check,
+        replace: parameters?.replace,
+    };
 }
 
-/** 手続きを変更する継続的効果 */
-export class ModifyingProcedure extends ContinuousEffect {
-    /** 変更対象の手続きに該当するかどうかをチェックする関数 */
-    check: InstructionChecker;
-    /** 変更後の処理 */
-    replace: InstructionReplacer;
-
-    constructor(
-        /** 変更判定関数 */
-        check: InstructionChecker,
-        /** 変更後の処理 */
-        replace: Instruction | Instruction[] | InstructionReplacer
-    ) {
-        super();
-        this.check = check;
-        if (typeof replace === "function") {
-            this.replace = replace;
-        } else if (Array.isArray(replace)) {
-            this.replace = (instruction) => replace;
-        } else {
-            this.replace = (instruction) => [replace];
-        }
-    }
-}
-
+// ========================================================================
 /** 処理を禁止する継続的効果 */
-export class ForbiddingAction extends ContinuousEffect {
-    /** 禁止対象の手続きに該当するかどうかをチェックする関数 */
-    check: InstructionChecker;
+export type ForbidActionEffect = ContinuousEffect &
+    ForbidActionEffectParameters;
+export type ForbidActionEffectParameters = {
+    check: InstructionChecker | undefined;
+};
 
-    constructor(check: InstructionChecker) {
-        super();
-        this.check = check;
-    }
+export function createForbidActionEffect(
+    parameters?: GameObjectParameter &
+        ContinuousEffectParameter &
+        ForbidActionEffectParameters
+): ForbidActionEffect {
+    const obj = createGameObject(parameters);
+    return {
+        ...obj,
+        source: parameters?.source,
+        timestamp: parameters?.timestamp,
+        check: parameters?.check,
+    };
 }
 
 // =================================================================
-
-/** Instructionの実行が特定の条件を満たすかどうかを判定する関数を表す型 */
+/** Instructionの実行が特定の条件を満たすかどうかを判定する関数を表す型 */ // FIXME: 2025-12-14
 type InstructionChecker = (args: {
     instruction: Instruction;
     state: GameState;

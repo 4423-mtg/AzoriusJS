@@ -1,4 +1,7 @@
-import { ContinuousEffect } from "./types/GameObject/GeneratedEffect/ContinuousEffect.js";
+import {
+    type ContinuousEffect,
+    createModifyCharacteristics,
+} from "./types/GameObject/GeneratedEffect/ContinuousEffect.js";
 
 // 特性を変更する継続的効果の適用順は
 // - オブジェクト単位では決まらず、存在するすべてのオブジェクト（戦場以外も含む）を俯瞰したうえで決まる。
@@ -23,15 +26,15 @@ import { ContinuousEffect } from "./types/GameObject/GeneratedEffect/ContinuousE
 //   - 6種 : 逃亡した多相の戦士（対戦相手のクリーチャーが飛行を持つなら飛行を持つ）
 //   - 7種 : 縫合グール（追放したクリーチャーのP/Tを持つ）
 
-const effects = [
-    new ContinuousEffect({ source: "Urborg, Tomb of Yawgmoth" }),
-    new ContinuousEffect({ source: "Blood Moon" }),
+const effects: ContinuousEffect[] = [
+    createModifyCharacteristics({ source: "Urborg, Tomb of Yawgmoth" }),
+    createModifyCharacteristics({ source: "Blood Moon" }),
 ];
-const effects2 = [
-    new ContinuousEffect({ source: "Rusted Relic" }),
-    new ContinuousEffect({ source: "One with the Stars" }),
+const effects2: ContinuousEffect[] = [
+    createModifyCharacteristics({ source: "Rusted Relic" }),
+    createModifyCharacteristics({ source: "One with the Stars" }),
 ];
-const effects3 = [
-    new ContinuousEffect({ source: "Sutured Ghoul" }),
-    new ContinuousEffect({ source: "Maro" }),
+const effects3: ContinuousEffect[] = [
+    createModifyCharacteristics({ source: "Sutured Ghoul" }),
+    createModifyCharacteristics({ source: "Maro" }),
 ];

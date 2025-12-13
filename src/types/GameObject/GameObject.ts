@@ -1,20 +1,29 @@
 import type { Player } from "./Player.js";
+const { randomUUID } = await import("node:crypto");
 
 /** ゲーム内のオブジェクト。
  * ルール上の「オブジェクト」の他に、継続的効果や遅延誘発型能力など、
  * 「ゲームの状態」に含まれるもの全般。 */
-export abstract class GameObject {
-    objectId: number;
+export type GameObject = {
+    objectId: GameObjectId;
+} & GameObjectProperty;
+
+export type GameObjectProperty = {
     owner: Player | undefined;
     controller: Player | undefined;
+};
+export type GameObjectParameter = Partial<GameObjectProperty>;
 
-    private static id_latest = -1;
+export type GameObjectId = ReturnType<typeof randomUUID>;
 
-    constructor(option?: GameObjectOptions) {
-        this.objectId = ++GameObject.id_latest;
-        this.owner = option?.owner;
-        this.controller = option?.controller;
-    }
+export function createGameObject(parameters?: GameObjectParameter): GameObject {
+    return {
+        objectId: createGameObjectId(),
+        owner: parameters?.owner,
+        controller: parameters?.owner,
+    };
 }
 
-export type GameObjectOptions = { owner?: Player; controller?: Player };
+function createGameObjectId() {
+    return randomUUID();
+}
