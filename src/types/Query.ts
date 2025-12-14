@@ -2,10 +2,6 @@ import { Game } from "./GameState/Game.js";
 import { Zone } from "./GameState/Zone.js";
 import { type GameObject } from "./GameObject/GameObject.js";
 import { Player } from "./GameObject/Player.js";
-import type { Power } from "./Characteristics/Characteristic.js";
-import { Card } from "./GameObject/Card/Card.js";
-import { unescape } from "node:querystring";
-import type { Timestamp } from "./GameState/GameState.js";
 
 // export type QueryParams = {
 //     state: GameState;
@@ -59,24 +55,6 @@ export class SingleQuery<T> {
         };
         return new SingleQuery(newQuery);
     }
-
-    /** オーナー (GameObjectのみ)*/
-    owner(): SingleQuery<
-        T extends GameObject ? GameObject["owner"] : undefined
-    > {
-        const newQuery = (args: QueryArgument) => {
-            const temp: T = this.query(args);
-            return (
-                isGameObject(temp) ? temp["owner"] : undefined
-            ) as T extends GameObject ? GameObject["owner"] : undefined;
-        };
-        return new SingleQuery(newQuery);
-    }
-    /** コントローラー (GameObjectのみ)*/
-    controller = new SingleQuery((args: QueryArgument) => {
-        const ret = this.query(args);
-        return isGameObject(ret) ? ret.controller : undefined;
-    });
 }
 
 type FunctionPropertyType<T, K extends keyof T> = T[K] extends (
@@ -92,13 +70,7 @@ type _a<T, K extends keyof T> = K extends unknown
         : never
     : never;
 
-export function RunSingleQuery<T>(
-    query: SingleQuery<T>,
-    args: QueryArgument
-): T {
-    return query.query(args);
-}
-
+// MultiQuery ===============================================================
 export class MultiQuery<T> {
     #query: (param: QueryArgument) => T[];
 
@@ -119,19 +91,6 @@ function isSingleSpec<T>(spec: Spec<T>): spec is T | SingleQuery<T> {
 
 function isMultiSpec<T>(spec: Spec<T>): spec is MultiSpec<T> {
     return spec instanceof MultiQuery || Array.isArray(spec);
-}
-
-// タイプガード ===============================================================
-function isGameObject(arg: any): arg is GameObject {
-    return arg instanceof GameObject;
-}
-
-function isPlayer(arg: any): arg is Player {
-    return arg instanceof Player;
-}
-
-function isZone(arg: any): arg is Zone {
-    return arg instanceof Zone;
 }
 
 // Specの解決 ===============================================================
