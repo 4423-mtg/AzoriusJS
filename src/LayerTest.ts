@@ -2,6 +2,7 @@ import {
     type ContinuousEffect,
     createModifyCharacteristics,
 } from "./types/GameObject/GeneratedEffect/ContinuousEffect.js";
+import { Timestamp } from "./types/GameState/GameState.js";
 
 // 特性を変更する継続的効果の適用順は
 // - オブジェクト単位では決まらず、存在するすべてのオブジェクト（戦場以外も含む）を俯瞰したうえで決まる。
@@ -27,8 +28,18 @@ import {
 //   - 7種 : 縫合グール（追放したクリーチャーのP/Tを持つ）
 
 const effects: ContinuousEffect[] = [
-    createModifyCharacteristics({ source: "Urborg, Tomb of Yawgmoth" }),
-    createModifyCharacteristics({ source: "Blood Moon" }),
+    createModifyCharacteristics({
+        source: "Urborg, Tomb of Yawgmoth",
+        timestamp: new Timestamp(),
+        affectedObjects: [],
+        layers: [],
+    }),
+    createModifyCharacteristics({
+        source: "Blood Moon",
+        timestamp: new Timestamp(),
+        affectedObjects: [],
+        layers: [],
+    }),
 ];
 const effects2: ContinuousEffect[] = [
     createModifyCharacteristics({ source: "Rusted Relic" }),
