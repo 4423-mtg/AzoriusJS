@@ -1,3 +1,8 @@
+import type { CardType } from "./types/Characteristics/CardType.js";
+import type { Subtype } from "./types/Characteristics/Subtype.js";
+import type { Supertype } from "./types/Characteristics/Supertype.js";
+import type { Card } from "./types/GameObject/Card/Card.js";
+import type { GameObject } from "./types/GameObject/GameObject.js";
 import {
     type ContinuousEffect,
     createCharacteristicsAltering,
@@ -34,11 +39,15 @@ const effects: ContinuousEffect[] = [
         timestamp: new Timestamp(),
         layers: {
             "4": {
-                layerOrder: "4",
-                affected: new MultiQuery((args) => {
-                    return 0;
-                }),
-                typeAltering: new MultiQuery(),
+                affected: new MultiQuery((args) =>
+                    (args.game.current.permanent as Card[]).filter((card) =>
+                        card.getCharacteristics().card_types?.includes("land")
+                    )
+                ), // FIXME: メソッドチェーンにする
+                typeAltering: (affected) =>
+                    affected
+                        .getCharacteristics()
+                        .card_types?.concat(["land"]) ?? ["land"],
             },
         },
     }),

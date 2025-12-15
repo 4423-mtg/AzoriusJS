@@ -78,13 +78,14 @@ type _a<T, K extends keyof T> = K extends unknown
 
 // MultiQuery ===============================================================
 export class MultiQuery<T> {
-    #query: (param: QueryArgument) => T[];
+    query: (args: QueryArgument) => T[];
 
-    constructor(query: (param: QueryArgument) => T[]) {
-        this.#query = query;
+    constructor(query: (args: QueryArgument) => T[]) {
+        this.query = query;
     }
+    // TODO: field, method, apply
 
-    resolve: (params: QueryArgument) => T[] = (params) => this.#query(params);
+    resolve: (args: QueryArgument) => T[] = (args) => this.query(args);
 }
 
 export type SingleSpec<T> = T | SingleQuery<T>;

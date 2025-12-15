@@ -5,7 +5,7 @@ import {
 } from "../GameObject.js";
 import type { Player } from "../Player.js";
 import { Timestamp, type GameState } from "../../GameState/GameState.js";
-import type { LayerInstance, LayerOrder } from "../../Characteristics/Layer.js";
+import type { Layer, LayerOrder } from "../../Characteristics/Layer.js";
 import type { Instruction } from "../../Instruction.js";
 
 /** 継続的効果。単一の常在型能力からの継続的効果か、または、単一の呪文や能力の解決によって生成された継続的効果 */
@@ -26,7 +26,7 @@ export type CharacteristicsAlteringEffect = ContinuousEffect &
 export type CharacteristicsAlteringEffectProperty = {
     /** 特性変更 */
     // layers: Partial<Record<LayerOrder, LayerInstance>>;
-    layers: Partial<{ [K in LayerOrder]: LayerInstance<K> }>;
+    layers: Partial<{ [K in LayerOrder]: Layer<K> }>;
 };
 
 // 作成時の引数
