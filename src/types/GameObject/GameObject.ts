@@ -6,13 +6,14 @@ const { randomUUID } = await import("node:crypto");
  * 「ゲームの状態」に含まれるもの全般。 */
 export type GameObject = {
     objectId: GameObjectId;
-} & GameObjectProperty;
-
-export type GameObjectProperty = {
     owner: Player | undefined;
     controller: Player | undefined;
 };
-export type GameObjectParameter = Partial<GameObjectProperty>;
+
+export type GameObjectParameter = Partial<{
+    owner: Player | undefined;
+    controller: Player | undefined;
+}>;
 
 export type GameObjectId = ReturnType<typeof randomUUID>;
 

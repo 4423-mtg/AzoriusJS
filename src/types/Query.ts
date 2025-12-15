@@ -1,7 +1,5 @@
 import { Game } from "./GameState/Game.js";
-import { Zone } from "./GameState/Zone.js";
 import { type GameObject } from "./GameObject/GameObject.js";
-import { Player } from "./GameObject/Player.js";
 
 // export type QueryParams = {
 //     state: GameState;
@@ -55,6 +53,14 @@ export class SingleQuery<T> {
         };
         return new SingleQuery(newQuery);
     }
+    apply<U extends any[], V>(
+        func: (ret: T, ...args: U) => V,
+        ...args: U
+    ): SingleQuery<V> {
+        const newQuery = (_args: QueryArgument) =>
+            func(this.query(_args), ...args);
+        return new SingleQuery(newQuery);
+    }
 }
 
 type FunctionPropertyType<T, K extends keyof T> = T[K] extends (
@@ -95,15 +101,12 @@ function isMultiSpec<T>(spec: Spec<T>): spec is MultiSpec<T> {
 
 // Specの解決 ===============================================================
 export function resolveSpec<T>(spec: Spec<T>, args: QueryArgument): T | T[] {
-    if (isSingleSpec<T>(spec)) {
-        return resolveSingleSpec(spec, args);
-    } else if (isMultiSpec(spec)) {
-        return resolveMultiSpec(spec, args);
-    } else {
-        return spec;
-    }
+    return isSingleSpec<T>(spec)
+        ? resolveSingleSpec(spec, args)
+        : isMultiSpec(spec)
+        ? resolveMultiSpec(spec, args)
+        : spec;
 }
-
 export function resolveSingleSpec<T>(
     spec: SingleSpec<T>,
     args: QueryArgument
@@ -114,23 +117,9 @@ export function resolveMultiSpec<T>(
     spec: MultiSpec<T>,
     args: QueryArgument
 ): T[] {
-    if (Array.isArray(spec)) {
-        return spec.map((s) => resolveSingleSpec(s, args));
-    } else {
-        return spec.resolve(args);
-    }
-}
-
-/** `spec`を`params`で解決し、得られたオブジェクトを`func`に引数として渡す。 */
-export function resolve_spec_apply<T, U>(
-    spec: Spec<T>,
-    args: QueryArgument,
-    func: (resolved: T) => U
-): U | U[] {
-    const temp = resolveSpec(spec, args);
-    return Array.isArray(temp)
-        ? temp.map((eachtemp) => func(eachtemp))
-        : func(temp);
+    return Array.isArray(spec)
+        ? spec.map((s) => resolveSingleSpec(s, args))
+        : spec.resolve(args);
 }
 
 // ==============================================================================

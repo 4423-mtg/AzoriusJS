@@ -5,8 +5,11 @@ import {
 } from "../GameObject.js";
 import type { Player } from "../Player.js";
 import { Timestamp, type GameState } from "../../GameState/GameState.js";
-import type { LayerInstance } from "../../Characteristics/Layer/LayerInstance.js";
-import type { MultiSpec } from "../../Reference.js";
+import type {
+    LayerInstance,
+    LayerOrder,
+} from "../../Characteristics/Layer/LayerInstance.js";
+import type { MultiSpec } from "../../Query.js";
 import type { Instruction } from "../../Instruction.js";
 
 /** 継続的効果 */
@@ -21,32 +24,30 @@ export type ContinuousEffectParameter = Partial<ContinuousEffectProperty>;
 
 // ========================================================================
 /** 値や特性を変更する継続的効果 */
-export type ModifyCharacteristicsEffect = ContinuousEffect &
-    ModifyCharacteristicsEffectProperty;
+export type CharacteristicsAlteringEffect = ContinuousEffect &
+    CharacteristicsAlteringEffectProperty;
 // プロパティ
-export type ModifyCharacteristicsEffectProperty = {
-    /** 影響を及ぼすオブジェクト */
-    affectedObjects: MultiSpec<GameObject>;
+export type CharacteristicsAlteringEffectProperty = {
     /** 特性変更 */
-    layers: LayerInstance[];
+    layers: Partial<Record<LayerOrder, LayerInstance>>;
 };
+
 // 作成時の引数
-export type ModifyCharacteristicsEffectParameter =
-    Partial<ModifyCharacteristicsEffectProperty>;
+export type CharacteristicsAlteringEffectParameter =
+    Partial<CharacteristicsAlteringEffectProperty>;
 
 /** 値や特性を変更する継続的効果を作成する */
-export function createModifyCharacteristics(
+export function createCharacteristicsAltering(
     parameters: GameObjectParameter &
         ContinuousEffectParameter &
-        ModifyCharacteristicsEffectParameter
-): ModifyCharacteristicsEffect {
+        CharacteristicsAlteringEffectParameter
+): CharacteristicsAlteringEffect {
     const obj = createGameObject(parameters);
     return {
         ...obj,
         source: parameters?.source,
         timestamp: parameters?.timestamp,
-        affectedObjects: parameters?.affectedObjects ?? [],
-        layers: parameters?.layers ?? [],
+        layers: parameters?.layers ?? {},
     };
 }
 
