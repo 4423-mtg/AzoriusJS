@@ -10,26 +10,26 @@ import type { Ability } from "../GameObject/Ability.js";
 // カード・タイプ、特殊タイプ、サブタイプ、ルール・テキスト、能力、
 // パワー、タフネス、忠誠度、守備値、手札補正子、ライフ補正子のことである。
 
-type Value = number | string | undefined;
+type NumericalValue = number | "*";
 
 /** 名前 */
-export type ObjectName = string | undefined;
+export type ObjectName = string;
 /** マナ・コスト */
 export type ManaCost = ManaSymbol[];
 /** ルール・テキスト */
-export type RuleText = string | undefined;
+export type RuleText = string;
 /** パワー */
-export type Power = Value;
+export type Power = NumericalValue;
 /** タフネス */
-export type Toughness = Value;
+export type Toughness = NumericalValue;
 /** 忠誠度 */
-export type Loyalty = Value;
+export type Loyalty = NumericalValue;
 /** 守備値 */
-export type Defense = Value;
+export type Defense = NumericalValue;
 /** 手札補正子 */
-export type HandModifier = Value;
+export type HandModifier = NumericalValue;
 /** ライフ補正子 */
-export type LifeModifier = Value;
+export type LifeModifier = NumericalValue;
 
 export type Printed = {
     name?: ObjectName;
@@ -73,14 +73,14 @@ export type Characteristics = {
  * そのオブジェクトを裏向きにする能力による影響を加味したものである。
  */
 export type CopiableValue = {
-    name: ObjectName | ObjectName[] | undefined;
-    mana_cost: ManaSymbol[];
-    color_identity: Color[];
-    card_types: CardType[];
-    subtypes: Subtype[];
-    supertypes: Supertype[];
-    text: RuleText;
-    power: Power;
-    toughness: Toughness;
-    loyalty: Loyalty;
+    name?: ObjectName | ObjectName[];
+    mana_cost?: ManaSymbol[];
+    color_identity?: Color[];
+    card_types?: CardType[];
+    subtypes?: Subtype[];
+    supertypes?: Supertype[];
+    text?: RuleText;
+    power?: Power;
+    toughness?: Toughness;
+    loyalty?: Loyalty;
 };

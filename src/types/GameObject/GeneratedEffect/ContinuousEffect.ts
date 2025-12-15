@@ -5,10 +5,7 @@ import {
 } from "../GameObject.js";
 import type { Player } from "../Player.js";
 import { Timestamp, type GameState } from "../../GameState/GameState.js";
-import type {
-    LayerInstance,
-    LayerOrder,
-} from "../../Characteristics/Layer/LayerInstance.js";
+import type { LayerInstance, LayerOrder } from "../../Characteristics/Layer.js";
 import type { MultiSpec } from "../../Query.js";
 import type { Instruction } from "../../Instruction.js";
 
