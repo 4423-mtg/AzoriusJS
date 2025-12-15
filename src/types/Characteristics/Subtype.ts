@@ -564,7 +564,7 @@ const planar_types = [
 
 /** ダンジョン・タイプ */
 export type DungeonType = (typeof dungeon_types)[number];
-const dungeon_types = ["Undercity"];
+const dungeon_types = ["Undercity"] as const;
 
 /** バトル・タイプ */
 export type BattleType = (typeof battle_types)[number];

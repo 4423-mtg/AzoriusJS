@@ -1,8 +1,9 @@
 import {
     type ContinuousEffect,
-    createModifyCharacteristics,
+    createCharacteristicsAltering,
 } from "./types/GameObject/GeneratedEffect/ContinuousEffect.js";
 import { Timestamp } from "./types/GameState/GameState.js";
+import { MultiQuery } from "./types/Query.js";
 
 // 特性を変更する継続的効果の適用順は
 // - オブジェクト単位では決まらず、存在するすべてのオブジェクト（戦場以外も含む）を俯瞰したうえで決まる。
@@ -28,24 +29,30 @@ import { Timestamp } from "./types/GameState/GameState.js";
 //   - 7種 : 縫合グール（追放したクリーチャーのP/Tを持つ）
 
 const effects: ContinuousEffect[] = [
-    createModifyCharacteristics({
+    createCharacteristicsAltering({
         source: "Urborg, Tomb of Yawgmoth",
         timestamp: new Timestamp(),
-        affectedObjects: [],
-        layers: [],
+        layers: {
+            "4": {
+                layerOrder: "4",
+                affected: new MultiQuery((args) => {
+                    return 0;
+                }),
+                typeAltering: new MultiQuery(),
+            },
+        },
     }),
-    createModifyCharacteristics({
+    createCharacteristicsAltering({
         source: "Blood Moon",
         timestamp: new Timestamp(),
-        affectedObjects: [],
-        layers: [],
+        layers: {},
     }),
 ];
 const effects2: ContinuousEffect[] = [
-    createModifyCharacteristics({ source: "Rusted Relic" }),
-    createModifyCharacteristics({ source: "One with the Stars" }),
+    createCharacteristicsAltering({ source: "Rusted Relic" }),
+    createCharacteristicsAltering({ source: "One with the Stars" }),
 ];
 const effects3: ContinuousEffect[] = [
-    createModifyCharacteristics({ source: "Sutured Ghoul" }),
-    createModifyCharacteristics({ source: "Maro" }),
+    createCharacteristicsAltering({ source: "Sutured Ghoul" }),
+    createCharacteristicsAltering({ source: "Maro" }),
 ];
