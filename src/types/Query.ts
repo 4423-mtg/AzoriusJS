@@ -1,5 +1,10 @@
 import { Game } from "./GameState/Game.js";
 import { type GameObject } from "./GameObject/GameObject.js";
+import {
+    getObjectByCharacteristics,
+    type GameState,
+} from "./GameState/GameState.js";
+import type { Characteristics } from "./Characteristics/Characteristic.js";
 
 // export type QueryParams = {
 //     state: GameState;
@@ -128,7 +133,6 @@ export type Spec<T> = SingleSpec<T> | MultiSpec<T>;
 function isSingleSpec<T>(spec: Spec<T>): spec is T | SingleQuery<T> {
     return !isMultiSpec(spec);
 }
-
 function isMultiSpec<T>(spec: Spec<T>): spec is MultiSpec<T> {
     return spec instanceof MultiQuery || Array.isArray(spec);
 }
@@ -157,6 +161,18 @@ export function resolveMultiSpec<T>(
 }
 
 // ==============================================================================
+/** 指定の特性を満たすパーマネント */
+export function permanentQuery(
+    query?: (characteristics: Characteristics) => boolean
+): MultiQuery<GameObject> {
+    const _q = ({ game, self }: QueryArgument) =>
+        getObjectByCharacteristics(game.current, query).map(
+            ({ object, characteristics }) => object
+        );
+
+    return new MultiQuery(_q);
+}
+
 // TODO
 
 // プレイヤーの領域

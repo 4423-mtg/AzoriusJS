@@ -1,14 +1,9 @@
-import type { CardType } from "./types/Characteristics/CardType.js";
-import type { Subtype } from "./types/Characteristics/Subtype.js";
-import type { Supertype } from "./types/Characteristics/Supertype.js";
-import type { Card } from "./types/GameObject/Card/Card.js";
-import type { GameObject } from "./types/GameObject/GameObject.js";
 import {
     type ContinuousEffect,
     createCharacteristicsAltering,
 } from "./types/GameObject/GeneratedEffect/ContinuousEffect.js";
-import { createTimestamp, Timestamp } from "./types/GameState/GameState.js";
-import { MultiQuery } from "./types/Query.js";
+import { createTimestamp } from "./types/GameState/GameState.js";
+import { permanentQuery } from "./types/Query.js";
 
 // 特性を変更する継続的効果の適用順は
 // - オブジェクト単位では決まらず、存在するすべてのオブジェクト（戦場以外も含む）を俯瞰したうえで決まる。
@@ -39,13 +34,9 @@ const effects: ContinuousEffect[] = [
         timestamp: createTimestamp(),
         layers: {
             "4": {
-                affected: new MultiQuery((args) =>
-                    (args.game.current.permanent as Card[]).filter((card) =>
-                        card.getCharacteristics().card_types?.includes("land")
-                    )
-                ), // FIXME: メソッドチェーンにする
-                // - MultiQueryのチェーンを書く
-                // - GameStateをtypeにする☑️
+                affected: permanentQuery(
+                    (chara) => chara.card_types?.includes("land") ?? false
+                ),
                 typeAltering: (affected) =>
                     affected
                         .getCharacteristics()

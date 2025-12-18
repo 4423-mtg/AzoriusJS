@@ -13,7 +13,6 @@ import type { GameObject } from "../GameObject/GameObject.js";
 import { Player } from "../GameObject/Player.js";
 import type { Phase, Step, Turn } from "../Turn/Turn.js";
 import type { Characteristics } from "../Characteristics/Characteristic.js";
-import { stat } from "node:fs";
 
 export type GameState = {
     timestamp: Timestamp;
@@ -40,7 +39,7 @@ export type GameState = {
 export function deepCopyGamestate(state: GameState): GameState {
     return { ...state }; // FIXME: shallow copy
 }
-export function getAllObjectsWithCharacteristics(): {
+export function getAllObjectsWithCharacteristics(state: GameState): {
     object: GameObject;
     characteristics: Characteristics;
 }[] {
@@ -66,6 +65,18 @@ export function getAllObjectsWithCharacteristics(): {
     // 2. LayerInstanceの参照をすべて解決してすべての順序で適用してみて、依存をチェック
     // 3. 依存があってループしているならタイムスタンプ順で適用、ループしていないなら依存順で適用、依存がないならタイムスタンプ順で適用
     // - 適用順は１つ適用する事に再計算する
+}
+export function getObjectByCharacteristics(
+    state: GameState,
+    query?: (characteristics: Characteristics) => boolean
+): {
+    object: GameObject;
+    characteristics: Characteristics;
+}[] {
+    return getAllObjectsWithCharacteristics(state).filter(
+        ({ object, characteristics }) =>
+            query === undefined ? true : query(characteristics)
+    );
 }
 export function getActivePlayer(state: GameState): Player | undefined {
     if (state.currentActivePlayerIndex === undefined) {
