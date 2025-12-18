@@ -38,10 +38,14 @@ export class SingleQuery<T> {
         };
         return new SingleQuery(newQuery);
     }
+    // FIXME: 例外が返るのはおかしい。undefinedが返るべき。
+    // T[typeof name]が関数であることは確定してはいるが、型情報になっていない。
+    // 大人しく全部並べるべきか
     method(
-        name: FunctionPropertyKeys<T>,
-        ...args: Parameters<FunctionPropertyType<T, typeof name>>
-    ): SingleQuery<ReturnType<FunctionPropertyType<T, typeof name>>> {
+        name: FunctionPropertiesKey<T>,
+        hoge: T[typeof name],
+        ...args: Parameters<FunctionProperty<T, typeof name>>
+    ): SingleQuery<ReturnType<FunctionProperty<T, typeof name>>> {
         const newQuery = (_args: QueryArgument) => {
             const temp = this.query(_args);
             const property = temp[name];
@@ -63,13 +67,15 @@ export class SingleQuery<T> {
     }
 }
 
-type FunctionPropertyType<T, K extends keyof T> = T[K] extends (
+/** `T[K]` が関数であるなら `T[K]`。そうでないなら、 `never`。 */
+type FunctionProperty<T, K extends keyof T> = T[K] extends (
     ...args: any[]
 ) => any
     ? T[K]
     : never;
 
-type FunctionPropertyKeys<T> = _a<T, keyof T>;
+/** T のプロパティのうち関数であるものの名前(key)。 */
+type FunctionPropertiesKey<T> = _a<T, keyof T>;
 type _a<T, K extends keyof T> = K extends unknown
     ? T[K] extends (...args: any[]) => any
         ? K
@@ -83,9 +89,36 @@ export class MultiQuery<T> {
     constructor(query: (args: QueryArgument) => T[]) {
         this.query = query;
     }
-    // TODO: field, method, apply
 
     resolve: (args: QueryArgument) => T[] = (args) => this.query(args);
+
+    field(name: keyof T): MultiQuery<T[typeof name]> {
+        const newQuery = (args: QueryArgument) => {
+            const temp = this.query(args);
+            return temp.map((e) => e[name]);
+        };
+        return new MultiQuery(newQuery);
+    }
+
+    method(
+        name: FunctionPropertiesKey<T>,
+        ...args: Parameters<FunctionProperty<T, typeof name>>
+    ): MultiQuery<ReturnType<FunctionProperty<T, typeof name>>> {
+        const newQuery = (_args: QueryArgument) => {
+            const temp = this.query(_args);
+            return temp.map((e) => {
+                if (typeof e[name] === "function") {
+                    return e[name](...args);
+                } else {
+                    throw new Error();
+                }
+            });
+        };
+        return new MultiQuery(newQuery);
+    }
+
+    // TODO:
+    apply() {}
 }
 
 export type SingleSpec<T> = T | SingleQuery<T>;

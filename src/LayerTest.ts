@@ -7,7 +7,7 @@ import {
     type ContinuousEffect,
     createCharacteristicsAltering,
 } from "./types/GameObject/GeneratedEffect/ContinuousEffect.js";
-import { Timestamp } from "./types/GameState/GameState.js";
+import { createTimestamp, Timestamp } from "./types/GameState/GameState.js";
 import { MultiQuery } from "./types/Query.js";
 
 // 特性を変更する継続的効果の適用順は
@@ -36,7 +36,7 @@ import { MultiQuery } from "./types/Query.js";
 const effects: ContinuousEffect[] = [
     createCharacteristicsAltering({
         source: "Urborg, Tomb of Yawgmoth",
-        timestamp: new Timestamp(),
+        timestamp: createTimestamp(),
         layers: {
             "4": {
                 affected: new MultiQuery((args) =>
@@ -44,6 +44,8 @@ const effects: ContinuousEffect[] = [
                         card.getCharacteristics().card_types?.includes("land")
                     )
                 ), // FIXME: メソッドチェーンにする
+                // - MultiQueryのチェーンを書く
+                // - GameStateをtypeにする☑️
                 typeAltering: (affected) =>
                     affected
                         .getCharacteristics()
@@ -53,7 +55,7 @@ const effects: ContinuousEffect[] = [
     }),
     createCharacteristicsAltering({
         source: "Blood Moon",
-        timestamp: new Timestamp(),
+        timestamp: createTimestamp(),
         layers: {},
     }),
 ];

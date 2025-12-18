@@ -16,7 +16,7 @@ import {
     AdditionalStepEffect,
     AdditionalTurnEffect,
 } from "../GameObject/GeneratedEffect/AdditionalTurnEffect.js";
-import { type ReferenceParam, resolve_single_spec } from "../Reference.js";
+import { type QueryArgument, resolveSingleSpec } from "../Query.js";
 import {
     BeginNewPhaseAndStep,
     BeginNewStep,
@@ -104,11 +104,11 @@ export class Game {
         for (const effect of toReversed(
             this.current.getGameObjects({ type: AdditionalStepEffect })
         )) {
-            const params: ReferenceParam = {
+            const params: QueryArgument = {
                 game: this,
                 self: effect,
             };
-            if (resolve_single_spec(effect.condition, params)) {
+            if (resolveSingleSpec(effect.condition, params)) {
                 this.begin_new_step(effect.generate_step(params));
                 return;
             }
@@ -131,11 +131,11 @@ export class Game {
         for (const effect of toReversed(
             this.current.getGameObjects({ type: AdditionalPhaseEffect })
         )) {
-            const params: ReferenceParam = {
+            const params: QueryArgument = {
                 game: this,
                 self: effect,
             };
-            if (resolve_single_spec(effect.condition, params)) {
+            if (resolveSingleSpec(effect.condition, params)) {
                 const new_phase = effect.generate_phase(params);
                 const new_step_kind = first_step_of_phase(new_phase.kind);
                 this.begin_new_phase_and_step(
@@ -161,11 +161,11 @@ export class Game {
         for (const effect of toReversed(
             this.current.getGameObjects({ type: AdditionalTurnEffect })
         )) {
-            const params: ReferenceParam = {
+            const params: QueryArgument = {
                 game: this,
                 self: effect,
             };
-            if (resolve_single_spec(effect.condition, params)) {
+            if (resolveSingleSpec(effect.condition, params)) {
                 this.begin_new_turn(effect.generate_turn(params));
                 return;
             }
