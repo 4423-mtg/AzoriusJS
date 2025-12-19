@@ -1,9 +1,10 @@
+import { isNonbasicLand } from "./types/Characteristics/Characteristic.js";
 import {
     type ContinuousEffect,
     createCharacteristicsAltering,
 } from "./types/GameObject/GeneratedEffect/ContinuousEffect.js";
 import { createTimestamp } from "./types/GameState/GameState.js";
-import { addCardType, permanentQuery } from "./types/Query.js";
+import { addCardType, overwriteType, permanentQuery } from "./types/Query.js";
 
 // 特性を変更する継続的効果の適用順は
 // - オブジェクト単位では決まらず、存在するすべてのオブジェクト（戦場以外も含む）を俯瞰したうえで決まる。
@@ -44,7 +45,12 @@ const effects: ContinuousEffect[] = [
     createCharacteristicsAltering({
         source: "Blood Moon",
         timestamp: createTimestamp(),
-        layers: {},
+        layers: {
+            "4": {
+                affected: permanentQuery(isNonbasicLand),
+                typeAltering: overwriteType({ subtype: ["Mountain"] }),
+            },
+        },
     }),
 ];
 const effects2: ContinuousEffect[] = [

@@ -49,20 +49,20 @@ export type Printed = {
 
 /** 特性 */
 export type Characteristics = {
-    name?: ObjectName | ObjectName[];
-    mana_cost?: ManaSymbol[];
-    colors?: Color[];
-    card_types?: CardType[];
-    subtypes?: Subtype[];
-    supertypes?: Supertype[];
-    text?: string;
-    abilities?: Ability[];
-    power?: Power;
-    toughness?: Toughness;
-    loyalty?: Loyalty;
-    defense?: Defense;
-    hand_modifier?: HandModifier;
-    life_modifier?: LifeModifier;
+    name: ObjectName | ObjectName[] | undefined;
+    mana_cost: ManaSymbol[] | undefined;
+    colors: Color[] | undefined;
+    card_types: CardType[] | undefined;
+    subtypes: Subtype[] | undefined;
+    supertypes: Supertype[] | undefined;
+    text: string | undefined;
+    abilities: Ability[] | undefined;
+    power: Power | undefined;
+    toughness: Toughness | undefined;
+    loyalty: Loyalty | undefined;
+    defense: Defense | undefined;
+    hand_modifier: HandModifier | undefined;
+    life_modifier: LifeModifier | undefined;
 };
 
 /** コピー可能な値。
@@ -84,3 +84,17 @@ export type CopiableValue = {
     toughness?: Toughness;
     loyalty?: Loyalty;
 };
+
+export function isBasicLand(chara: Characteristics): boolean {
+    return (
+        (chara.card_types?.includes("land") ?? false) &&
+        (chara.supertypes?.includes("basic") ?? false)
+    );
+}
+
+export function isNonbasicLand(chara: Characteristics): boolean {
+    return (
+        (chara.card_types?.includes("land") ?? false) &&
+        !chara.supertypes?.includes("basic")
+    );
+}

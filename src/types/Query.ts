@@ -49,6 +49,10 @@ export class SingleQuery<T> {
     // FIXME: 例外が返るのはおかしい。undefinedが返るべき。
     // T[typeof name]が関数であることは確定してはいるが、型情報になっていない。
     // 大人しく全部並べるべきか
+    // 1. Tの関数プロパティだけを抽出する FunctionProperties<T>
+    // 2. name: keyof FunctionProperties<T>
+    // 3. ...args: Parameters<typeof FunctionProperties<T>[typeof name]>
+    // 4. => ReturnType<typeof FunctionProperties<T>[typeof name]>
     method(
         name: FunctionPropertiesKey<T>,
         hoge: T[typeof name],
@@ -177,6 +181,7 @@ export function permanentQuery(
     return new MultiQuery(_q);
 }
 
+// FIXME: サブタイプはカードタイプ別にする必要があるかも
 export function addCardType(added: {
     cardType?: MultiSpec<CardType>;
     subtype?: MultiSpec<Subtype>;
@@ -211,8 +216,20 @@ export function addCardType(added: {
     });
 }
 
-// TODO
+export function overwriteType(types: {
+    cardType?: MultiSpec<CardType>;
+    subtype?: MultiSpec<Subtype>;
+    supertype?: MultiSpec<Supertype>;
+}): (affected: Characteristics) => {
+    cardType: MultiSpec<CardType>;
+    subtype: MultiSpec<Subtype>;
+    supertype: MultiSpec<Supertype>;
+} {
+    // TODO
+    // クリーチャーと部族のサブタイプは共有なのだろうか？
+}
 
+// TODO
 // プレイヤーの領域
 // SingleSpec<Player>.zone: (zonetype) => SingleSpec<Zone>
 // プレイヤーのパーマネント

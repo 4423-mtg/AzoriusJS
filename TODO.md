@@ -1,6 +1,5 @@
 - Queryのメソッドチェーンを廃止
 - GameObjectとZoneの関係
-- type マナコスト
 - type Game
 - typeAltering overwriteType
 

@@ -68,14 +68,14 @@ export function getAllObjectsWithCharacteristics(state: GameState): {
 }
 export function getObjectByCharacteristics(
     state: GameState,
-    query?: (characteristics: Characteristics) => boolean
+    predicate?: (characteristics: Characteristics) => boolean
 ): {
     object: GameObject;
     characteristics: Characteristics;
 }[] {
     return getAllObjectsWithCharacteristics(state).filter(
         ({ object, characteristics }) =>
-            query === undefined ? true : query(characteristics)
+            predicate === undefined ? true : predicate(characteristics)
     );
 }
 export function getActivePlayer(state: GameState): Player | undefined {
