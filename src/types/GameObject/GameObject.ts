@@ -8,6 +8,11 @@ export type GameObject = {
     objectId: GameObjectId;
     owner: Player | undefined;
     controller: Player | undefined;
+    // TODO: 以下のものはGameObjectで扱う
+    // - 領域
+    // - カウンター
+    // - マーカー(怪物的・クラスレベル等)
+    // - ステッカーは
 };
 
 export type GameObjectParameter = Partial<{

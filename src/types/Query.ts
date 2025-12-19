@@ -5,6 +5,9 @@ import {
     type GameState,
 } from "./GameState/GameState.js";
 import type { Characteristics } from "./Characteristics/Characteristic.js";
+import type { CardType } from "./Characteristics/CardType.js";
+import type { Subtype } from "./Characteristics/Subtype.js";
+import type { Supertype } from "./Characteristics/Supertype.js";
 
 // export type QueryParams = {
 //     state: GameState;
@@ -165,12 +168,47 @@ export function resolveMultiSpec<T>(
 export function permanentQuery(
     query?: (characteristics: Characteristics) => boolean
 ): MultiQuery<GameObject> {
+    // FIXME: 戻り値は MultiQuery<Card>
     const _q = ({ game, self }: QueryArgument) =>
         getObjectByCharacteristics(game.current, query).map(
             ({ object, characteristics }) => object
         );
 
     return new MultiQuery(_q);
+}
+
+export function addCardType(added: {
+    cardType?: MultiSpec<CardType>;
+    subtype?: MultiSpec<Subtype>;
+    supertype?: MultiSpec<Supertype>;
+}): (affected: Characteristics) => {
+    cardType: MultiSpec<CardType>;
+    subtype: MultiSpec<Subtype>;
+    supertype: MultiSpec<Supertype>;
+} {
+    return (affected) => ({
+        cardType: new MultiQuery((_args) => {
+            const _t =
+                added.cardType !== undefined
+                    ? resolveMultiSpec(added.cardType, _args)
+                    : [];
+            return affected.card_types?.concat(_t) ?? _t;
+        }),
+        subtype: new MultiQuery((_args) => {
+            const _t =
+                added.subtype !== undefined
+                    ? resolveMultiSpec(added.subtype, _args)
+                    : [];
+            return affected.subtypes?.concat(_t) ?? _t;
+        }),
+        supertype: new MultiQuery((_args) => {
+            const _t =
+                added.supertype !== undefined
+                    ? resolveMultiSpec(added.supertype, _args)
+                    : [];
+            return affected.supertypes?.concat(_t) ?? _t;
+        }),
+    });
 }
 
 // TODO

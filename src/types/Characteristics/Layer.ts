@@ -6,8 +6,7 @@ import type { Subtype } from "./Subtype.js";
 import type { Supertype } from "./Supertype.js";
 import type { SingleSpec, MultiSpec } from "../Query.js";
 import type { GameObject } from "../GameObject/GameObject.js";
-import type { CopiableValue } from "./Characteristic.js";
-import type { Card } from "../GameObject/Card/Card.js";
+import type { Characteristics, CopiableValue } from "./Characteristic.js";
 
 /** 単一の常在型能力からの継続的効果または呪文や能力の解決によって生成された単一の継続的効果
  * の中に含まれる、各種類別の効果 */
@@ -63,14 +62,18 @@ type Layer2 = {
 };
 type Layer3 = {
     affected: MultiSpec<GameObject>;
-    textAltering: any; // FIXME:
+    textAltering: any; // FIXME: any
 };
 type Layer4 = {
     affected: MultiSpec<GameObject>;
     typeAltering: (
-        affected: Card, // FIXME:
-        source?: GameObject // FIXME:
-    ) => MultiSpec<CardType | Subtype | Supertype>;
+        affected: Characteristics,
+        source?: GameObject
+    ) => {
+        cardType: MultiSpec<CardType>;
+        subtype: MultiSpec<Subtype>;
+        supertype: MultiSpec<Supertype>;
+    };
 };
 type Layer5 = {
     affected: MultiSpec<GameObject>;
@@ -82,15 +85,15 @@ type Layer6 = {
 };
 type Layer7a = {
     affected: MultiSpec<GameObject>;
-    ptAltering: SingleSpec<{ power: any; toughness: any }>; // FIXME:
+    ptAltering: SingleSpec<{ power: any; toughness: any }>; // FIXME: any
 };
 type Layer7b = {
     affected: MultiSpec<GameObject>;
-    ptAltering: SingleSpec<{ basePower: any; baseToughness: any }>; // FIXME:
+    ptAltering: SingleSpec<{ basePower: any; baseToughness: any }>; // FIXME: any
 };
 type Layer7c = {
     affected: MultiSpec<GameObject>;
-    ptAltering: SingleSpec<{ modifyPower: any; modifyToughness: any }>; // FIXME:
+    ptAltering: SingleSpec<{ modifyPower: any; modifyToughness: any }>; // FIXME: any
 };
 type Layer7d = {
     affected: MultiSpec<GameObject>;

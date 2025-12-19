@@ -1,9 +1,8 @@
 - Queryのメソッドチェーンを廃止
 - GameObjectとZoneの関係
 - type マナコスト
-- type Card
 - type Game
-- typeAltering addType, overwriteType
+- typeAltering overwriteType
 
 - 閉じた分割
   - 種類別

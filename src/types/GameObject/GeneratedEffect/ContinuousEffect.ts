@@ -4,7 +4,7 @@ import {
     type GameObjectParameter,
 } from "../GameObject.js";
 import type { Player } from "../Player.js";
-import { Timestamp, type GameState } from "../../GameState/GameState.js";
+import type { Timestamp, GameState } from "../../GameState/GameState.js";
 import type { Layer, LayerOrder } from "../../Characteristics/Layer.js";
 import type { Instruction } from "../../Instruction.js";
 

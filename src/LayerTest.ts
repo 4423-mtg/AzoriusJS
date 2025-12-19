@@ -3,7 +3,7 @@ import {
     createCharacteristicsAltering,
 } from "./types/GameObject/GeneratedEffect/ContinuousEffect.js";
 import { createTimestamp } from "./types/GameState/GameState.js";
-import { permanentQuery } from "./types/Query.js";
+import { addCardType, permanentQuery } from "./types/Query.js";
 
 // 特性を変更する継続的効果の適用順は
 // - オブジェクト単位では決まらず、存在するすべてのオブジェクト（戦場以外も含む）を俯瞰したうえで決まる。
@@ -37,10 +37,7 @@ const effects: ContinuousEffect[] = [
                 affected: permanentQuery(
                     (chara) => chara.card_types?.includes("land") ?? false
                 ),
-                typeAltering: (affected) =>
-                    affected
-                        .getCharacteristics()
-                        .card_types?.concat(["land"]) ?? ["land"],
+                typeAltering: addCardType({ cardType: ["land"] }),
             },
         },
     }),
