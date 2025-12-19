@@ -1,5 +1,5 @@
 import type { QueryArgument, SingleSpec } from "../../Query.js";
-import type { Phase, Step, Turn } from "../../Turn/Turn.js";
+import type { Phase, Step, Turn } from "../../Turn.js";
 import { GameObject, type GameObjectOptions } from "../GameObject.js";
 
 /** ターンを追加する効果 */

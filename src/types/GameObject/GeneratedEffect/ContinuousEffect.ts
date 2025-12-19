@@ -6,7 +6,7 @@ import {
 import type { Player } from "../Player.js";
 import type { Timestamp, GameState } from "../../GameState/GameState.js";
 import type { Layer, LayerOrder } from "../../Characteristics/Layer.js";
-import type { Instruction } from "../../Instruction.js";
+import type { Instruction } from "../../Instruction/Instruction.js";
 
 /** 継続的効果。単一の常在型能力からの継続的効果か、または、単一の呪文や能力の解決によって生成された継続的効果 */
 export type ContinuousEffect = GameObject & ContinuousEffectProperty;

@@ -11,7 +11,7 @@ import {
 } from "./Zone.js";
 import type { GameObject } from "../GameObject/GameObject.js";
 import { Player } from "../GameObject/Player.js";
-import type { Phase, Step, Turn } from "../Turn/Turn.js";
+import type { Phase, Step, Turn } from "../Turn.js";
 import type { Characteristics } from "../Characteristics/Characteristic.js";
 
 export type GameState = {

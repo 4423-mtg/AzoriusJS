@@ -9,7 +9,7 @@ import {
     first_step_of_phase,
     type PhaseKind,
     type StepKind,
-} from "../Turn/Turn.js";
+} from "../Turn.js";
 import { StackedAbility } from "../GameObject/StackedAbility.js";
 import {
     AdditionalPhaseEffect,
@@ -22,7 +22,7 @@ import {
     BeginNewStep,
     BeginNewTurn,
     Instruction,
-} from "../Instruction.js";
+} from "../Instruction/Instruction.js";
 import { Stack } from "./Zone.js";
 
 // MARK: Game
