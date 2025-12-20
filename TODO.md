@@ -1,9 +1,18 @@
-- GameState getAllObjectsWithCharacteristics
-- type Game
+- GameState
+  - getAllObjectsWithCharacteristics
+  - Instructionの適用
+- Instruction.ts 重い
+  - ターン進行などもGameから移す
+
+- Layer.ts
+  - 文章変更効果
+- その他
+  - Spell.ts
+  - AdditionalTurnEffect.ts
+  - Ability.ts
+  - StackedAbility.ts
+  - Match.ts
 - GameObject化
-
-
-- type spell
 
 - 閉じた分割
   - 種類別

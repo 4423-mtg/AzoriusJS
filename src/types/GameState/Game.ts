@@ -1,4 +1,9 @@
-import type { GameState } from "./GameState.js";
+import type { Instruction } from "../Instruction/Instruction.js";
+import {
+    applyInstruction,
+    getNextInstruction,
+    type GameState,
+} from "./GameState.js";
 import type { MatchInfo } from "./Match.js";
 
 // MARK: Game
@@ -6,8 +11,21 @@ import type { MatchInfo } from "./Match.js";
 export type Game = {
     matchInfo: MatchInfo;
     gameStates: GameState[];
+    instructions: Instruction[];
 };
 // GameState -> GameState はGameState.tsへ
+
+/** ゲームの状態を1つ進める。 */
+export function proceed(game: Game): void {
+    const current = game.gameStates.at(-1);
+    if (current === undefined) {
+        throw Error();
+    } else {
+        const instruction = getNextInstruction(current);
+        game.instructions.push(instruction);
+        game.gameStates.push(applyInstruction(current, instruction));
+    }
+}
 
 // export class Game {
 //     match_info: MatchInfo;

@@ -1,12 +1,13 @@
 import type { Player } from "../GameObject/Player.js";
 import type { Ability } from "../GameObject/Ability.js";
 import type { Color } from "./Color.js";
-import type { CardType } from "./CardType.js";
-import type { Subtype } from "./Subtype.js";
-import type { Supertype } from "./Supertype.js";
 import type { SingleSpec, MultiSpec } from "../Query.js";
 import type { GameObject } from "../GameObject/GameObject.js";
-import type { Characteristics, CopiableValue } from "./Characteristic.js";
+import type {
+    CardTypeSet,
+    Characteristics,
+    CopiableValue,
+} from "./Characteristic.js";
 
 /** 単一の常在型能力からの継続的効果または呪文や能力の解決によって生成された単一の継続的効果
  * の中に含まれる、各種類別の効果 */
@@ -47,54 +48,94 @@ export type Layer<T extends LayerOrder> = T extends "1a"
     ? Layer7d // FIXME: フロート表示が {layerOrder;affected} になるのがいまいち
     : never;
 
-// FIXME: affectedが引数に必要
+/** コピー可能な効果の適用 */
 type Layer1a = {
     affected: MultiSpec<GameObject>;
-    copyableValueAltering: SingleSpec<CopiableValue>;
+    copyableValueAltering: (
+        current: Characteristics,
+        source?: GameObject
+    ) => SingleSpec<CopiableValue>;
 };
+
+/** 裏向きによる特性変更 */
 type Layer1b = {
     affected: MultiSpec<GameObject>;
-    copyableValueAltering: SingleSpec<CopiableValue>;
+    copyableValueAltering: (
+        current: Characteristics,
+        source?: GameObject
+    ) => SingleSpec<CopiableValue>;
 };
+
+/** コントロール変更 */
 type Layer2 = {
     affected: MultiSpec<GameObject>;
-    controllerAltering: SingleSpec<Player>;
+    controllerAltering: (
+        current: Characteristics,
+        source?: GameObject
+    ) => SingleSpec<Player>;
 };
+
+/** 文章変更 */
 type Layer3 = {
     affected: MultiSpec<GameObject>;
-    textAltering: any; // FIXME: any
+    textAltering: (current: Characteristics, source?: GameObject) => any; // FIXME: 文章の型
 };
+
+/** タイプ変更 */
 type Layer4 = {
     affected: MultiSpec<GameObject>;
     typeAltering: (
-        affected: Characteristics,
+        current: Characteristics,
         source?: GameObject
-    ) => {
-        cardType: MultiSpec<CardType> | undefined;
-        subtype: MultiSpec<Subtype> | undefined;
-        supertype: MultiSpec<Supertype> | undefined;
-    };
+    ) => CardTypeSet;
 };
+
+/** 色変更 */
 type Layer5 = {
     affected: MultiSpec<GameObject>;
-    colorAltering: MultiSpec<Color>;
+    colorAltering: (
+        current: Characteristics,
+        source?: GameObject
+    ) => MultiSpec<Color>;
 };
+
+/** 能力変更 */
 type Layer6 = {
     affected: MultiSpec<GameObject>;
-    abilityAltering: MultiSpec<Ability>;
+    abilityAltering: (
+        current: Characteristics,
+        source?: GameObject
+    ) => MultiSpec<Ability>;
 };
+
+/** パワー・タフネスを定義する特性定義能力 */
 type Layer7a = {
     affected: MultiSpec<GameObject>;
-    ptAltering: SingleSpec<{ power: any; toughness: any }>; // FIXME: any
+    ptAltering: (
+        current: Characteristics,
+        source?: GameObject
+    ) => SingleSpec<{ power: number; toughness: number }>;
 };
+
+/** 基本のパワー・タフネスの変更 */
 type Layer7b = {
     affected: MultiSpec<GameObject>;
-    ptAltering: SingleSpec<{ basePower: any; baseToughness: any }>; // FIXME: any
+    ptAltering: (
+        current: Characteristics,
+        source?: GameObject
+    ) => SingleSpec<{ basePower: number; baseToughness: number }>;
 };
+
+/** パワー・タフネスの修整 */
 type Layer7c = {
     affected: MultiSpec<GameObject>;
-    ptAltering: SingleSpec<{ modifyPower: any; modifyToughness: any }>; // FIXME: any
+    ptAltering: (
+        current: Characteristics,
+        source?: GameObject
+    ) => SingleSpec<{ modifyPower: number; modifyToughness: number }>;
 };
+
+/** パワーとタフネスの入れ替え */
 type Layer7d = {
     affected: MultiSpec<GameObject>;
 };

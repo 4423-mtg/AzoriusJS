@@ -1,12 +1,11 @@
-import type { Color } from "../Characteristics/Color.js";
+import type { Color, Colorless } from "../Characteristics/Color.js";
+import type { GameObject } from "./GameObject.js";
 
-export type ManaType = Color | "C";
+/** マナのタイプ */
+export type ManaType = Color | Colorless;
 
-export class Mana {
-    manatype: ManaType;
-
-    constructor(manatype: ManaType) {
-        this.manatype = manatype;
-    }
+/** マナ */
+export type Mana = GameObject & {
+    type: ManaType;
     // TODO: 特殊効果
-}
+};

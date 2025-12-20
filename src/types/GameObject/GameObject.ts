@@ -1,4 +1,4 @@
-import type { Zone, ZoneType } from "../GameState/Zone.js";
+import type { Zone } from "../GameState/Zone.js";
 import type { Card } from "./Card/Card.js";
 import type { Counter } from "./Counter.js";
 import type { Marker } from "./Marker.js";

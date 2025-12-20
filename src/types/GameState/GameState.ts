@@ -4,6 +4,7 @@ import type { Player } from "../GameObject/Player.js";
 import type { Phase, Step, Turn } from "../Turn.js";
 import type { Characteristics } from "../Characteristics/Characteristic.js";
 import type { Card } from "../GameObject/Card/Card.js";
+import type { Instruction } from "../Instruction/Instruction.js";
 
 export type GameState = {
     timestamp: Timestamp;
@@ -27,8 +28,17 @@ export type GameState = {
     //
 };
 
-export function getNextState(state: GameState): GameState {
-    // TODO
+/** 次に行うべき処理を取得する。 */
+export function getNextInstruction(state: GameState): Instruction {
+    //
+}
+
+/** 処理を適用し、新しい GameState を生成して返す。 */
+export function applyInstruction(
+    state: GameState,
+    instruction: Instruction
+): GameState {
+    //
 }
 
 export function deepCopyGamestate(state: GameState): GameState {

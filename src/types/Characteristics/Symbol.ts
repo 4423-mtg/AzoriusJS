@@ -1,23 +1,20 @@
+import type { ManaType } from "../GameObject/Mana.js";
 import type { Color } from "./Color.js";
 
-export type ColorSymbol = "W" | "U" | "B" | "R" | "G";
-export function getColorSymbol(color: Color): ColorSymbol {
-    switch (color) {
-        case "White":
-            return "W";
-        case "Blue":
-            return "U";
-        case "Black":
-            return "B";
-        case "Red":
-            return "R";
-        case "Green":
-            return "G";
-        default:
-            throw Error();
-    }
-}
-// 混成シンボルは前後の違いがない
+const manaTypeSymbol = {
+    White: "W",
+    Blue: "U",
+    Black: "B",
+    Red: "R",
+    Green: "G",
+    Colorless: "C",
+} as const satisfies Record<ManaType, string>;
+
+export type ManaTypeSymbol<T extends ManaType = ManaType> = T extends ManaType
+    ? (typeof manaTypeSymbol)[T]
+    : never;
+
+// 混成シンボルは前後の違いがない FIXME: 無色マナ混成シンボル
 type _2ColorCombination =
     | "W/U"
     | "W/B"
@@ -74,7 +71,7 @@ export type ManaSymbol =
     | SnowManaSymbol;
 
 /** 単色マナ・シンボル */
-type MonoColorSymbol = `{${Color}}` | `{C}`;
+type MonoColorSymbol = `{${ManaTypeSymbol}}`;
 /** 不特定マナ・シンボル */
 type NumericalSymbol = `{${number}}`;
 /** 変数シンボル */

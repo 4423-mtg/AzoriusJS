@@ -4,6 +4,7 @@ import type { CardType } from "./CardType.js";
 import type { Subtype } from "./Subtype.js";
 import type { Supertype } from "./Supertype.js";
 import type { Ability } from "../GameObject/Ability.js";
+import type { MultiSpec } from "../Query.js";
 
 // CR 109.3 オブジェクトの特性とは、
 // 名前、マナ・コスト、色、色指標、
@@ -85,16 +86,35 @@ export type CopiableValue = {
     loyalty?: Loyalty;
 };
 
-export function isBasicLand(chara: Characteristics): boolean {
-    return (
-        (chara.card_types?.includes("Land") ?? false) &&
-        (chara.supertypes?.includes("basic") ?? false)
-    );
+/** カードタイプ・サブタイプ・特殊タイプの組。`undefined`のこともある。 */
+export type CardTypeSet = {
+    cardType: MultiSpec<CardType> | undefined;
+    subtype: MultiSpec<Subtype> | undefined;
+    supertype: MultiSpec<Supertype> | undefined;
+};
+
+/**  */
+export function hasCardType(
+    chara: Characteristics,
+    cardType: CardType
+): boolean {
+    return chara.card_types?.includes(cardType) ?? false;
 }
 
+/** */
+export function hasSupertype(
+    chara: Characteristics,
+    supertype: Supertype
+): boolean {
+    return chara.supertypes?.includes(supertype) ?? false;
+}
+
+/** 基本土地であるなら `true` 。 */
+export function isBasicLand(chara: Characteristics): boolean {
+    return hasCardType(chara, "Land") && hasSupertype(chara, "Basic");
+}
+
+/** 基本でない土地であるなら `true` 。 */
 export function isNonbasicLand(chara: Characteristics): boolean {
-    return (
-        (chara.card_types?.includes("Land") ?? false) &&
-        !chara.supertypes?.includes("basic")
-    );
+    return hasCardType(chara, "Land") && !hasSupertype(chara, "Basic");
 }

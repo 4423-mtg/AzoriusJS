@@ -1,14 +1,9 @@
-import type { Instruction } from "../Turn/Instruction.js";
+import type { GameObject } from "./GameObject.js";
 
-export class Counter {
+export type Counter = GameObject & {
     name: string;
-    instructions?: Instruction[];
+};
 
-    constructor(name: string, instructions?: Instruction[]) {
-        this.name = name;
-        this.instructions = instructions;
-    }
-
-    static "+1/+1" = new Counter("+1/+1"); // FIXME
-    static "-1/-1" = new Counter("-1/-1"); // FIXME
+export function createCounter(name: string) {
+    //
 }

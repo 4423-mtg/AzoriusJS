@@ -1,7 +1,10 @@
 import type { Game } from "./GameState/Game.js";
 import { isInBattlefield, type GameObject } from "./GameObject/GameObject.js";
 import { getObjectByCharacteristics } from "./GameState/GameState.js";
-import type { Characteristics } from "./Characteristics/Characteristic.js";
+import type {
+    CardTypeSet,
+    Characteristics,
+} from "./Characteristics/Characteristic.js";
 import type { CardType } from "./Characteristics/CardType.js";
 import type { Subtype } from "./Characteristics/Subtype.js";
 import type { Supertype } from "./Characteristics/Supertype.js";
@@ -99,50 +102,48 @@ export function permanentQuery(
     });
 }
 
-export function addCardType(added: {
-    cardType?: MultiSpec<CardType>;
-    subtype?: MultiSpec<Subtype>;
-    supertype?: MultiSpec<Supertype>;
-}): (affected: Characteristics) => {
-    cardType: MultiSpec<CardType>;
-    subtype: MultiSpec<Subtype>;
-    supertype: MultiSpec<Supertype>;
-} {
-    return (affected) => ({
-        cardType: new MultiQuery((_args) => {
-            const _t =
-                added.cardType !== undefined
-                    ? resolveMultiSpec(added.cardType, _args)
-                    : [];
-            return affected.card_types?.concat(_t) ?? _t;
-        }),
-        subtype: new MultiQuery((_args) => {
-            const _t =
-                added.subtype !== undefined
-                    ? resolveMultiSpec(added.subtype, _args)
-                    : [];
-            return affected.subtypes?.concat(_t) ?? _t;
-        }),
-        supertype: new MultiQuery((_args) => {
-            const _t =
-                added.supertype !== undefined
-                    ? resolveMultiSpec(added.supertype, _args)
-                    : [];
-            return affected.supertypes?.concat(_t) ?? _t;
-        }),
-    });
+/** カードタイプ・サブタイプ・特殊タイプを追加する。 */
+export function addCardType(
+    added: Partial<CardTypeSet>
+): (current: Characteristics) => CardTypeSet {
+    return (current) => {
+        const _cardt = added.cardType;
+        const _subt = added.subtype;
+        const _supert = added.supertype;
+        return {
+            cardType:
+                _cardt === undefined
+                    ? current.card_types
+                    : new MultiQuery((_args) =>
+                          (current.card_types ?? []).concat(
+                              resolveMultiSpec(_cardt, _args)
+                          )
+                      ),
+            subtype:
+                _subt === undefined
+                    ? current.subtypes
+                    : new MultiQuery((_args) =>
+                          (current.subtypes ?? []).concat(
+                              resolveMultiSpec(_subt, _args)
+                          )
+                      ),
+            supertype:
+                _supert === undefined
+                    ? current.supertypes
+                    : new MultiQuery((_args) =>
+                          (current.supertypes ?? []).concat(
+                              resolveMultiSpec(_supert, _args)
+                          )
+                      ),
+        };
+    };
 }
 
-export function overwriteType(newtype: {
-    cardType?: MultiSpec<CardType>;
-    subtype?: MultiSpec<Subtype>;
-    supertype?: MultiSpec<Supertype>;
-}): (affected: Characteristics) => {
-    cardType: MultiSpec<CardType> | undefined;
-    subtype: MultiSpec<Subtype> | undefined;
-    supertype: MultiSpec<Supertype> | undefined;
-} {
-    return (affected) => {
+/** カードタイプ・サブタイプ・特殊タイプを、指定したタイプで上書きする。指定がないものは元のタイプを残す。 */
+export function overwriteType(
+    newtype: Partial<CardTypeSet>
+): (current: Characteristics) => CardTypeSet {
+    return (current) => {
         const _cardt = newtype.cardType;
         const _subt = newtype.subtype;
         const _supert = newtype.supertype;
@@ -150,15 +151,15 @@ export function overwriteType(newtype: {
             cardType:
                 _cardt !== undefined
                     ? new MultiQuery((args) => resolveMultiSpec(_cardt, args))
-                    : affected.card_types,
+                    : current.card_types,
             subtype:
                 _subt !== undefined
                     ? new MultiQuery((args) => resolveMultiSpec(_subt, args))
-                    : affected.subtypes,
+                    : current.subtypes,
             supertype:
                 _supert !== undefined
                     ? new MultiQuery((args) => resolveMultiSpec(_supert, args))
-                    : affected.supertypes,
+                    : current.supertypes,
         };
     };
 }
