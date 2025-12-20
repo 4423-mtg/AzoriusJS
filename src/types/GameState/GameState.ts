@@ -1,18 +1,9 @@
-import {
-    Battlefield,
-    Command,
-    Exile,
-    Graveyard,
-    Hand,
-    Library,
-    Stack,
-    type Zone,
-    type ZoneType,
-} from "./Zone.js";
+import { type Zone } from "./Zone.js";
 import type { GameObject } from "../GameObject/GameObject.js";
-import { Player } from "../GameObject/Player.js";
+import type { Player } from "../GameObject/Player.js";
 import type { Phase, Step, Turn } from "../Turn.js";
 import type { Characteristics } from "../Characteristics/Characteristic.js";
+import type { Card } from "../GameObject/Card/Card.js";
 
 export type GameState = {
     timestamp: Timestamp;
@@ -26,7 +17,7 @@ export type GameState = {
     numberOfPassedPlayers: number;
     /** このターンにクリンナップ・ステップをもう一度行うかどうか。 */
     cleanupAgainFlag: boolean;
-    /** アクティブプレイヤーのインデックス。 */
+    /** アクティブプレイヤーのインデックス。 */ // FIXME: アクティブプレイヤーは、現在のターンのコントローラー
     currentActivePlayerIndex: number | undefined;
     /** 優先権を持っているプレイヤーのインデックス。 */
     currentPriorityPlayerIndex: number | undefined;
@@ -36,11 +27,17 @@ export type GameState = {
     //
 };
 
+export function getNextState(state: GameState): GameState {
+    // TODO
+}
+
 export function deepCopyGamestate(state: GameState): GameState {
     return { ...state }; // FIXME: shallow copy
 }
-export function getAllObjectsWithCharacteristics(state: GameState): {
-    object: GameObject;
+
+/** すべてのオブジェクトと、それが現在取っている特性を取得する。 */
+export function getObjectsWithCharacteristics(state: GameState): {
+    object: Card | Player;
     characteristics: Characteristics;
 }[] {
     // TODO:
@@ -66,18 +63,21 @@ export function getAllObjectsWithCharacteristics(state: GameState): {
     // 3. 依存があってループしているならタイムスタンプ順で適用、ループしていないなら依存順で適用、依存がないならタイムスタンプ順で適用
     // - 適用順は１つ適用する事に再計算する
 }
+
+/** 指定された特性であるオブジェクトをすべて取得する。 */
 export function getObjectByCharacteristics(
     state: GameState,
     predicate?: (characteristics: Characteristics) => boolean
 ): {
-    object: GameObject;
+    object: Card | Player;
     characteristics: Characteristics;
 }[] {
-    return getAllObjectsWithCharacteristics(state).filter(
-        ({ object, characteristics }) =>
-            predicate === undefined ? true : predicate(characteristics)
+    return getObjectsWithCharacteristics(state).filter(
+        ({ object, characteristics }) => predicate?.(characteristics) ?? true
     );
 }
+
+/**  */
 export function getActivePlayer(state: GameState): Player | undefined {
     if (state.currentActivePlayerIndex === undefined) {
         return undefined;
@@ -86,6 +86,8 @@ export function getActivePlayer(state: GameState): Player | undefined {
         return plidx === undefined ? undefined : state.players[plidx];
     }
 }
+
+/** */
 export function getPriorityPlayer(state: GameState) {
     if (state.currentPriorityPlayerIndex === undefined) {
         return undefined;

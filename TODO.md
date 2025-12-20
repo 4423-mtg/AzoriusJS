@@ -1,5 +1,7 @@
 - GameState getAllObjectsWithCharacteristics
 - type Game
+- GameObject化
+
 
 - type spell
 

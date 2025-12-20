@@ -1,7 +1,7 @@
-import type { Zone } from "../GameState/Zone.js";
+import type { Zone, ZoneType } from "../GameState/Zone.js";
+import type { Card } from "./Card/Card.js";
 import type { Counter } from "./Counter.js";
 import type { Marker } from "./Marker.js";
-import type { Player } from "./Player.js";
 import type { Sticker } from "./Sticker.js";
 const { randomUUID } = await import("node:crypto");
 
@@ -10,30 +10,31 @@ const { randomUUID } = await import("node:crypto");
  * 「ゲームの状態」に含まれるもの全般。 */
 export type GameObject = {
     objectId: GameObjectId;
-    owner: Player | undefined;
-    controller: Player | undefined;
     zone: Zone | undefined;
     counters: Counter[] | undefined;
     stickers: Sticker[] | undefined;
     markers: Marker[] | undefined;
 };
 
-export type GameObjectParameter = Partial<Omit<GameObject, "objectId">>;
+export type GameObjectParameters = Partial<Omit<GameObject, "objectId">>;
 
 export type GameObjectId = ReturnType<typeof randomUUID>;
 
-export function createGameObject(parameters?: GameObjectParameter): GameObject {
+export function createGameObject(params?: GameObjectParameters): GameObject {
     return {
         objectId: createGameObjectId(),
-        owner: parameters?.owner,
-        controller: parameters?.owner,
-        zone: parameters?.zone,
-        counters: parameters?.counters,
-        stickers: parameters?.stickers,
-        markers: parameters?.markers,
+        zone: params?.zone,
+        counters: params?.counters,
+        stickers: params?.stickers,
+        markers: params?.markers,
     };
 }
 
 function createGameObjectId() {
     return randomUUID();
+}
+
+// ==========================================================================
+export function isInBattlefield(obj: GameObject): obj is Card {
+    return obj.zone?.type === "Battlefield";
 }

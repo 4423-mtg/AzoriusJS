@@ -1,26 +1,15 @@
-import { GameObject } from "./GameObject.js";
+import type { GameObject } from "./GameObject.js";
 import type { Ability } from "./Ability.js";
 import type { Counter } from "./Counter.js";
 import type { PlayerInfo } from "../GameState/Match.js";
 
 /** プレイヤー */
-export class Player extends GameObject {
+export type Player = GameObject & {
     info: PlayerInfo;
     life: number;
-    counters: Counter[] = [];
-    abilities: Ability[] = [];
-
-    /** 勝敗 */
-    won: boolean = false;
-    lost: boolean = false;
-
-    constructor(info: PlayerInfo, life?: number) {
-        super(); // TODO: プレイヤーのオーナー・コントローラー？
-        this.info = info;
-        this.life = life ?? 20;
-    }
-
-    equals(player: Player): boolean {
-        return this.objectId === player.objectId;
-    }
-}
+    counters: Counter[];
+    ability: Ability[];
+    won: boolean;
+    lost: boolean;
+    controller: Player | undefined;
+};

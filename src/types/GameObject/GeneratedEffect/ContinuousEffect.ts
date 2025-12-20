@@ -1,7 +1,7 @@
 import {
     createGameObject,
     type GameObject,
-    type GameObjectParameter,
+    type GameObjectParameters,
 } from "../GameObject.js";
 import type { Player } from "../Player.js";
 import type { Timestamp, GameState } from "../../GameState/GameState.js";
@@ -35,7 +35,7 @@ export type CharacteristicsAlteringEffectParameter =
 
 /** 値や特性を変更する継続的効果を作成する */
 export function createCharacteristicsAltering(
-    parameters: GameObjectParameter &
+    parameters: GameObjectParameters &
         ContinuousEffectParameter &
         CharacteristicsAlteringEffectParameter
 ): CharacteristicsAlteringEffect {
@@ -60,7 +60,7 @@ export type ModifyProcedureEffectParameter = {
 };
 
 export function createModifyingProcedureEffect(
-    parameters?: GameObjectParameter &
+    parameters?: GameObjectParameters &
         ContinuousEffectParameter &
         ModifyProcedureEffectParameter
 ): ModifyProcedureEffect {
@@ -83,7 +83,7 @@ export type ForbidActionEffectParameters = {
 };
 
 export function createForbidActionEffect(
-    parameters?: GameObjectParameter &
+    parameters?: GameObjectParameters &
         ContinuousEffectParameter &
         ForbidActionEffectParameters
 ): ForbidActionEffect {

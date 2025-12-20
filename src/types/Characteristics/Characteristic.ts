@@ -87,14 +87,14 @@ export type CopiableValue = {
 
 export function isBasicLand(chara: Characteristics): boolean {
     return (
-        (chara.card_types?.includes("land") ?? false) &&
+        (chara.card_types?.includes("Land") ?? false) &&
         (chara.supertypes?.includes("basic") ?? false)
     );
 }
 
 export function isNonbasicLand(chara: Characteristics): boolean {
     return (
-        (chara.card_types?.includes("land") ?? false) &&
+        (chara.card_types?.includes("Land") ?? false) &&
         !chara.supertypes?.includes("basic")
     );
 }

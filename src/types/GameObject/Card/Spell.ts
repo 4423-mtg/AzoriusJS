@@ -2,7 +2,7 @@ import type { GameObject } from "../GameObject.js";
 import type { Card } from "./Card.js";
 
 /** 呪文としての特性 */
-export type SpellCharacteristic = {
+export type SpellCharacteristic = GameObject & {
     // 2. 呪文の選択
     is_modal: boolean;
     modes;

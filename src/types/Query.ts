@@ -1,13 +1,11 @@
-import { Game } from "./GameState/Game.js";
-import { type GameObject } from "./GameObject/GameObject.js";
-import {
-    getObjectByCharacteristics,
-    type GameState,
-} from "./GameState/GameState.js";
+import type { Game } from "./GameState/Game.js";
+import { isInBattlefield, type GameObject } from "./GameObject/GameObject.js";
+import { getObjectByCharacteristics } from "./GameState/GameState.js";
 import type { Characteristics } from "./Characteristics/Characteristic.js";
 import type { CardType } from "./Characteristics/CardType.js";
 import type { Subtype } from "./Characteristics/Subtype.js";
 import type { Supertype } from "./Characteristics/Supertype.js";
+import type { Card } from "./GameObject/Card/Card.js";
 
 // export type QueryParams = {
 //     state: GameState;
@@ -87,15 +85,18 @@ export function resolveMultiSpec<T>(
 // ==============================================================================
 /** 指定の特性を満たすパーマネント */
 export function permanentQuery(
-    query?: (characteristics: Characteristics) => boolean
-): MultiQuery<GameObject> {
-    // FIXME: 戻り値は MultiQuery<Card>
-    const _q = ({ game, self }: QueryArgument) =>
-        getObjectByCharacteristics(game.current, query).map(
-            ({ object, characteristics }) => object
-        );
-
-    return new MultiQuery(_q);
+    query: (characteristics: Characteristics) => boolean
+): MultiQuery<Card> {
+    return new MultiQuery(({ game, self }: QueryArgument) => {
+        const state = game.gameStates.at(-1);
+        if (state === undefined) {
+            throw Error();
+        } else {
+            return getObjectByCharacteristics(state, query)
+                .map(({ object, characteristics }) => object)
+                .filter((obj) => isInBattlefield(obj));
+        }
+    });
 }
 
 export function addCardType(added: {

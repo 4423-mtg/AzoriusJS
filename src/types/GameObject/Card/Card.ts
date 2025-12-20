@@ -1,6 +1,10 @@
 import type { Printed } from "../../Characteristics/Characteristic.js";
+import type { GameObject } from "../GameObject.js";
+import type { Player } from "../Player.js";
 
-export type Card = {
+export type Card = GameObject & {
+    owner: Player;
+    controller: Player;
     isToken: boolean;
     faces: Face[];
     status: Status;
