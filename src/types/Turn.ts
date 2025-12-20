@@ -9,7 +9,7 @@ export type Turn = {
     isExtra: boolean;
 };
 type TurnId = ReturnType<typeof randomUUID>;
-type TurnParameters = Omit<Turn, "id">;
+export type TurnParameters = Omit<Turn, "id">;
 export function createTurn(params: TurnParameters): Turn {
     return {
         id: createTurnId(),
@@ -39,7 +39,7 @@ export type Phase = {
     isExtra: boolean;
 };
 type PhaseId = ReturnType<typeof randomUUID>;
-type PhaseParameters = Omit<Phase, "id">;
+export type PhaseParameters = Omit<Phase, "id">;
 export function createPhase(params: PhaseParameters): Phase {
     return {
         id: createPhaseId(),
@@ -74,7 +74,7 @@ export type Step = {
     isExtra: boolean;
 };
 type StepId = ReturnType<typeof randomUUID>;
-type StepParameters = Omit<Step, "id">;
+export type StepParameters = Omit<Step, "id">;
 export function createStep(params: StepParameters): Step {
     return {
         id: createStepId(),

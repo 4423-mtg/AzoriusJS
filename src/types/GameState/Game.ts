@@ -1,6 +1,6 @@
 import type { Instruction } from "../Instruction/Instruction.js";
 import {
-    applyInstruction,
+    createNextState,
     getNextInstruction,
     type GameState,
 } from "./GameState.js";
@@ -23,7 +23,7 @@ export function proceed(game: Game): void {
     } else {
         const instruction = getNextInstruction(current);
         game.instructions.push(instruction);
-        game.gameStates.push(applyInstruction(current, instruction));
+        game.gameStates.push(createNextState(current, instruction));
     }
 }
 

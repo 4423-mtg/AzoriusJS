@@ -34,7 +34,7 @@ export function getNextInstruction(state: GameState): Instruction {
 }
 
 /** 処理を適用し、新しい GameState を生成して返す。 */
-export function applyInstruction(
+export function createNextState(
     state: GameState,
     instruction: Instruction
 ): GameState {
