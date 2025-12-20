@@ -37,62 +37,7 @@ export class SingleQuery<T> {
     resolve(args: QueryArgument): T {
         return this.query(args);
     }
-
-    // メソッドチェーン
-    field(name: keyof T): SingleQuery<T[typeof name]> {
-        const newQuery = (args: QueryArgument) => {
-            const temp = this.query(args);
-            return temp[name];
-        };
-        return new SingleQuery(newQuery);
-    }
-    // FIXME: 例外が返るのはおかしい。undefinedが返るべき。
-    // T[typeof name]が関数であることは確定してはいるが、型情報になっていない。
-    // 大人しく全部並べるべきか
-    // 1. Tの関数プロパティだけを抽出する FunctionProperties<T>
-    // 2. name: keyof FunctionProperties<T>
-    // 3. ...args: Parameters<typeof FunctionProperties<T>[typeof name]>
-    // 4. => ReturnType<typeof FunctionProperties<T>[typeof name]>
-    method(
-        name: FunctionPropertiesKey<T>,
-        hoge: T[typeof name],
-        ...args: Parameters<FunctionProperty<T, typeof name>>
-    ): SingleQuery<ReturnType<FunctionProperty<T, typeof name>>> {
-        const newQuery = (_args: QueryArgument) => {
-            const temp = this.query(_args);
-            const property = temp[name];
-            if (typeof property === "function") {
-                return property(...args);
-            } else {
-                throw new Error("");
-            }
-        };
-        return new SingleQuery(newQuery);
-    }
-    apply<U extends any[], V>(
-        func: (ret: T, ...args: U) => V,
-        ...args: U
-    ): SingleQuery<V> {
-        const newQuery = (_args: QueryArgument) =>
-            func(this.query(_args), ...args);
-        return new SingleQuery(newQuery);
-    }
 }
-
-/** `T[K]` が関数であるなら `T[K]`。そうでないなら、 `never`。 */
-type FunctionProperty<T, K extends keyof T> = T[K] extends (
-    ...args: any[]
-) => any
-    ? T[K]
-    : never;
-
-/** T のプロパティのうち関数であるものの名前(key)。 */
-type FunctionPropertiesKey<T> = _a<T, keyof T>;
-type _a<T, K extends keyof T> = K extends unknown
-    ? T[K] extends (...args: any[]) => any
-        ? K
-        : never
-    : never;
 
 // MultiQuery ===============================================================
 export class MultiQuery<T> {
@@ -103,34 +48,6 @@ export class MultiQuery<T> {
     }
 
     resolve: (args: QueryArgument) => T[] = (args) => this.query(args);
-
-    field(name: keyof T): MultiQuery<T[typeof name]> {
-        const newQuery = (args: QueryArgument) => {
-            const temp = this.query(args);
-            return temp.map((e) => e[name]);
-        };
-        return new MultiQuery(newQuery);
-    }
-
-    method(
-        name: FunctionPropertiesKey<T>,
-        ...args: Parameters<FunctionProperty<T, typeof name>>
-    ): MultiQuery<ReturnType<FunctionProperty<T, typeof name>>> {
-        const newQuery = (_args: QueryArgument) => {
-            const temp = this.query(_args);
-            return temp.map((e) => {
-                if (typeof e[name] === "function") {
-                    return e[name](...args);
-                } else {
-                    throw new Error();
-                }
-            });
-        };
-        return new MultiQuery(newQuery);
-    }
-
-    // TODO:
-    apply() {}
 }
 
 export type SingleSpec<T> = T | SingleQuery<T>;
@@ -181,7 +98,6 @@ export function permanentQuery(
     return new MultiQuery(_q);
 }
 
-// FIXME: サブタイプはカードタイプ別にする必要があるかも
 export function addCardType(added: {
     cardType?: MultiSpec<CardType>;
     subtype?: MultiSpec<Subtype>;
@@ -216,17 +132,34 @@ export function addCardType(added: {
     });
 }
 
-export function overwriteType(types: {
+export function overwriteType(newtype: {
     cardType?: MultiSpec<CardType>;
     subtype?: MultiSpec<Subtype>;
     supertype?: MultiSpec<Supertype>;
 }): (affected: Characteristics) => {
-    cardType: MultiSpec<CardType>;
-    subtype: MultiSpec<Subtype>;
-    supertype: MultiSpec<Supertype>;
+    cardType: MultiSpec<CardType> | undefined;
+    subtype: MultiSpec<Subtype> | undefined;
+    supertype: MultiSpec<Supertype> | undefined;
 } {
-    // TODO
-    // クリーチャーと部族のサブタイプは共有なのだろうか？
+    return (affected) => {
+        const _cardt = newtype.cardType;
+        const _subt = newtype.subtype;
+        const _supert = newtype.supertype;
+        return {
+            cardType:
+                _cardt !== undefined
+                    ? new MultiQuery((args) => resolveMultiSpec(_cardt, args))
+                    : affected.card_types,
+            subtype:
+                _subt !== undefined
+                    ? new MultiQuery((args) => resolveMultiSpec(_subt, args))
+                    : affected.subtypes,
+            supertype:
+                _supert !== undefined
+                    ? new MultiQuery((args) => resolveMultiSpec(_supert, args))
+                    : affected.supertypes,
+        };
+    };
 }
 
 // TODO

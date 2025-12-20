@@ -1,7 +1,7 @@
-- Queryのメソッドチェーンを廃止
-- GameObjectとZoneの関係
+- GameState getAllObjectsWithCharacteristics
 - type Game
-- typeAltering overwriteType
+
+- type spell
 
 - 閉じた分割
   - 種類別

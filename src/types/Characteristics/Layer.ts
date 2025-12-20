@@ -44,7 +44,7 @@ export type Layer<T extends LayerOrder> = T extends "1a"
     : T extends "7c"
     ? Layer7c
     : T extends "7d"
-    ? Layer7d // FIXME: フロー表示が {layerOrder;affected} になるのがいまいち
+    ? Layer7d // FIXME: フロート表示が {layerOrder;affected} になるのがいまいち
     : never;
 
 // FIXME: affectedが引数に必要
@@ -70,9 +70,9 @@ type Layer4 = {
         affected: Characteristics,
         source?: GameObject
     ) => {
-        cardType: MultiSpec<CardType>;
-        subtype: MultiSpec<Subtype>;
-        supertype: MultiSpec<Supertype>;
+        cardType: MultiSpec<CardType> | undefined;
+        subtype: MultiSpec<Subtype> | undefined;
+        supertype: MultiSpec<Supertype> | undefined;
     };
 };
 type Layer5 = {

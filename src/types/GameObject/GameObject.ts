@@ -1,4 +1,8 @@
+import type { Zone } from "../GameState/Zone.js";
+import type { Counter } from "./Counter.js";
+import type { Marker } from "./Marker.js";
 import type { Player } from "./Player.js";
+import type { Sticker } from "./Sticker.js";
 const { randomUUID } = await import("node:crypto");
 
 /** ゲーム内のオブジェクト。
@@ -8,17 +12,13 @@ export type GameObject = {
     objectId: GameObjectId;
     owner: Player | undefined;
     controller: Player | undefined;
-    // TODO: 以下のものはGameObjectで扱う
-    // - 領域
-    // - カウンター
-    // - マーカー(怪物的・クラスレベル等)
-    // - ステッカーは
+    zone: Zone | undefined;
+    counters: Counter[] | undefined;
+    stickers: Sticker[] | undefined;
+    markers: Marker[] | undefined;
 };
 
-export type GameObjectParameter = Partial<{
-    owner: Player | undefined;
-    controller: Player | undefined;
-}>;
+export type GameObjectParameter = Partial<Omit<GameObject, "objectId">>;
 
 export type GameObjectId = ReturnType<typeof randomUUID>;
 
@@ -27,6 +27,10 @@ export function createGameObject(parameters?: GameObjectParameter): GameObject {
         objectId: createGameObjectId(),
         owner: parameters?.owner,
         controller: parameters?.owner,
+        zone: parameters?.zone,
+        counters: parameters?.counters,
+        stickers: parameters?.stickers,
+        markers: parameters?.markers,
     };
 }
 

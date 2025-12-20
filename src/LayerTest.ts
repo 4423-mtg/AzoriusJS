@@ -36,9 +36,9 @@ const effects: ContinuousEffect[] = [
         layers: {
             "4": {
                 affected: permanentQuery(
-                    (chara) => chara.card_types?.includes("land") ?? false
+                    (chara) => chara.card_types?.includes("Land") ?? false
                 ),
-                typeAltering: addCardType({ cardType: ["land"] }),
+                typeAltering: addCardType({ cardType: ["Land"] }),
             },
         },
     }),

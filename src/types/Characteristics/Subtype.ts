@@ -1,3 +1,5 @@
+import { cardTypes, type CardType } from "./CardType.js";
+
 export type Subtype =
     | ArtifactType
     | EnchantmentType
@@ -9,9 +11,51 @@ export type Subtype =
     | DungeonType
     | BattleType;
 
+/** 指定したカードタイプに対応するサブタイプを返す。 */
+export function getSubtypes(cardType: CardType): readonly Subtype[] {
+    switch (cardType) {
+        case "Artifact":
+            return artifactTypes;
+        case "Battle":
+            return battleTypes;
+        case "Conspiracy":
+            return [];
+        case "Creature":
+            return creatureTypes;
+        case "Dungeon":
+            return dungeonTypes;
+        case "Enchantment":
+            return enchantmentTypes;
+        case "Instant":
+            return spelltypes;
+        case "Kindred":
+            return creatureTypes;
+        case "Land":
+            return landTypes;
+        case "Phenomenon":
+            return [];
+        case "Plane":
+            return planarTypes;
+        case "Planeswalker":
+            return planeswalkerTypes;
+        case "Scheme":
+            return [];
+        case "Sorcery":
+            return spelltypes;
+        case "Vanguard":
+            return [];
+        default:
+            throw Error();
+    }
+}
+
+/** 指定したサブタイプに対応するカードタイプすべてを返す。 */
+export function getParentTypes(subtype: Subtype): CardType[] {
+    return cardTypes.filter((ct) => getSubtypes(ct).includes(subtype));
+}
+
 /** アーティファクト・タイプ */
-export type ArtifactType = (typeof artifact_types)[number];
-const artifact_types = [
+const artifactTypes = [
     "Attraction",
     "Blood",
     "Bobblehead",
@@ -32,10 +76,10 @@ const artifact_types = [
     "Treasure",
     "Vehicle",
 ] as const;
+export type ArtifactType = (typeof artifactTypes)[number];
 
 /** エンチャント・タイプ */
-export type EnchantmentType = (typeof enchantment_types)[number];
-const enchantment_types = [
+const enchantmentTypes = [
     "Aura",
     "Background",
     "Cartouche",
@@ -49,10 +93,10 @@ const enchantment_types = [
     "Shard",
     "Shrine",
 ] as const;
+export type EnchantmentType = (typeof enchantmentTypes)[number];
 
 /** 土地タイプ */
-export type LandType = (typeof land_types)[number];
-const land_types = [
+export const landTypes = [
     "Cave",
     "Desert",
     "Forest",
@@ -71,10 +115,10 @@ const land_types = [
     "Town",
     "Urza’s",
 ] as const;
+export type LandType = (typeof landTypes)[number];
 
 /** プレインズウォーカー・タイプ */
-export type PlaneswalkerType = (typeof planeswalker_types)[number];
-const planeswalker_types = [
+export const planeswalkerTypes = [
     "Ajani",
     "Aminatou",
     "Angrath",
@@ -155,14 +199,20 @@ const planeswalker_types = [
     "Yanling",
     "Zariel",
 ] as const;
+export type PlaneswalkerType = (typeof planeswalkerTypes)[number];
 
 /** 呪文タイプ */
-export type SpellType = (typeof spell_types)[number];
-const spell_types = ["Adventure", "Arcane", "Lesson", "Omen", "Trap"] as const;
+export const spelltypes = [
+    "Adventure",
+    "Arcane",
+    "Lesson",
+    "Omen",
+    "Trap",
+] as const;
+export type SpellType = (typeof spelltypes)[number];
 
 /** クリーチャー・タイプ */
-export type CreatureType = (typeof creature_types)[number];
-const creature_types = [
+export const creatureTypes = [
     "Time Lord",
     "Advisor",
     "Aetherborn",
@@ -466,18 +516,18 @@ const creature_types = [
     "Wizard",
     "Wolf",
     "Wolverine",
-    "Wombat,",
-    "Worm,",
-    "Wraith,",
-    "Wurm,",
-    "Yeti,",
-    "Zombie,",
+    "Wombat",
+    "Worm",
+    "Wraith",
+    "Wurm",
+    "Yeti",
+    "Zombie",
     "Zubera",
 ] as const;
+export type CreatureType = (typeof creatureTypes)[number];
 
 /** 次元タイプ */
-export type PlanarType = (typeof planar_types)[number];
-const planar_types = [
+export const planarTypes = [
     "The Abyss",
     "Alara",
     "Alfava Metraxis",
@@ -561,11 +611,12 @@ const planar_types = [
     "Zendikar",
     "Zhalfir",
 ] as const;
+export type PlanarType = (typeof planarTypes)[number];
 
 /** ダンジョン・タイプ */
-export type DungeonType = (typeof dungeon_types)[number];
-const dungeon_types = ["Undercity"] as const;
+export const dungeonTypes = ["Undercity"] as const;
+export type DungeonType = (typeof dungeonTypes)[number];
 
 /** バトル・タイプ */
-export type BattleType = (typeof battle_types)[number];
-const battle_types = ["Siege"] as const;
+export const battleTypes = ["Siege"] as const;
+export type BattleType = (typeof battleTypes)[number];
