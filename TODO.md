@@ -15,4 +15,5 @@
   - Ability.ts
   - StackedAbility.ts
   - Match.ts
+- 誘発チェック
 - GameObject化

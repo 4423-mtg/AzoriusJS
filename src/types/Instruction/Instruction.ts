@@ -11,10 +11,11 @@ import type {
     TurnParameters,
 } from "../Turn.js";
 import type { MultiSpec, SingleSpec } from "../Query.js";
+import type { InstructionType } from "./InstructionType.js";
 
 /** 処理。 */
 export type Instruction = {
-    type: string; // FIXME: ユニオンにしないと実行時に分岐処理できない
+    type: InstructionType;
     instructor: SingleSpec<Player>;
     performer: SingleSpec<Player>;
 };
@@ -29,7 +30,7 @@ export type SimultaneousInstructions = Instruction & {
     instructions: Instruction[];
 };
 
-/** 複数の処理から1つを選ばせる指示 */ // 優先権
+/** 複数の処理から1つを選ばせる指示 */ // 優先権など
 export type ChooseInstruction = Instruction & {
     type: "choose";
     instructions: Instruction[];
