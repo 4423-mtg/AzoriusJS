@@ -1,10 +1,13 @@
-import { type Zone } from "./Zone.js";
+import { type Zone, type ZoneType } from "./Zone.js";
 import type { GameObject } from "../GameObject/GameObject.js";
 import type { Player } from "../GameObject/Player.js";
 import type { Phase, Step, Turn } from "../Turn.js";
 import type { Characteristics } from "../Characteristics/Characteristic.js";
 import type { Card } from "../GameObject/Card/Card.js";
-import type { Instruction } from "../Instruction/Instruction.js";
+import type {
+    Instruction,
+    SimultaneousInstructions,
+} from "../Instruction/Instruction.js";
 
 export type GameState = {
     timestamp: Timestamp;
@@ -16,39 +19,76 @@ export type GameState = {
     currentPhase: Phase | undefined;
     currentStep: Step | undefined;
     numberOfPassedPlayers: number;
+    /** 優先権を持っているプレイヤーのターンインデックス */
+    currentPriorityPlayerIndex: number | undefined;
+    /** 最後に優先権パスでない行動をしたプレイヤーのターンインデックス */
+    latestActionPlayer: number | undefined;
     /** このターンにクリンナップ・ステップをもう一度行うかどうか。 */
     cleanupAgainFlag: boolean;
-    /** アクティブプレイヤーのインデックス。 */ // FIXME: アクティブプレイヤーは、現在のターンのコントローラー
-    currentActivePlayerIndex: number | undefined;
-    /** 優先権を持っているプレイヤーのインデックス。 */
-    currentPriorityPlayerIndex: number | undefined;
-    /** 最後に通常のターンを行ったプレイヤーのインデックス。 */
-    currentTurnOrderPlayer: number | undefined;
+    // TODO: 「最後に通常のターンを行ったプレイヤー」は要るのかどうか...
 };
+// FIXME: 配列のキーの型を明示的に定義したほうがいい？（ターン順のため）
 
-/** 次に行うべき処理を取得する。 */
-export function getNextInstruction(state: GameState): Instruction {
-    // stateに応じて変わる。
-    // - 全員が優先権を放棄している
-    //   - スタックにあれば解決する。
-    //   - スタックになければ次へ進む。
-    //     - 未使用のマナが消滅する。
-    //     - 次のターン・フェイズ・ステップに移る。
-    // - 全員が優先権を放棄していない
-    //   - 次の人が優先権行動をするか、優先権を放棄する
-    //
-    // TODO:
-    // - ターン起因処理 (まだ誰も優先権を持っていないなら。その後アクティブプレイヤーが優先権を得る)
-    // - クリンナップ2回目
-    // - ゲーム開始時の処理
+// MARK: 状態取得 ==================================================================
+/** アクティブプレイヤーを取得する */
+export function getActivePlayer(state: GameState): Player | undefined {
+    return state.currentTurn?.activePlayer;
+}
+/** 優先権を持っているプレイヤーを取得する */
+export function getPriorityPlayer(state: GameState): Player | undefined {
+    if (state.currentPriorityPlayerIndex === undefined) {
+        return undefined;
+    } else {
+        const playerIdx = state.turnOrder[state.currentPriorityPlayerIndex];
+        return playerIdx === undefined ? undefined : state.players[playerIdx];
+    }
+}
+/** 最後に優先権パスでない行動をしたプレイヤーを取得する */
+export function getLatestActionPlayer(state: GameState): Player | undefined {
+    if (state.latestActionPlayer === undefined) {
+        return undefined;
+    } else {
+        const playerIdx = state.turnOrder[state.latestActionPlayer];
+        return playerIdx === undefined ? undefined : state.players[playerIdx];
+    }
 }
 
-export function deepCopyGamestate(state: GameState): GameState {
-    return { ...state }; // FIXME: shallow copy
+/** プレイヤーをターン順で取得する */
+export function getPlayersByTurnOrder(state: GameState): Player[] {
+    return state.turnOrder.map((n) => {
+        if (n < state.players.length) {
+            return state.players[n] as Player; // FIXME: no as
+        } else {
+            throw Error();
+        }
+    });
+}
+/** 指定した領域を取得する */
+export function getZones(
+    state: GameState,
+    option: { type: ZoneType; owner?: Player }
+): Zone[] {
+    return state.zones.filter(
+        (z) => z.owner === option.owner && z.type === option.type
+    );
+}
+
+// ==================================================================
+/** 指定された特性であるオブジェクトをすべて取得する。 */
+export function getObjectsWithCharacteristics(
+    state: GameState,
+    predicate?: (characteristics: Characteristics) => boolean
+): {
+    object: Card | Player;
+    characteristics: Characteristics;
+}[] {
+    return getAllObjectsAndCharacteristics(state).filter(
+        ({ object, characteristics }) => predicate?.(characteristics) ?? true
+    );
 }
 
 /** すべてのオブジェクトと、それが現在取っている特性を取得する。 */
-export function getObjectsWithCharacteristics(state: GameState): {
+export function getAllObjectsAndCharacteristics(state: GameState): {
     object: Card | Player;
     characteristics: Characteristics;
 }[] {
@@ -76,51 +116,49 @@ export function getObjectsWithCharacteristics(state: GameState): {
     // - 適用順は１つ適用する事に再計算する
 }
 
-/** 指定された特性であるオブジェクトをすべて取得する。 */
-export function getObjectByCharacteristics(
-    state: GameState,
-    predicate?: (characteristics: Characteristics) => boolean
-): {
-    object: Card | Player;
-    characteristics: Characteristics;
-}[] {
-    return getObjectsWithCharacteristics(state).filter(
-        ({ object, characteristics }) => predicate?.(characteristics) ?? true
-    );
-}
-
-/**  */
-export function getActivePlayer(state: GameState): Player | undefined {
-    if (state.currentActivePlayerIndex === undefined) {
-        return undefined;
-    } else {
-        const plidx = state.turnOrder[state.currentActivePlayerIndex];
-        return plidx === undefined ? undefined : state.players[plidx];
-    }
-}
-
-/** */
-export function getPriorityPlayer(state: GameState) {
+// ==================================================================
+/** 次に行うべき処理を取得する。 */
+export function getNextInstructions(
+    state: GameState
+): Instruction[] | SimultaneousInstructions {
+    // stateに応じて変わる。
+    // - 全員が優先権を放棄している
     if (state.currentPriorityPlayerIndex === undefined) {
-        return undefined;
-    } else {
-        const plidx = state.turnOrder[state.currentPriorityPlayerIndex];
-        return plidx === undefined ? undefined : state.players[plidx];
     }
+    //   - スタックにあれば解決する。
+    //   - スタックになければ次へ進む。
+    //     - 未使用のマナが消滅する。
+    //     - 次のターン・フェイズ・ステップに移る。
+    // - 全員が優先権を放棄していない
+    //   - 次の人が優先権行動をするか、優先権を放棄する
+    //
+    // TODO:
+    // - ターン起因処理 (まだ誰も優先権を持っていないなら。その後アクティブプレイヤーが優先権を得る)
+    // - クリンナップ2回目
+    // - ゲーム開始時の処理
 }
-export function getTurnOrderPlayer(state: GameState) {
-    if (state.currentTurnOrderPlayer === undefined) {
-        return undefined;
-    } else {
-        const plidx = state.turnOrder[state.currentTurnOrderPlayer];
-        return plidx === undefined ? undefined : state.players[plidx];
-    }
-}
-export function getAllPlayersByTurnOrder(state: GameState) {}
-export function getZone(
+
+// フェイズ開始
+// ターン起因処理
+// アクティブプレイヤーが優先権を得る
+// 優先権行動
+// 次のプレイヤーの優先権行動
+// ...
+// (全員パス)
+// スタックにあれば解決、なければ次のフェイズへ
+
+/** 処理を1つ適用し、新しい GameState を生成して返す。 */
+export function getNextState(
     state: GameState,
-    option?: { owner?: Player; zonetype?: string }
-) {}
+    instruction: Instruction
+): GameState {
+    // 置換効果などを考慮する。
+}
+
+// 不要になった？
+export function deepCopyGamestate(state: GameState): GameState {
+    return { ...state }; // FIXME: shallow copy
+}
 
 // =============================================================================
 // MARK: Timestamp

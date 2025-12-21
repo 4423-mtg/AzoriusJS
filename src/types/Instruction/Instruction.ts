@@ -11,7 +11,6 @@ import type {
     TurnParameters,
 } from "../Turn.js";
 import type { MultiSpec, SingleSpec } from "../Query.js";
-import type { GameState } from "../GameState/GameState.js";
 
 /** 処理。 */
 export type Instruction = {
@@ -22,16 +21,13 @@ export type Instruction = {
 
 // - Instruction は入れ子になることがある。
 //   - どのような入れ子になるかは各 Instruction が各自定義する。
-// - 種類の異なる Instruction が同時に実行されることがある。
 
-/** 処理を適用し、新しい GameState を生成して返す。 */
-export function getNextState(
-    instruction: Instruction,
-    state: GameState
-): GameState {
-    // 置換効果などを考慮する。
-}
-// 複数の処理を同時に行うことがある。（ゴブリンの溶接工など）
+// MARK: 基本 ************************************************
+/** 複数の処理を同時に行う指示。 */ // ゴブリンの溶接工
+export type SimultaneousInstructions = {
+    type: "parallel";
+    instructions: Instruction[];
+};
 
 // MARK: 基本 ************************************************
 /** 領域の移動 */

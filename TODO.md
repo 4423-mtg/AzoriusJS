@@ -1,8 +1,9 @@
 - GameState
-  - getAllObjectsWithCharacteristics
-  - Instructionの適用
+  - playersのキー
+  - getAllObjectsAndCharacteristics
+  - getNextInstructions
+  - getNextState
 - Instruction.ts 重い
-  - ターン進行などもGameから移す
 
 - Layer.ts
   - 文章変更効果

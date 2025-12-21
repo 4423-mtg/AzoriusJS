@@ -1,26 +1,52 @@
 import type { MatchInfo } from "./Match.js";
-import { getNextInstruction, type GameState } from "./GameState.js";
-import { getNextState, type Instruction } from "../Instruction/Instruction.js";
+import {
+    getNextInstructions,
+    getNextState,
+    type GameState,
+} from "./GameState.js";
+import {
+    type Instruction,
+    type SimultaneousInstructions,
+} from "../Instruction/Instruction.js";
 
 // MARK: Game
 /** ゲーム全体。ゲームのすべての断面を持つ。 */
 export type Game = {
     matchInfo: MatchInfo;
-    history: GameStateSet[];
+    history: HistoryEntry[];
 };
-export type GameStateSet = {
+export type HistoryEntry = {
     state: GameState;
     instruction: Instruction;
 };
 
-/** ゲームの状態を1つ進める。 */
-export function proceed(game: Game): void {
+/** 処理を1つだけ実行し、Gameを更新する。 */
+export function applyOneInstruction(
+    game: Game,
+    instruction: Instruction
+): void {
     const current = game.history.at(-1);
     if (current === undefined) {
         throw Error();
     } else {
-        const nextInstruction = getNextInstruction(current.state);
-        const nextState = getNextState(nextInstruction, current.state);
-        game.history.push({ state: nextState, instruction: nextInstruction });
+        const newEntry: HistoryEntry = {
+            state: getNextState(current.state, instruction),
+            instruction: instruction,
+        };
+        game.history.push(newEntry);
+    }
+}
+
+/** 1つ以上の処理を実行し、Gameを更新する。 */
+export function applyInstructions(
+    game: Game,
+    instructions: Instruction[] | SimultaneousInstructions
+): void {
+    if (Array.isArray(instructions)) {
+        for (const inst of instructions) {
+            applyOneInstruction(game, inst);
+        }
+    } else {
+        // TODO: ?
     }
 }

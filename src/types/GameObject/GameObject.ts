@@ -30,7 +30,7 @@ export function createGameObject(params?: GameObjectParameters): GameObject {
     };
 }
 
-function createGameObjectId() {
+function createGameObjectId(): GameObjectId {
     return randomUUID();
 }
 

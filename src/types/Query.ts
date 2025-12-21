@@ -1,6 +1,6 @@
 import type { Game } from "./GameState/Game.js";
 import { isInBattlefield, type GameObject } from "./GameObject/GameObject.js";
-import { getObjectByCharacteristics } from "./GameState/GameState.js";
+import { getObjectsWithCharacteristics } from "./GameState/GameState.js";
 import type {
     CardTypeSet,
     Characteristics,
@@ -95,7 +95,7 @@ export function permanentQuery(
         if (state === undefined) {
             throw Error();
         } else {
-            return getObjectByCharacteristics(state, query)
+            return getObjectsWithCharacteristics(state, query)
                 .map(({ object, characteristics }) => object)
                 .filter((obj) => isInBattlefield(obj));
         }
