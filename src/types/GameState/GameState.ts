@@ -8,6 +8,8 @@ import type {
     Instruction,
     SimultaneousInstructions,
 } from "../Instruction/Instruction.js";
+import type { StackedAbility } from "../GameObject/StackedAbility.js";
+import type { Spell } from "../GameObject/Card/Spell.js";
 
 export type GameState = {
     timestamp: Timestamp;
@@ -22,12 +24,11 @@ export type GameState = {
     /** 優先権を持っているプレイヤーのターンインデックス */
     currentPriorityPlayerIndex: number | undefined;
     /** 最後に優先権パスでない行動をしたプレイヤーのターンインデックス */
-    latestActionPlayer: number | undefined;
+    latestActionPlayerIndex: number | undefined;
     /** このターンにクリンナップ・ステップをもう一度行うかどうか。 */
     cleanupAgainFlag: boolean;
     // TODO: 「最後に通常のターンを行ったプレイヤー」は要るのかどうか...
 };
-// FIXME: 配列のキーの型を明示的に定義したほうがいい？（ターン順のため）
 
 // MARK: 状態取得 ==================================================================
 /** アクティブプレイヤーを取得する */
@@ -45,10 +46,10 @@ export function getPriorityPlayer(state: GameState): Player | undefined {
 }
 /** 最後に優先権パスでない行動をしたプレイヤーを取得する */
 export function getLatestActionPlayer(state: GameState): Player | undefined {
-    if (state.latestActionPlayer === undefined) {
+    if (state.latestActionPlayerIndex === undefined) {
         return undefined;
     } else {
-        const playerIdx = state.turnOrder[state.latestActionPlayer];
+        const playerIdx = state.turnOrder[state.latestActionPlayerIndex];
         return playerIdx === undefined ? undefined : state.players[playerIdx];
     }
 }
@@ -116,26 +117,57 @@ export function getAllObjectsAndCharacteristics(state: GameState): {
     // - 適用順は１つ適用する事に再計算する
 }
 
+export function getAllObjectsInZone(
+    state: GameState,
+    zone: Zone
+): GameObject[] {
+    return state.objects.filter((obj) => obj.zone === zone);
+}
+
 // ==================================================================
 /** 次に行うべき処理を取得する。 */
 export function getNextInstructions(
     state: GameState
 ): Instruction[] | SimultaneousInstructions {
-    // stateに応じて変わる。
-    // - 全員が優先権を放棄している
-    if (state.currentPriorityPlayerIndex === undefined) {
+    // TODO: ゲーム開始時
+    if (
+        // まだ誰も優先権を持っていないなら、ターン起因処理を行う
+        state.currentPriorityPlayerIndex === undefined
+    ) {
+        // ターン起因処理 & アクティブプレイヤーが優先権を得る
+        return [] as Instruction[];
+    } else if (
+        // 全員が優先権を放棄している
+        state.currentPriorityPlayerIndex === state.latestActionPlayerIndex
+    ) {
+        const tempZones = getZones(state, { type: "Stack" });
+        if (tempZones.length !== 1) {
+            throw Error("Not Implemented");
+        } else {
+            const stack = tempZones[0] as Exclude<
+                (typeof tempZones)[0],
+                undefined
+            >;
+            const stackedObjects = getAllObjectsInZone(state, stack);
+            if (stackedObjects.length === 0) {
+                // スタックに何もなければ次へ進む。
+                //   - 未使用のマナが消滅する。
+                //   - 次のターン・フェイズ・ステップに移る。
+                //     - TODO: クリンナップ2回目
+                return [] as Instruction[];
+            } else {
+                // スタックに何かあれば解決する。
+                const topObject = stackedObjects.at(-1) as
+                    | Spell
+                    | StackedAbility;
+                return [{ type: "resolve", stackedObject: topObject }];
+            }
+        }
+    } else {
+        // 全員が優先権を放棄していないなら、優先権を持っている人は
+        // 優先権行動をするか、優先権を放棄する
+        return [] as Instruction[];
     }
-    //   - スタックにあれば解決する。
-    //   - スタックになければ次へ進む。
-    //     - 未使用のマナが消滅する。
-    //     - 次のターン・フェイズ・ステップに移る。
-    // - 全員が優先権を放棄していない
-    //   - 次の人が優先権行動をするか、優先権を放棄する
-    //
-    // TODO:
-    // - ターン起因処理 (まだ誰も優先権を持っていないなら。その後アクティブプレイヤーが優先権を得る)
-    // - クリンナップ2回目
-    // - ゲーム開始時の処理
 }
 
 // フェイズ開始

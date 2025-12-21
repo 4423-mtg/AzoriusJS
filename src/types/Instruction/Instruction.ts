@@ -14,9 +14,9 @@ import type { MultiSpec, SingleSpec } from "../Query.js";
 
 /** 処理。 */
 export type Instruction = {
+    type: string; // FIXME: ユニオンにしないと実行時に分岐処理できない
     instructor: SingleSpec<Player>;
     performer: SingleSpec<Player>;
-    type: string; // FIXME:
 };
 
 // - Instruction は入れ子になることがある。
@@ -24,8 +24,14 @@ export type Instruction = {
 
 // MARK: 基本 ************************************************
 /** 複数の処理を同時に行う指示。 */ // ゴブリンの溶接工
-export type SimultaneousInstructions = {
-    type: "parallel";
+export type SimultaneousInstructions = Instruction & {
+    type: "simultaneous";
+    instructions: Instruction[];
+};
+
+/** 複数の処理から1つを選ばせる指示 */ // 優先権
+export type ChooseInstruction = Instruction & {
+    type: "choose";
     instructions: Instruction[];
 };
 

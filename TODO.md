@@ -4,6 +4,8 @@
   - getNextInstructions
   - getNextState
 - Instruction.ts 重い
+  - いろいろ
+  - Instructionの入れ子について考える。（例：ドロー、発掘、唱える）
 
 - Layer.ts
   - 文章変更効果
