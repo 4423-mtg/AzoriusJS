@@ -24,21 +24,23 @@ export type GameState = {
     currentPriorityPlayerIndex: number | undefined;
     /** 最後に通常のターンを行ったプレイヤーのインデックス。 */
     currentTurnOrderPlayer: number | undefined;
-
-    //
 };
 
 /** 次に行うべき処理を取得する。 */
 export function getNextInstruction(state: GameState): Instruction {
+    // stateに応じて変わる。
+    // - 全員が優先権を放棄している
+    //   - スタックにあれば解決する。
+    //   - スタックになければ次へ進む。
+    //     - 未使用のマナが消滅する。
+    //     - 次のターン・フェイズ・ステップに移る。
+    // - 全員が優先権を放棄していない
+    //   - 次の人が優先権行動をするか、優先権を放棄する
     //
-}
-
-/** 処理を適用し、新しい GameState を生成して返す。 */
-export function createNextState(
-    state: GameState,
-    instruction: Instruction
-): GameState {
-    //
+    // TODO:
+    // - ターン起因処理 (まだ誰も優先権を持っていないなら。その後アクティブプレイヤーが優先権を得る)
+    // - クリンナップ2回目
+    // - ゲーム開始時の処理
 }
 
 export function deepCopyGamestate(state: GameState): GameState {
