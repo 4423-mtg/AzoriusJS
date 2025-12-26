@@ -9,7 +9,7 @@
   - ツリーにならざるを得ない気がする
     - Instructionが状態を持つことになる（例：N枚ドローは引いた枚数を持つ）
     - Instructionは子Instructionを都度生成する
-  - Instructionの処理にバリデーションが必要 => zod
+  - Instructionは公称型にする
 
 - Layer.ts
   - 文章変更効果

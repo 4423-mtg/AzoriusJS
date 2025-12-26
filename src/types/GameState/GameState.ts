@@ -182,7 +182,20 @@ export function applyOneInstruction(
     state: GameState,
     instructions: Instruction[]
 ): GameState {
-    // TODO: 置換効果等
+    const inst = instructions.at(-1);
+    if (inst !== undefined) {
+        switch (inst.type) {
+            case "draw":
+                // typeが決まった時点で型推論されるようにできないか？
+                // ドロー処理
+                // TODO: 置換効果等
+                break;
+            default:
+                break;
+        }
+    } else {
+        throw new Error();
+    }
 }
 
 export function deepCopyGamestate(state: GameState): GameState {

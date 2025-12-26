@@ -14,8 +14,10 @@ import { isSingleSpec, type MultiSpec, type SingleSpec } from "../Query.js";
 import type { InstructionType } from "./InstructionType.js";
 
 /** 処理。 */
-export type Instruction = {
-    type: InstructionType;
+export type Instruction = InstructionCommonField<InstructionType>;
+
+export type InstructionCommonField<T extends InstructionType> = {
+    type: T;
     instructor: SingleSpec<Player>;
     performer: SingleSpec<Player>;
     completed: boolean;
@@ -23,7 +25,7 @@ export type Instruction = {
 
 // - Instruction は入れ子になることがある。
 //   - どのような入れ子になるかは各 Instruction が各自定義する。
-// TODO: 続唱...?
+// 続唱...?
 
 /** Instructionのチェーンから、次の瞬間のInstructionのチェーンを得る。 */
 export function getNextInstructionChain(chain: Instruction[]): Instruction[] {
@@ -44,29 +46,25 @@ export function yieldNextInstructions(instruction: Instruction): Instruction[] {
     } else {
         // TODO: 型に応じた処理をする
         // タイプガードが必要 -> zod ?
-        switch (key) {
-            case value:
+        switch (instruction.type) {
+            case "draw":
                 break;
-
             default:
                 break;
-        }
-        if (condition) {
-        } else {
-            return undefined;
         }
     }
 }
 
 // MARK: 基本 ************************************************
 /** 複数の処理を同時に行う指示。 */ // ゴブリンの溶接工
-export type SimultaneousInstructions = Instruction & {
-    type: "simultaneous";
-    instructions: Instruction[];
-};
+export type SimultaneousInstructions =
+    InstructionCommonField<"simultaneous"> & {
+        type: "simultaneous";
+        instructions: Instruction[];
+    };
 
 /** 複数の処理から1つを選ばせる指示 */ // 優先権など
-export type ChooseInstruction = Instruction & {
+export type ChooseInstruction = InstructionCommonField<"chooseInstruction"> & {
     type: "choose";
     instructions: Instruction[];
 };
@@ -74,7 +72,8 @@ export type ChooseInstruction = Instruction & {
 // =============================================================
 // MARK: 領域を移動する
 /** 領域の移動 */
-export type Move = Instruction & {
+export type Move = InstructionCommonField<"move"> & {
+    type: "";
     objects: MultiSpec<GameObject>;
     destination: (
         object: GameObject,
@@ -88,13 +87,13 @@ export type Move = Instruction & {
 
 // MARK: 解決する
 /** 呪文や能力を解決する。マナ能力を含む */
-export type Resolve = Instruction & {
+export type Resolve = InstructionCommonField<"resolve"> & {
     stackedObject: SingleSpec<Spell | StackedAbility>;
 };
 
 // MARK: 支払う
 /** 支払う */
-export type Pay = Instruction & {
+export type Pay = InstructionCommonField<"pay"> & {
     cost: MultiSpec<Instruction>;
     // 任意の処理がコストになりうる（例：炎の編み込み）
 };
@@ -102,42 +101,34 @@ export type Pay = Instruction & {
 
 // MARK: カードを引く
 /** カードを引く */
-export type Draw = Instruction & {
+export type Draw = InstructionCommonField<"draw"> & {
     number: SingleSpec<number>;
     current: number;
 };
-export function isDraw(instruction: Instruction): instruction is Draw {
-    const x = [{ key: "number", pred: (v) => isSingleSpec() }];
-
-    return "number" in instruction && typeof instruction["number"] === "number";
-}
 // 托鉢するものは置換処理の方で特別扱いする
 
 // MARK: ターンを開始する
 /** ターンを開始する */
-export type BeginNewTurn = Instruction & {
-    type: "BeginNewTurn";
+export type BeginTurn = InstructionCommonField<"beginTurn"> & {
     params: SingleSpec<TurnParameters>;
 };
 
 // MARK: フェイズとステップを開始する
 /** フェイズとステップを開始する */
-export type BeginNewPhaseStep = Instruction & {
-    type: "BeginNewPhaseStep";
+export type BeginPhaseStep = InstructionCommonField<"beginPhaseAndStep"> & {
     phase: SingleSpec<PhaseParameters>;
     step?: SingleSpec<StepParameters>;
 };
 
 // MARK: ステップを開始する
 /** ステップを開始する */
-export type BeginNewStep = Instruction & {
-    type: "BeginNewStep";
+export type BeginStep = InstructionCommonField<"beginStep"> & {
     step: SingleSpec<StepParameters>;
 };
 
 // MARK: ダメージを与える
 /** ダメージを与える */ // FIXME:
-export type DealDamage = Instruction & {
+export type DealDamage = InstructionCommonField<"dealDamage"> & {
     /** ダメージの発生源 */
     source: SingleSpec<GameObject>;
     /** ダメージが与えられるオブジェクト */
@@ -151,13 +142,13 @@ export type DealDamage = Instruction & {
 
 // MARK: ライフを得る
 /** ライフを得る */
-export type GainLife = Instruction & {
+export type GainLife = InstructionCommonField<"gainLife"> & {
     amount: (player: Player) => SingleSpec<number>;
 };
 
 // MARK: カウンターを置く
 /** カウンターを置く・得る */
-export type PutCounter = Instruction & {
+export type PutCounter = InstructionCommonField<"putCounter"> & {
     object: MultiSpec<GameObject>;
     counter: (object: GameObject) => MultiSpec<Counter>;
 };
