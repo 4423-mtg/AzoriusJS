@@ -14,14 +14,15 @@ import { isSingleSpec, type MultiSpec, type SingleSpec } from "../Query.js";
 import type { InstructionType } from "./InstructionType.js";
 
 /** 処理。 */
-export type Instruction = InstructionCommonField<InstructionType>;
-
-export type InstructionCommonField<T extends InstructionType> = {
+export type Instruction<
+    T extends InstructionType = InstructionType,
+    U extends {} = {}
+> = {
     type: T;
     instructor: SingleSpec<Player>;
     performer: SingleSpec<Player>;
     completed: boolean;
-};
+} & Omit<U, "type" | "instructor" | "performer" | "completed">;
 
 // - Instruction は入れ子になることがある。
 //   - どのような入れ子になるかは各 Instruction が各自定義する。
@@ -57,29 +58,36 @@ export function yieldNextInstructions(instruction: Instruction): Instruction[] {
 
 // MARK: 基本 ************************************************
 /** 複数の処理を同時に行う指示。 */ // ゴブリンの溶接工
-export type SimultaneousInstructions =
-    InstructionCommonField<"simultaneous"> & {
+export type SimultaneousInstructions = Instruction<
+    "simultaneous",
+    {
         type: "simultaneous";
         instructions: Instruction[];
-    };
+    }
+>;
 
 /** 複数の処理から1つを選ばせる指示 */ // 優先権など
-export type ChooseInstruction = InstructionCommonField<"chooseInstruction"> & {
-    type: "choose";
-    instructions: Instruction[];
-};
+export type ChooseInstruction = Instruction<
+    "chooseInstruction",
+    {
+        type: "choose";
+        instructions: Instruction[];
+    }
+>;
 
 // =============================================================
 // MARK: 領域を移動する
 /** 領域の移動 */
-export type Move = InstructionCommonField<"move"> & {
-    type: "";
-    objects: MultiSpec<GameObject>;
-    destination: (
-        object: GameObject,
-        source: GameObject
-    ) => SingleSpec<Zone | undefined>;
-};
+export type Move = Instruction<
+    "move",
+    {
+        objects: MultiSpec<GameObject>;
+        destination: (
+            object: GameObject,
+            source: GameObject
+        ) => SingleSpec<Zone | undefined>;
+    }
+>; // FIXME: プロパティの重複がないようにチェックしたい
 
 // MARK: 誘発する
 /** 誘発する */
@@ -87,71 +95,98 @@ export type Move = InstructionCommonField<"move"> & {
 
 // MARK: 解決する
 /** 呪文や能力を解決する。マナ能力を含む */
-export type Resolve = InstructionCommonField<"resolve"> & {
-    stackedObject: SingleSpec<Spell | StackedAbility>;
-};
+export type Resolve = Instruction<
+    "resolve",
+    {
+        stackedObject: SingleSpec<Spell | StackedAbility>;
+    }
+>;
 
 // MARK: 支払う
 /** 支払う */
-export type Pay = InstructionCommonField<"pay"> & {
-    cost: MultiSpec<Instruction>;
-    // 任意の処理がコストになりうる（例：炎の編み込み）
-};
+export type Pay = Instruction<
+    "pay",
+    {
+        cost: MultiSpec<Instruction>;
+        // 任意の処理がコストになりうる（例：炎の編み込み）
+    }
+>;
 // 複数のコストは好きな順番で支払える
 
 // MARK: カードを引く
 /** カードを引く */
-export type Draw = InstructionCommonField<"draw"> & {
-    number: SingleSpec<number>;
-    current: number;
-};
+export type Draw = Instruction<
+    "draw",
+    {
+        number: SingleSpec<number>;
+        current: number;
+    }
+>;
 // 托鉢するものは置換処理の方で特別扱いする
 
 // MARK: ターンを開始する
 /** ターンを開始する */
-export type BeginTurn = InstructionCommonField<"beginTurn"> & {
-    params: SingleSpec<TurnParameters>;
-};
+export type BeginTurn = Instruction<
+    "beginTurn",
+    {
+        params: SingleSpec<TurnParameters>;
+    }
+>;
 
 // MARK: フェイズとステップを開始する
 /** フェイズとステップを開始する */
-export type BeginPhaseStep = InstructionCommonField<"beginPhaseAndStep"> & {
-    phase: SingleSpec<PhaseParameters>;
-    step?: SingleSpec<StepParameters>;
-};
+export type BeginPhaseStep = Instruction<
+    "beginPhaseAndStep",
+    {
+        phase: SingleSpec<PhaseParameters>;
+        step?: SingleSpec<StepParameters>;
+    }
+>;
 
 // MARK: ステップを開始する
 /** ステップを開始する */
-export type BeginStep = InstructionCommonField<"beginStep"> & {
-    step: SingleSpec<StepParameters>;
-};
+export type BeginStep = Instruction<
+    "beginStep",
+    {
+        step: SingleSpec<StepParameters>;
+    }
+>;
 
 // MARK: ダメージを与える
 /** ダメージを与える */ // FIXME:
-export type DealDamage = InstructionCommonField<"dealDamage"> & {
-    /** ダメージの発生源 */
-    source: SingleSpec<GameObject>;
-    /** ダメージが与えられるオブジェクト */
-    object: MultiSpec<GameObject>; // FIXME: only permanent
-    /** ダメージの量 */
-    number: SingleSpec<number>;
-};
+export type DealDamage = Instruction<
+    "dealDamage",
+    {
+        /** ダメージの発生源 */
+        source: SingleSpec<GameObject>;
+        /** ダメージが与えられるオブジェクト */
+        object: MultiSpec<GameObject>; // FIXME: only permanent
+        /** ダメージの量 */
+        number: SingleSpec<number>;
+    }
+>;
 // 発生源から対象が決まることも対象から発生源が決まることもあるのでは？（量についても同じ）
 // ダメージの結果（絆魂・感染など）
 // クリーチャーは被ダメージ、プレイヤーはライフ減少
 
 // MARK: ライフを得る
 /** ライフを得る */
-export type GainLife = InstructionCommonField<"gainLife"> & {
-    amount: (player: Player) => SingleSpec<number>;
-};
+export type GainLife = Instruction<
+    "gainLife",
+    {
+        amount: (player: Player) => SingleSpec<number>;
+    }
+>;
 
 // MARK: カウンターを置く
 /** カウンターを置く・得る */
-export type PutCounter = InstructionCommonField<"putCounter"> & {
-    object: MultiSpec<GameObject>;
-    counter: (object: GameObject) => MultiSpec<Counter>;
-};
+export type PutCounter = Instruction<
+    "putCounter",
+    {
+        object: MultiSpec<GameObject>;
+        counter: (object: GameObject) => MultiSpec<Counter>;
+    }
+>;
 
 // MARK: 見る
 /** 見る */
