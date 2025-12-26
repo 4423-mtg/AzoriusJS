@@ -1,12 +1,12 @@
 import type { MatchInfo } from "./Match.js";
 import {
-    getNextInstructions,
-    getNextState,
+    applyOneInstruction,
+    getNextInstructionsFromState,
     type GameState,
 } from "./GameState.js";
 import {
+    getNextInstructionChain,
     type Instruction,
-    type SimultaneousInstructions,
 } from "../Instruction/Instruction.js";
 
 // MARK: Game
@@ -17,36 +17,36 @@ export type Game = {
 };
 export type HistoryEntry = {
     state: GameState;
-    instruction: Instruction;
+    instructions: Instruction[];
 };
 
-/** 処理を1つだけ実行し、Gameを更新する。 */
-export function applyOneInstruction(
-    game: Game,
-    instruction: Instruction
-): void {
+/** Gameを1つ進める。 */
+export function goToNext(game: Game): void {
     const current = game.history.at(-1);
-    if (current === undefined) {
-        throw Error();
+    if (current !== undefined) {
+        const nextInstructions = getNextInstructions(game);
+        game.history.push({
+            state: applyOneInstruction(current.state, nextInstructions),
+            instructions: nextInstructions,
+        });
     } else {
-        const newEntry: HistoryEntry = {
-            state: getNextState(current.state, instruction),
-            instruction: instruction,
-        };
-        game.history.push(newEntry);
+        throw Error();
     }
 }
 
-/** 1つ以上の処理を実行し、Gameを更新する。 */
-export function applyInstructions(
-    game: Game,
-    instructions: Instruction[] | SimultaneousInstructions
-): void {
-    if (Array.isArray(instructions)) {
-        for (const inst of instructions) {
-            applyOneInstruction(game, inst);
+/** 次に行うべき処理を得る */
+export function getNextInstructions(game: Game): Instruction[] {
+    const current = game.history.at(-1);
+    if (current !== undefined) {
+        const _first = current.instructions[0];
+        if (_first === undefined) {
+            throw new Error("");
+        } else {
+            return _first.completed
+                ? getNextInstructionsFromState(current.state)
+                : getNextInstructionChain(current.instructions);
         }
     } else {
-        // TODO: ?
+        throw Error();
     }
 }

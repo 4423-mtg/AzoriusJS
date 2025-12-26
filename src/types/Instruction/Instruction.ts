@@ -10,7 +10,7 @@ import type {
     StepParameters,
     TurnParameters,
 } from "../Turn.js";
-import type { MultiSpec, SingleSpec } from "../Query.js";
+import { isSingleSpec, type MultiSpec, type SingleSpec } from "../Query.js";
 import type { InstructionType } from "./InstructionType.js";
 
 /** 処理。 */
@@ -18,10 +18,45 @@ export type Instruction = {
     type: InstructionType;
     instructor: SingleSpec<Player>;
     performer: SingleSpec<Player>;
+    completed: boolean;
 };
 
 // - Instruction は入れ子になることがある。
 //   - どのような入れ子になるかは各 Instruction が各自定義する。
+// TODO: 続唱...?
+
+/** Instructionのチェーンから、次の瞬間のInstructionのチェーンを得る。 */
+export function getNextInstructionChain(chain: Instruction[]): Instruction[] {
+    const pred = (instruction: Instruction) => !instruction.completed;
+    const i = chain.findLastIndex(pred);
+    const e = chain.findLast(pred);
+    if (i === -1 || e === undefined) {
+        throw new Error();
+    } else {
+        return chain.slice(0, i).concat(yieldNextInstructions(e));
+    }
+}
+
+/** 完了していないInstructionから、次のInstructionを生成する。 */
+export function yieldNextInstructions(instruction: Instruction): Instruction[] {
+    if (instruction.completed) {
+        throw new Error();
+    } else {
+        // TODO: 型に応じた処理をする
+        // タイプガードが必要 -> zod ?
+        switch (key) {
+            case value:
+                break;
+
+            default:
+                break;
+        }
+        if (condition) {
+        } else {
+            return undefined;
+        }
+    }
+}
 
 // MARK: 基本 ************************************************
 /** 複数の処理を同時に行う指示。 */ // ゴブリンの溶接工
@@ -36,7 +71,8 @@ export type ChooseInstruction = Instruction & {
     instructions: Instruction[];
 };
 
-// MARK: 基本 ************************************************
+// =============================================================
+// MARK: 領域を移動する
 /** 領域の移動 */
 export type Move = Instruction & {
     objects: MultiSpec<GameObject>;
@@ -46,14 +82,17 @@ export type Move = Instruction & {
     ) => SingleSpec<Zone | undefined>;
 };
 
+// MARK: 誘発する
 /** 誘発する */
 // class Triggering extends Instruction {}
 
+// MARK: 解決する
 /** 呪文や能力を解決する。マナ能力を含む */
 export type Resolve = Instruction & {
     stackedObject: SingleSpec<Spell | StackedAbility>;
 };
 
+// MARK: 支払う
 /** 支払う */
 export type Pay = Instruction & {
     cost: MultiSpec<Instruction>;
@@ -61,31 +100,42 @@ export type Pay = Instruction & {
 };
 // 複数のコストは好きな順番で支払える
 
+// MARK: カードを引く
 /** カードを引く */
 export type Draw = Instruction & {
     number: SingleSpec<number>;
+    current: number;
 };
+export function isDraw(instruction: Instruction): instruction is Draw {
+    const x = [{ key: "number", pred: (v) => isSingleSpec() }];
+
+    return "number" in instruction && typeof instruction["number"] === "number";
+}
 // 托鉢するものは置換処理の方で特別扱いする
 
-/** 新しいターンを開始する */
+// MARK: ターンを開始する
+/** ターンを開始する */
 export type BeginNewTurn = Instruction & {
     type: "BeginNewTurn";
     params: SingleSpec<TurnParameters>;
 };
 
-/** 新しいフェイズとステップを開始する */
+// MARK: フェイズとステップを開始する
+/** フェイズとステップを開始する */
 export type BeginNewPhaseStep = Instruction & {
     type: "BeginNewPhaseStep";
     phase: SingleSpec<PhaseParameters>;
     step?: SingleSpec<StepParameters>;
 };
 
-/** 新しいステップを開始する */
+// MARK: ステップを開始する
+/** ステップを開始する */
 export type BeginNewStep = Instruction & {
     type: "BeginNewStep";
     step: SingleSpec<StepParameters>;
 };
 
+// MARK: ダメージを与える
 /** ダメージを与える */ // FIXME:
 export type DealDamage = Instruction & {
     /** ダメージの発生源 */
@@ -99,23 +149,32 @@ export type DealDamage = Instruction & {
 // ダメージの結果（絆魂・感染など）
 // クリーチャーは被ダメージ、プレイヤーはライフ減少
 
+// MARK: ライフを得る
 /** ライフを得る */
 export type GainLife = Instruction & {
     amount: (player: Player) => SingleSpec<number>;
 };
 
+// MARK: カウンターを置く
 /** カウンターを置く・得る */
 export type PutCounter = Instruction & {
     object: MultiSpec<GameObject>;
     counter: (object: GameObject) => MultiSpec<Counter>;
 };
 
+// MARK: 見る
 /** 見る */
+
+// MARK: 束に分ける
 /** 束に分ける */
+
+// MARK: 値を選ぶ・宣言する
 /** 値を選ぶ・宣言する */
 
+// MARK: 裏向きにする・表向きにする
 /** 裏向きにする・表向きにする */
 
+// ==================================================================
 // MARK: 2次的行動 ************************************************
 /** 優先権行動 */
 

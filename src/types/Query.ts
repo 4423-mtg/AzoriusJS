@@ -55,10 +55,10 @@ export type SingleSpec<T> = T | SingleQuery<T>;
 export type MultiSpec<T> = SingleSpec<T>[] | MultiQuery<T>;
 export type Spec<T> = SingleSpec<T> | MultiSpec<T>;
 
-function isSingleSpec<T>(spec: Spec<T>): spec is T | SingleQuery<T> {
+export function isSingleSpec<T>(spec: Spec<T>): spec is T | SingleQuery<T> {
     return !isMultiSpec(spec);
 }
-function isMultiSpec<T>(spec: Spec<T>): spec is MultiSpec<T> {
+export function isMultiSpec<T>(spec: Spec<T>): spec is MultiSpec<T> {
     return spec instanceof MultiQuery || Array.isArray(spec);
 }
 

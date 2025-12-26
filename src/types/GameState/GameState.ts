@@ -126,9 +126,7 @@ export function getAllObjectsInZone(
 
 // ==================================================================
 /** 次に行うべき処理を取得する。 */
-export function getNextInstructions(
-    state: GameState
-): Instruction[] | SimultaneousInstructions {
+export function getNextInstructionsFromState(state: GameState): Instruction[] {
     // TODO: ゲーム開始時
     if (
         // まだ誰も優先権を持っていないなら、ターン起因処理を行う
@@ -179,15 +177,14 @@ export function getNextInstructions(
 // (全員パス)
 // スタックにあれば解決、なければ次のフェイズへ
 
-/** 処理を1つ適用し、新しい GameState を生成して返す。 */
-export function getNextState(
+/** 処理を1つだけ実行して、結果のGameStateを返す。 */
+export function applyOneInstruction(
     state: GameState,
-    instruction: Instruction
+    instructions: Instruction[]
 ): GameState {
-    // 置換効果などを考慮する。
+    // TODO: 置換効果等
 }
 
-// 不要になった？
 export function deepCopyGamestate(state: GameState): GameState {
     return { ...state }; // FIXME: shallow copy
 }
