@@ -50,3 +50,4 @@ export type InstructionType =
     | "untap"
     | "transform"
     | "convert";
+// TODO: 非常盤木キーワード能力

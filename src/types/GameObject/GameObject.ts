@@ -1,6 +1,6 @@
 import type { Zone } from "../GameState/Zone.js";
 import type { Card } from "./Card/Card.js";
-import type { Counter } from "./Counter.js";
+import type { CounterOnObject } from "./Counter.js";
 import type { Marker } from "./Marker.js";
 import type { Sticker } from "./Sticker.js";
 const { randomUUID } = await import("node:crypto");
@@ -11,7 +11,7 @@ const { randomUUID } = await import("node:crypto");
 export type GameObject = {
     objectId: GameObjectId;
     zone: Zone | undefined;
-    counters: Counter[] | undefined;
+    counters: CounterOnObject[] | undefined;
     stickers: Sticker[] | undefined;
     markers: Marker[] | undefined;
 };

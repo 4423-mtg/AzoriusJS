@@ -1,480 +1,338 @@
 /** 効果やルールによってゲーム中に行われる指示。 */
-import type { GameObject } from "../GameObject/GameObject.js";
 import type { Player } from "../GameObject/Player.js";
-import type { StackedAbility } from "../GameObject/StackedAbility.js";
-import type { Counter } from "../GameObject/Counter.js";
-import type { Spell } from "../GameObject/Card/Spell.js";
-import type { Zone } from "../GameState/Zone.js";
-import type {
-    PhaseParameters,
-    StepParameters,
-    TurnParameters,
-} from "../Turn.js";
-import { isSingleSpec, type MultiSpec, type SingleSpec } from "../Query.js";
+import type { SingleSpec } from "../Query.js";
 import type { InstructionType } from "./InstructionType.js";
+import type {
+    BeginPhaseAndStep,
+    BeginStep,
+    BeginTurn,
+    ChooseValue,
+    DealDamage,
+    Draw,
+    GainLife,
+    Look,
+    Move,
+    Pay,
+    PutCounter,
+    PutTriggerdAbilitiesOnStack,
+    Resolve,
+    SeparateIntoPiles,
+    StateBasedAction,
+    Trigger,
+    TurnBasedAction,
+    TurnFaceDown,
+    TurnFaceUp,
+} from "./BasicInstruction.js";
+import type {
+    Activate,
+    Attach,
+    Behold,
+    Cast,
+    Convert,
+    CounterSpellOrAbility,
+    Create,
+    Destroy,
+    Discard,
+    Double,
+    Exchange,
+    Exile,
+    Fight,
+    Goad,
+    Investigate,
+    Mill,
+    Play,
+    Regenerate,
+    Reveal,
+    Sacrifice,
+    Scry,
+    Search,
+    Shuffle,
+    Surveil,
+    Tap,
+    Transform,
+    Triple,
+    Unattach,
+    Untap,
+} from "./KeywordAction.ts/Evergreen.js";
 
 /** 処理。 */
-export type Instruction<
-    T extends InstructionType = InstructionType,
-    U extends {} = {}
-> = {
+export type Instruction<T extends InstructionType = InstructionType> =
+    T extends "simultaneous"
+        ? SimultaneousInstructions
+        : T extends "chooseInstruction"
+        ? ChooseInstruction
+        : T extends "move"
+        ? Move
+        : T extends "trigger"
+        ? Trigger
+        : T extends "resolve"
+        ? Resolve
+        : T extends "pay"
+        ? Pay
+        : T extends "draw"
+        ? Draw
+        : T extends "beginTurn"
+        ? BeginTurn
+        : T extends "beginPhaseAndStep"
+        ? BeginPhaseAndStep
+        : T extends "beginStep"
+        ? BeginStep
+        : T extends "dealDamage"
+        ? DealDamage
+        : T extends "gainLife"
+        ? GainLife
+        : T extends "putCounter"
+        ? PutCounter
+        : T extends "look"
+        ? Look
+        : T extends "separateIntoPiles"
+        ? SeparateIntoPiles
+        : T extends "chooseValue"
+        ? ChooseValue
+        : T extends "turnFaceDown"
+        ? TurnFaceDown
+        : T extends "turnFaceUp"
+        ? TurnFaceUp
+        : T extends "turnBasedAction"
+        ? TurnBasedAction
+        : T extends "stateBasedAction"
+        ? StateBasedAction
+        : T extends "putTriggerdAbilitiesOnStack"
+        ? PutTriggerdAbilitiesOnStack
+        : T extends "activate"
+        ? Activate
+        : T extends "attach"
+        ? Attach
+        : T extends "unattach"
+        ? Unattach
+        : T extends "behold"
+        ? Behold
+        : T extends "cast"
+        ? Cast
+        : T extends "counter"
+        ? CounterSpellOrAbility
+        : T extends "create"
+        ? Create
+        : T extends "destroy"
+        ? Destroy
+        : T extends "discard"
+        ? Discard
+        : T extends "double"
+        ? Double
+        : T extends "triple"
+        ? Triple
+        : T extends "exchange"
+        ? Exchange
+        : T extends "exile"
+        ? Exile
+        : T extends "fight"
+        ? Fight
+        : T extends "goad"
+        ? Goad
+        : T extends "investigate"
+        ? Investigate
+        : T extends "mill"
+        ? Mill
+        : T extends "play"
+        ? Play
+        : T extends "regenerate"
+        ? Regenerate
+        : T extends "reveal"
+        ? Reveal
+        : T extends "sacrifice"
+        ? Sacrifice
+        : T extends "scry"
+        ? Scry
+        : T extends "search"
+        ? Search
+        : T extends "shuffle"
+        ? Shuffle
+        : T extends "surveil"
+        ? Surveil
+        : T extends "tap"
+        ? Tap
+        : T extends "untap"
+        ? Untap
+        : T extends "transform"
+        ? Transform
+        : T extends "convert"
+        ? Convert
+        : never;
+
+/** Instructionの定義用 */
+export type DefineInstruction<
+    T extends InstructionType,
+    U extends { [K: PropertyKey]: unknown } & _ForbidKeys<
+        keyof _InstructionCommonAttributes<T>
+    > = {}
+> = _InstructionCommonAttributes<T> & U;
+
+/** Instructionの共通フィールド */
+type _InstructionCommonAttributes<T extends InstructionType> = {
     type: T;
     instructor: SingleSpec<Player>;
     performer: SingleSpec<Player>;
     completed: boolean;
-} & Omit<U, "type" | "instructor" | "performer" | "completed">;
+};
+type _ForbidKeys<K extends PropertyKey> = {
+    [P in K]?: never;
+};
 
 // - Instruction は入れ子になることがある。
 //   - どのような入れ子になるかは各 Instruction が各自定義する。
-// 続唱...?
-
 /** Instructionのチェーンから、次の瞬間のInstructionのチェーンを得る。 */
 export function getNextInstructionChain(chain: Instruction[]): Instruction[] {
-    const pred = (instruction: Instruction) => !instruction.completed;
-    const i = chain.findLastIndex(pred);
-    const e = chain.findLast(pred);
+    const incomplete = (instruction: Instruction) => !instruction.completed;
+    const i = chain.findLastIndex(incomplete);
+    const e = chain.findLast(incomplete);
     if (i === -1 || e === undefined) {
         throw new Error();
     } else {
-        return chain.slice(0, i).concat(yieldNextInstructions(e));
+        return chain.slice(0, i).concat(_yieldNext(e));
     }
 }
 
 /** 完了していないInstructionから、次のInstructionを生成する。 */
-export function yieldNextInstructions(instruction: Instruction): Instruction[] {
-    if (instruction.completed) {
+export function _yieldNext(inst: Instruction): Instruction[] {
+    if (inst.completed) {
         throw new Error();
-    } else {
-        // TODO: 型に応じた処理をする
-        // タイプガードが必要 -> zod ?
-        switch (instruction.type) {
-            case "draw":
-                break;
-            default:
-                break;
-        }
+    }
+    switch (inst.type) {
+        case "simultaneous":
+            break;
+        case "chooseInstruction":
+            break;
+        case "move":
+            break;
+        case "trigger":
+            break;
+        case "resolve":
+            break;
+        case "pay":
+            break;
+        case "draw":
+            return [
+                {
+                    type: "draw",
+                    instructor: inst.instructor,
+                    performer: inst.performer,
+                    completed: inst.number === ++inst.current,
+                    number: inst.number,
+                    current: ++inst.current,
+                },
+                {
+                    type: "draw",
+                    instructor: inst.instructor,
+                    performer: inst.performer,
+                    completed: true,
+                    number: 1,
+                    current: 1,
+                },
+            ];
+        case "beginTurn":
+            break;
+        case "beginPhaseAndStep":
+            break;
+        case "beginStep":
+            break;
+        case "dealDamage":
+            break;
+        case "gainLife":
+            break;
+        case "putCounter":
+            break;
+        case "look":
+            break;
+        case "separateIntoPiles":
+            break;
+        case "chooseValue":
+            break;
+        case "turnFaceDown":
+            break;
+        case "turnFaceUp":
+            break;
+        case "turnBasedAction":
+            break;
+        case "stateBasedAction":
+            break;
+        case "putTriggerdAbilitiesOnStack":
+            break;
+        case "activate":
+            break;
+        case "attach":
+            break;
+        case "unattach":
+            break;
+        case "behold":
+            break;
+        case "cast":
+            break;
+        case "counter":
+            break;
+        case "create":
+            break;
+        case "destroy":
+            break;
+        case "discard":
+            break;
+        case "double":
+            break;
+        case "triple":
+            break;
+        case "exchange":
+            break;
+        case "exile":
+            break;
+        case "fight":
+            break;
+        case "goad":
+            break;
+        case "investigate":
+            break;
+        case "mill":
+            break;
+        case "play":
+            break;
+        case "regenerate":
+            break;
+        case "reveal":
+            break;
+        case "sacrifice":
+            break;
+        case "scry":
+            break;
+        case "search":
+            break;
+        case "shuffle":
+            break;
+        case "surveil":
+            break;
+        case "tap":
+            break;
+        case "untap":
+            break;
+        case "transform":
+            break;
+        case "convert":
+            break;
+        default:
+            throw new Error(inst.type);
     }
 }
 
 // MARK: 基本 ************************************************
 /** 複数の処理を同時に行う指示。 */ // ゴブリンの溶接工
-export type SimultaneousInstructions = Instruction<
+export type SimultaneousInstructions = DefineInstruction<
     "simultaneous",
     {
-        type: "simultaneous";
         instructions: Instruction[];
     }
 >;
 
 /** 複数の処理から1つを選ばせる指示 */ // 優先権など
-export type ChooseInstruction = Instruction<
+export type ChooseInstruction = DefineInstruction<
     "chooseInstruction",
     {
-        type: "choose";
         instructions: Instruction[];
     }
 >;
-
-// =============================================================
-// MARK: 領域を移動する
-/** 領域の移動 */
-export type Move = Instruction<
-    "move",
-    {
-        objects: MultiSpec<GameObject>;
-        destination: (
-            object: GameObject,
-            source: GameObject
-        ) => SingleSpec<Zone | undefined>;
-    }
->; // FIXME: プロパティの重複がないようにチェックしたい
-
-// MARK: 誘発する
-/** 誘発する */
-// class Triggering extends Instruction {}
-
-// MARK: 解決する
-/** 呪文や能力を解決する。マナ能力を含む */
-export type Resolve = Instruction<
-    "resolve",
-    {
-        stackedObject: SingleSpec<Spell | StackedAbility>;
-    }
->;
-
-// MARK: 支払う
-/** 支払う */
-export type Pay = Instruction<
-    "pay",
-    {
-        cost: MultiSpec<Instruction>;
-        // 任意の処理がコストになりうる（例：炎の編み込み）
-    }
->;
-// 複数のコストは好きな順番で支払える
-
-// MARK: カードを引く
-/** カードを引く */
-export type Draw = Instruction<
-    "draw",
-    {
-        number: SingleSpec<number>;
-        current: number;
-    }
->;
-// 托鉢するものは置換処理の方で特別扱いする
-
-// MARK: ターンを開始する
-/** ターンを開始する */
-export type BeginTurn = Instruction<
-    "beginTurn",
-    {
-        params: SingleSpec<TurnParameters>;
-    }
->;
-
-// MARK: フェイズとステップを開始する
-/** フェイズとステップを開始する */
-export type BeginPhaseStep = Instruction<
-    "beginPhaseAndStep",
-    {
-        phase: SingleSpec<PhaseParameters>;
-        step?: SingleSpec<StepParameters>;
-    }
->;
-
-// MARK: ステップを開始する
-/** ステップを開始する */
-export type BeginStep = Instruction<
-    "beginStep",
-    {
-        step: SingleSpec<StepParameters>;
-    }
->;
-
-// MARK: ダメージを与える
-/** ダメージを与える */ // FIXME:
-export type DealDamage = Instruction<
-    "dealDamage",
-    {
-        /** ダメージの発生源 */
-        source: SingleSpec<GameObject>;
-        /** ダメージが与えられるオブジェクト */
-        object: MultiSpec<GameObject>; // FIXME: only permanent
-        /** ダメージの量 */
-        number: SingleSpec<number>;
-    }
->;
-// 発生源から対象が決まることも対象から発生源が決まることもあるのでは？（量についても同じ）
-// ダメージの結果（絆魂・感染など）
-// クリーチャーは被ダメージ、プレイヤーはライフ減少
-
-// MARK: ライフを得る
-/** ライフを得る */
-export type GainLife = Instruction<
-    "gainLife",
-    {
-        amount: (player: Player) => SingleSpec<number>;
-    }
->;
-
-// MARK: カウンターを置く
-/** カウンターを置く・得る */
-export type PutCounter = Instruction<
-    "putCounter",
-    {
-        object: MultiSpec<GameObject>;
-        counter: (object: GameObject) => MultiSpec<Counter>;
-    }
->;
-
-// MARK: 見る
-/** 見る */
-
-// MARK: 束に分ける
-/** 束に分ける */
-
-// MARK: 値を選ぶ・宣言する
-/** 値を選ぶ・宣言する */
-
-// MARK: 裏向きにする・表向きにする
-/** 裏向きにする・表向きにする */
-
-// ==================================================================
-// MARK: 2次的行動 ************************************************
-/** 優先権行動 */
-
-/** ターン起因処理 */
-
-//     // MARK: Game/ターン起因
-//     /** ターン起因処理を行う。 */
-//     turn_based_action(phasekind: PhaseType, stepkind: StepType | undefined) {
-//         // TODO:
-//         if (phasekind === "Precombat Main") {
-//             // 英雄譚にカウンターを置く
-//             return;
-//         }
-//         switch (stepkind) {
-//             case "Untap":
-//                 // アクティブプレイヤーのパーマネントがフェイズイン／フェイズアウトする
-//                 // 条件を満たしていれば昼夜が入れ替わる
-//                 // アンタップする
-//                 break;
-
-//             case "Draw":
-//                 // カードを引く
-//                 break;
-
-//             case "Beginning of Combat":
-//                 // 多人数戦の一部ルールのみ
-//                 break;
-
-//             case "Declare Attackers":
-//                 // 攻撃クリーチャーを指定する
-//                 break;
-
-//             case "Declare Blockers":
-//                 // ブロッククリーチャーを指定する
-//                 break;
-
-//             case "Combat Damage":
-//                 // APNAP順に戦闘ダメージの割り振りを宣言する
-//                 // すべての戦闘ダメージが同時に与えられる
-//                 break;
-
-//             case "Cleanup":
-//                 // アクティブプレイヤーは手札の上限を超えた分の手札を捨てる
-//                 // パーマネントのダメージを取り除き、ターン終了時までの効果を終了する
-//                 break;
-//         }
-//     }
-
-//     // MARK: Game/状況起因処理
-//     /** 状況起因処理 (1回)  戻り値は処理を実際に行ったなら true*/
-//     state_based_action(): boolean {
-//         // TODO: 状況起因処理は一つの Instruction で同時に処理される
-//         // ライフが0以下なら敗北する
-//         // 毒カウンター10以上なら敗北する
-//         // 前回の状況起因処理以降にライブラリー0枚でカードを引こうとしたプレイヤーは敗北する
-//         // 致死ダメージを負っているクリーチャーは破壊される
-//         // タフネス0以下のクリーチャーは墓地に置かれる
-//         // 忠誠度0のPWは墓地に置かれる
-//         // 英雄譚が最終章以降かつスタックにそれからの章能力が置かれていないなら生け贄に捧げる
-//         // バトルが守備カウンター0個で以下同文
-//         // 不正なオーラは墓地に置かれる
-//         // 不正な装備品・城砦ははずれる
-//         // クリーチャーがなにかにつけられているならはずれる
-//         // オーラや装備品や城砦でないパーマネントがなにかにつけられているならはずれる
-//         // 戦場にないトークンは消滅する
-//         // スタックにない呪文のコピーは消滅する
-//         // +1カウンターと-1カウンターを相殺する
-//         // レジェンドルール
-//         return false; // 状況起因処理を実際に行ったなら true
-//     }
-
-// export class Game {
-//     match_info: MatchInfo;
-//     #history: GameState[] = [];
-//
-//     /** 現在のステップやフェイズを終了し、次のステップやフェイズに移行する。
-//      * 移った先のフェイズやステップにターン起因処理がある場合はそれも行う。
-//      * - 次がメイン・フェイズである場合は、ステップがないのでメイン・フェイズに移る。
-//      * - 現在がクリンナップ・ステップである場合は、次のターンに移る。
-//      * - 追加ターンや追加のフェイズ、追加のステップがある場合はそれに移る。
-//      */
-//     goto_next(): void {
-//         // 移る先のフェイズやステップ、ターンを決める。追加ターンや追加のフェイズ・ステップを考慮する
-//         /** 配列を反転した配列を新たに生成して返す。 */
-//         const toReversed = <T>(array: T[]) => Array.from(array).reverse();
-
-//         // ステップの追加があるならそれに移る
-//         for (const effect of toReversed(
-//             this.current.getGameObjects({ type: AdditionalStepEffect })
-//         )) {
-//             const params: QueryArgument = {
-//                 game: this,
-//                 self: effect,
-//             };
-//             if (resolveSingleSpec(effect.condition, params)) {
-//                 this.begin_new_step(effect.generate_step(params));
-//                 return;
-//             }
-//         }
-//         // 同じフェイズに次のステップがあるならそれに移る
-//         const { phase: next_phase_kind, step: next_step_kind } =
-//             getNextPhaseAndStep(
-//                 this.current.getPhase().kind,
-//                 this.current.getStep()?.kind
-//             );
-//         if (next_phase_kind === this.current.getPhase().kind) {
-//             this.begin_new_step(
-//                 next_step_kind !== undefined
-//                     ? new Step(this.#get_new_step_id(), next_step_kind)
-//                     : undefined
-//             );
-//             return;
-//         }
-//         // フェイズの追加があるならそれに移る
-//         for (const effect of toReversed(
-//             this.current.getGameObjects({ type: AdditionalPhaseEffect })
-//         )) {
-//             const params: QueryArgument = {
-//                 game: this,
-//                 self: effect,
-//             };
-//             if (resolveSingleSpec(effect.condition, params)) {
-//                 const new_phase = effect.generate_phase(params);
-//                 const new_step_kind = getFirstStepOfPhase(new_phase.kind);
-//                 this.begin_new_phase_and_step(
-//                     new_phase,
-//                     new_step_kind !== undefined
-//                         ? new Step(this.#get_new_step_id(), new_step_kind)
-//                         : undefined
-//                 );
-//                 return;
-//             }
-//         }
-//         // 次のフェイズがあるなら、次のフェイズに移る
-//         if (next_phase_kind !== undefined) {
-//             this.begin_new_phase_and_step(
-//                 new Phase(this.#get_new_phase_id(), next_phase_kind),
-//                 next_step_kind !== undefined
-//                     ? new Step(this.#get_new_step_id(), next_step_kind)
-//                     : undefined
-//             );
-//             return;
-//         }
-//         // ターンの追加があるならそれに移る
-//         for (const effect of toReversed(
-//             this.current.getGameObjects({ type: AdditionalTurnEffect })
-//         )) {
-//             const params: QueryArgument = {
-//                 game: this,
-//                 self: effect,
-//             };
-//             if (resolveSingleSpec(effect.condition, params)) {
-//                 this.begin_new_turn(effect.generate_turn(params));
-//                 return;
-//             }
-//         }
-//         // ターン順で次のプレイヤーのターンに移る
-//         const index = this.current.getCurrentTurnOrder();
-//         this.begin_new_turn(
-//             new Turn(
-//                 this.#get_new_turn_id(),
-//                 this.current.getTurnOrder()[index !== undefined ? index + 1 : 0]
-//             )
-//         );
-//         // TODO: アクティブプレイヤーが優先権を得る
-//         // ターンを移る間に能力が誘発したり状況起因処理が必要になったりした場合、
-//         // 通常通りそれらを処理してからアクティブプレイヤーが優先権を得る
-//         // ただしアンタップ・ステップには優先権は発生しないのでアップキープになる
-//         // アンタップステップにも誘発した場合アップキープに好きな順で積む
-//         return;
-//     }
-
-//     // MARK: Game/スタック置く
-//     /** 誘発していた能力をスタックに置く */
-//     put_triggered_abilities_on_stack(): void {
-//         const abilities = this.current
-//             .getGameObjects({ type: StackedAbility })
-//             .filter((ab) => ab.zone?.zonetype !== Stack);
-//         const range = (num: number) =>
-//             Array(num)
-//                 .fill(undefined)
-//                 .map((_, i) => i);
-
-//         // 各プレイヤーごとに
-//         for (const player of this.current.getPlayersByAPNAPOrder()) {
-//             // 自分の能力
-//             let abl = abilities.filter((a) => a.controller === player);
-//             // 好きな順でスタックに置く
-//             while (abl.length > 0) {
-//                 const num = select_number(range(abl.length));
-//                 abl[num].zone = this.current.zones([Stack])[0];
-//                 abl = abl.filter((_, i) => i !== num);
-//             }
-//         }
-//     }
-
-//     // MARK: Game/優先権を得る
-//     /** 状況起因処理と誘発チェックを行った後、プレイヤーが優先権を得る */
-//     set_priority_to(index: number): void {
-//         while (true) {
-//             // 発生しなくなるまで状況起因処理を繰り返す
-//             let flag_sba = false;
-//             while (true) {
-//                 flag_sba = this.state_based_action();
-//                 if (!flag_sba) {
-//                     break;
-//                 }
-//             }
-//             // 誘発していた能力をスタックに置く
-//             let flag_stack = false;
-//             if (
-//                 this.current
-//                     .getGameObjects({ type: StackedAbility })
-//                     .filter((ab) => ab.zone?.zonetype !== Stack).length > 0
-//             ) {
-//                 this.put_triggered_abilities_on_stack();
-//                 flag_stack = true;
-//             }
-//             // どちらも発生しなければ終わる
-//             if (!flag_sba && !flag_stack) {
-//                 break;
-//             }
-//         }
-//         /* プレイヤーが優先権を得る */
-//         this.current.setPlayerWithPriority(index);
-//     }
-
-//     // MARK: Game/行動
-//     /** 優先権による行動。呪文を唱える、能力を起動する、特別な処理を行う、優先権をパスする */
-//     take_priority_action(): void {
-//         // TODO:
-//         // 1. 呪文を唱える
-//         // 2. 能力を起動する
-//         // 3. 特別な処理を行う（土地のプレイ）
-//         // 4. パスする
-//     }
-
-//     // MARK: Game/解決
-//     /** スタックを1つ解決する */
-//     resolve_stack(): void {
-//         const stacked_obj = this.current.stacked_objects()[-1];
-//         this.perform(stacked_obj, stacked_obj.resolve);
-//         // 墓地に置くのは誰？
-//     }
-
-//     // MARK: Game/状況誘発
-//     /** 状況誘発 */
-//     check_state_triggers(state: GameState): void {
-//         // TODO: 誘発条件？
-//     }
-// }
-
-// test ok
-// const Evacuation = new MoveZone(
-//     this.controller,
-//     [
-//         {
-//             moved: new MultiRef((params) => {
-//                 return params.game.current
-//                     .permanents()
-//                     .filter((c) =>
-//                         c
-//                             .characteristics()
-//                             .card_types?.includes(CardType.Creature)
-//                     );
-//             }),
-//             dest: (obj) =>
-//                 new SingleRef<Zone>((params) => {
-//                     return params.game.current.zones(
-//                         [ZoneType.Hand],
-//                         [obj.owner]
-//                     )[0];
-//                 }),
-//         },
-//     ],
-//     this.performer
-// );

@@ -1,6 +1,6 @@
 import type { GameObject } from "./GameObject.js";
 
-export type Counter = GameObject & {
+export type CounterOnObject = GameObject & {
     name: string;
 };
 

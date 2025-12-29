@@ -1,6 +1,6 @@
 import type { MatchInfo } from "./Match.js";
 import {
-    applyOneInstruction,
+    applyInstruction,
     getNextInstructionsFromState,
     type GameState,
 } from "./GameState.js";
@@ -24,9 +24,9 @@ export type HistoryEntry = {
 export function goToNext(game: Game): void {
     const current = game.history.at(-1);
     if (current !== undefined) {
-        const nextInstructions = getNextInstructions(game);
+        const nextInstructions = _getNextInstructions(game);
         game.history.push({
-            state: applyOneInstruction(current.state, nextInstructions),
+            state: applyInstruction(current.state, nextInstructions),
             instructions: nextInstructions,
         });
     } else {
@@ -34,19 +34,21 @@ export function goToNext(game: Game): void {
     }
 }
 
-/** 次に行うべき処理を得る */
-export function getNextInstructions(game: Game): Instruction[] {
+/** 次に行うべき処理を得る。 */
+function _getNextInstructions(game: Game): Instruction[] {
     const current = game.history.at(-1);
     if (current !== undefined) {
         const _first = current.instructions[0];
-        if (_first === undefined) {
-            throw new Error("");
-        } else {
+        if (_first !== undefined) {
+            // 最後に行われた instruction が完了状態なら、stateから取得する。
+            // そうでないなら、instructionから続きを取得する。
             return _first.completed
                 ? getNextInstructionsFromState(current.state)
                 : getNextInstructionChain(current.instructions);
+        } else {
+            throw new Error("");
         }
     } else {
-        throw Error();
+        throw new Error();
     }
 }

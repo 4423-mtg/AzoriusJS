@@ -1,15 +1,9 @@
 - GameState
   - getAllObjectsAndCharacteristics
-  - getNextInstructions
-  - getNextState
-- Instruction.ts 重い
-  - いろいろ
-  - Instructionの入れ子について考える。（例：ドロー、発掘、唱える）
-  - 続唱...?
-  - ツリーにならざるを得ない気がする
-    - Instructionが状態を持つことになる（例：N枚ドローは引いた枚数を持つ）
-    - Instructionは子Instructionを都度生成する
-  - Instructionは公称型にする
+  - getNextInstructionsFromState
+  - applyInstruction
+- Instruction.ts
+  - _yieldNext
 
 - Layer.ts
   - 文章変更効果

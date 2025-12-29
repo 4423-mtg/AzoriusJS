@@ -4,10 +4,7 @@ import type { Player } from "../GameObject/Player.js";
 import type { Phase, Step, Turn } from "../Turn.js";
 import type { Characteristics } from "../Characteristics/Characteristic.js";
 import type { Card } from "../GameObject/Card/Card.js";
-import type {
-    Instruction,
-    SimultaneousInstructions,
-} from "../Instruction/Instruction.js";
+import type { Instruction } from "../Instruction/Instruction.js";
 import type { StackedAbility } from "../GameObject/StackedAbility.js";
 import type { Spell } from "../GameObject/Card/Spell.js";
 
@@ -178,21 +175,27 @@ export function getNextInstructionsFromState(state: GameState): Instruction[] {
 // スタックにあれば解決、なければ次のフェイズへ
 
 /** 処理を1つだけ実行して、結果のGameStateを返す。 */
-export function applyOneInstruction(
+// TODO: 置換効果等を考慮する
+export function applyInstruction(
     state: GameState,
     instructions: Instruction[]
 ): GameState {
     const inst = instructions.at(-1);
     if (inst !== undefined) {
+        const newState = deepCopyGamestate(state);
         switch (inst.type) {
             case "draw":
-                // typeが決まった時点で型推論されるようにできないか？
                 // ドロー処理
-                // TODO: 置換効果等
+                const x = inst;
+                newState;
+                break;
+            case "simultaneous":
                 break;
             default:
+                inst;
                 break;
         }
+        return newState;
     } else {
         throw new Error();
     }
