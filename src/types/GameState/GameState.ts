@@ -7,7 +7,10 @@ import type { Card } from "../GameObject/Card/Card.js";
 import type { Instruction } from "../Instruction/Instruction.js";
 import type { StackedAbility } from "../GameObject/StackedAbility.js";
 import type { Spell } from "../GameObject/Card/Spell.js";
-import { isContinuousEffect } from "../GameObject/GeneratedEffect/ContinuousEffect.js";
+import {
+    isCharacteristicsAlteringEffect,
+    isContinuousEffect,
+} from "../GameObject/GeneratedEffect/ContinuousEffect.js";
 import type { Timestamp } from "./Timestamp.js";
 
 export type GameState = {
@@ -92,7 +95,12 @@ export function getAllObjectsAndCharacteristics(state: GameState): {
     object: Card | Player;
     characteristics: Characteristics;
 }[] {
-    const effects = state.objects.filter((o) => isContinuousEffect(o));
+    const effects = state.objects.filter((o) =>
+        isCharacteristicsAlteringEffect(o)
+    );
+    // 第1種
+    const effects1 = effects.map((e) => ({ effect: e, layer: e.layers["1a"] }));
+
     // TODO:
     // 特性定義能力を適用
     // 1a種すべてをすべての順序で適用してみて依存をチェック

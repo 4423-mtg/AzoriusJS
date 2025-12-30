@@ -6,7 +6,12 @@ import {
 } from "../GameObject.js";
 import type { Player } from "../Player.js";
 import type { GameState } from "../../GameState/GameState.js";
-import type { Layer, LayerOrder } from "../../Characteristics/Layer.js";
+import {
+    isLayer,
+    layerCategories,
+    type Layer,
+    type LayerCategory,
+} from "../../Characteristics/Layer.js";
 import type { Instruction } from "../../Instruction/Instruction.js";
 import { isTimestamp, type Timestamp } from "../../GameState/Timestamp.js";
 
@@ -45,9 +50,33 @@ export type CharacteristicsAlteringEffect = ContinuousEffect &
 // プロパティ
 export type CharacteristicsAlteringEffectProperty = {
     /** 特性変更 */
-    // layers: Partial<Record<LayerOrder, LayerInstance>>;
-    layers: Partial<{ [K in LayerOrder]: Layer<K> }>;
+    layers: Partial<{ [K in LayerCategory]: Layer<K> }>;
 };
+
+export function isCharacteristicsAlteringEffect(
+    arg: unknown
+): arg is CharacteristicsAlteringEffect {
+    return isContinuousEffect(arg) && "layers" in arg && isLayers(arg.layers);
+}
+function isLayers(
+    arg: unknown
+): arg is Partial<{ [K in LayerCategory]: Layer<K> }> {
+    if (typeof arg === "object" && arg !== null) {
+        for (const k in arg) {
+            const v = (arg as typeof arg & Record<typeof k, unknown>)[k]; // FIXME: no as
+            if (!layerCategories.some((c) => c === k)) {
+                return false;
+            } else if (
+                !isLayer(v, k as (typeof layerCategories)[number]) // FIXME: no as
+            ) {
+                return false;
+            }
+        }
+        return true;
+    } else {
+        return false;
+    }
+}
 
 // 作成時の引数
 export type CharacteristicsAlteringEffectParameter =
