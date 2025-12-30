@@ -10,6 +10,7 @@ import type { Spell } from "../GameObject/Card/Spell.js";
 import {
     isCharacteristicsAlteringEffect,
     isContinuousEffect,
+    type CharacteristicsAlteringEffect,
 } from "../GameObject/GeneratedEffect/ContinuousEffect.js";
 import type { Timestamp } from "./Timestamp.js";
 
@@ -98,22 +99,31 @@ export function getAllObjectsAndCharacteristics(state: GameState): {
     const effects = state.objects.filter((o) =>
         isCharacteristicsAlteringEffect(o)
     );
+    // 適用済みリスト
+    const applied: {
+        effect: CharacteristicsAlteringEffect;
+        applied: boolean;
+    }[] = effects.map((e) => ({ effect: e, applied: false }));
+
     // 第1種
-    const effects1 = effects.map((e) => ({ effect: e, layer: e.layers["1a"] }));
+    const effects1a = effects.map((e) => ({
+        effect: e,
+        layer1a: e.layers["1a"],
+    }));
 
     // TODO:
-    // 特性定義能力を適用
-    // 1a種すべてをすべての順序で適用してみて依存をチェック
-    // 依存があってループしているならタイムスタンプ順で適用、ループしていないなら依存順で適用、依存がないならタイムスタンプ順で適用
-    // - 適用順は１つ適用する事に再計算する
+    // - 特性定義能力について // TODO: 特性定義能力かどうかは能力に紐づく！
+    //   - すべての継続的効果をすべての順序で適用してみて、依存をチェックする
+    //   - 依存があってループしているならタイムスタンプ順で適用、ループしていないなら依存順で適用、依存がないならタイムスタンプ順で適用する
+    //     - 適用順は1つ適用するごとに再計算する
+    // - その後特性定義能力でない能力について同様に行う
     // 第1b種
     // 第2種
     // 第3種
     // 第4種
-    // 能力無効チェック (その能力からの継続的効果をすでに適用しているならそのまま適用し、していないならもうその能力からの効果は適用しない)
     // 第5種
+    // - 5種以下では能力無効チェックを行う (その能力からの継続的効果をすでに適用しているならそのまま適用し、していないならもうその能力からの効果は適用しない)
     // 第6種
-    // 能力無効チェック (その能力からの継続的効果をすでに適用しているならそのまま適用し、していないならもうその能力からの効果は適用しない)
     // 第7a種
     // 第7b種
     // 第7c種

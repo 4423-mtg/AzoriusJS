@@ -39,6 +39,7 @@ const urborg = createCharacteristicsAltering({
     timestamp: ts,
     layers: {
         "4": {
+            type: "4",
             affected: permanentQuery(
                 (chara) => chara.card_types?.includes("Land") ?? false
             ),
@@ -51,6 +52,7 @@ const bloodMoon = createCharacteristicsAltering({
     timestamp: ts,
     layers: {
         "4": {
+            type: "4",
             affected: permanentQuery(isNonbasicLand),
             typeAltering: overwriteType({ subtype: ["Mountain"] }),
         },
