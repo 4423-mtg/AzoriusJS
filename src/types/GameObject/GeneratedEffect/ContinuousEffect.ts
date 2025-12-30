@@ -1,22 +1,42 @@
 import {
     createGameObject,
+    isGameObject,
     type GameObject,
     type GameObjectParameters,
 } from "../GameObject.js";
 import type { Player } from "../Player.js";
-import type { Timestamp, GameState } from "../../GameState/GameState.js";
+import type { GameState } from "../../GameState/GameState.js";
 import type { Layer, LayerOrder } from "../../Characteristics/Layer.js";
 import type { Instruction } from "../../Instruction/Instruction.js";
+import { isTimestamp, type Timestamp } from "../../GameState/Timestamp.js";
 
 /** 継続的効果。単一の常在型能力からの継続的効果か、または、単一の呪文や能力の解決によって生成された継続的効果 */
 export type ContinuousEffect = GameObject & ContinuousEffectProperty;
+
+export function isContinuousEffect(obj: unknown): obj is ContinuousEffect {
+    return isGameObject(obj) && isContinuousEffectProperty(obj);
+}
+
 // プロパティ
 export type ContinuousEffectProperty = {
     source: GameObject | undefined | string; // FIXME: 一時的にstringを追加
     timestamp: Timestamp | undefined;
 };
-// 作成時の引数
-export type ContinuousEffectParameter = Partial<ContinuousEffectProperty>;
+function isContinuousEffectProperty(arg: unknown) {
+    if (typeof arg === "object" && arg !== null) {
+        const source =
+            "source" in arg &&
+            (arg.source === undefined ||
+                typeof arg.source === "string" ||
+                isGameObject(arg.source));
+        const timestamp =
+            "timestamp" in arg &&
+            (arg.timestamp === undefined || isTimestamp(arg.timestamp));
+        return source && timestamp;
+    } else {
+        return false;
+    }
+}
 
 // ========================================================================
 /** 値や特性を変更する継続的効果 */
@@ -36,7 +56,7 @@ export type CharacteristicsAlteringEffectParameter =
 /** 値や特性を変更する継続的効果を作成する */
 export function createCharacteristicsAltering(
     parameters: GameObjectParameters &
-        ContinuousEffectParameter &
+        Partial<ContinuousEffectProperty> &
         CharacteristicsAlteringEffectParameter
 ): CharacteristicsAlteringEffect {
     const obj = createGameObject(parameters);
@@ -61,7 +81,7 @@ export type ModifyProcedureEffectParameter = {
 
 export function createModifyingProcedureEffect(
     parameters?: GameObjectParameters &
-        ContinuousEffectParameter &
+        Partial<ContinuousEffectProperty> &
         ModifyProcedureEffectParameter
 ): ModifyProcedureEffect {
     const obj = createGameObject(parameters);
@@ -84,7 +104,7 @@ export type ForbidActionEffectParameters = {
 
 export function createForbidActionEffect(
     parameters?: GameObjectParameters &
-        ContinuousEffectParameter &
+        Partial<ContinuousEffectProperty> &
         ForbidActionEffectParameters
 ): ForbidActionEffect {
     const obj = createGameObject(parameters);

@@ -1,4 +1,4 @@
-import { type Zone, type ZoneType } from "./Zone.js";
+import type { Zone, ZoneType } from "./Zone.js";
 import type { GameObject } from "../GameObject/GameObject.js";
 import type { Player } from "../GameObject/Player.js";
 import type { Phase, Step, Turn } from "../Turn.js";
@@ -7,6 +7,8 @@ import type { Card } from "../GameObject/Card/Card.js";
 import type { Instruction } from "../Instruction/Instruction.js";
 import type { StackedAbility } from "../GameObject/StackedAbility.js";
 import type { Spell } from "../GameObject/Card/Spell.js";
+import { isContinuousEffect } from "../GameObject/GeneratedEffect/ContinuousEffect.js";
+import type { Timestamp } from "./Timestamp.js";
 
 export type GameState = {
     timestamp: Timestamp;
@@ -90,6 +92,7 @@ export function getAllObjectsAndCharacteristics(state: GameState): {
     object: Card | Player;
     characteristics: Characteristics;
 }[] {
+    const effects = state.objects.filter((o) => isContinuousEffect(o));
     // TODO:
     // 特性定義能力を適用
     // 1a種すべてをすべての順序で適用してみて依存をチェック
@@ -203,30 +206,4 @@ export function applyInstruction(
 
 export function deepCopyGamestate(state: GameState): GameState {
     return { ...state }; // FIXME: shallow copy
-}
-
-// =============================================================================
-// MARK: Timestamp
-// =============================================================================
-export type Timestamp = {
-    id: TimestampId;
-};
-
-let _timestampid: number = -1;
-
-export function createTimestamp() {
-    return { id: ++_timestampid };
-}
-
-/** `timestamp1` が `timestamp2` よりも前なら負の値、同じなら `0` 、後なら正の値。 */
-export function compareTimestamp(
-    timestamp1: Timestamp,
-    timestamp2: Timestamp
-): number {
-    return compareTimestampId(timestamp1.id, timestamp2.id);
-}
-
-export type TimestampId = number;
-export function compareTimestampId(id1: TimestampId, id2: TimestampId): number {
-    return id1 - id2;
 }

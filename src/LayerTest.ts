@@ -3,7 +3,11 @@ import {
     type ContinuousEffect,
     createCharacteristicsAltering,
 } from "./types/GameObject/GeneratedEffect/ContinuousEffect.js";
-import { createTimestamp } from "./types/GameState/GameState.js";
+import {
+    getAllObjectsAndCharacteristics,
+    type GameState,
+} from "./types/GameState/GameState.js";
+import { createTimestamp } from "./types/GameState/Timestamp.js";
 import { addCardType, overwriteType, permanentQuery } from "./types/Query.js";
 
 // 特性を変更する継続的効果の適用順は
@@ -29,30 +33,47 @@ import { addCardType, overwriteType, permanentQuery } from "./types/Query.js";
 //   - 6種 : 逃亡した多相の戦士（対戦相手のクリーチャーが飛行を持つなら飛行を持つ）
 //   - 7種 : 縫合グール（追放したクリーチャーのP/Tを持つ）
 
-const effects: ContinuousEffect[] = [
-    createCharacteristicsAltering({
-        source: "Urborg, Tomb of Yawgmoth",
-        timestamp: createTimestamp(),
-        layers: {
-            "4": {
-                affected: permanentQuery(
-                    (chara) => chara.card_types?.includes("Land") ?? false
-                ),
-                typeAltering: addCardType({ cardType: ["Land"] }),
-            },
+const ts = createTimestamp();
+const urborg = createCharacteristicsAltering({
+    source: "Urborg, Tomb of Yawgmoth",
+    timestamp: ts,
+    layers: {
+        "4": {
+            affected: permanentQuery(
+                (chara) => chara.card_types?.includes("Land") ?? false
+            ),
+            typeAltering: addCardType({ cardType: ["Land"] }),
         },
-    }),
-    createCharacteristicsAltering({
-        source: "Blood Moon",
-        timestamp: createTimestamp(),
-        layers: {
-            "4": {
-                affected: permanentQuery(isNonbasicLand),
-                typeAltering: overwriteType({ subtype: ["Mountain"] }),
-            },
+    },
+});
+const bloodMoon = createCharacteristicsAltering({
+    source: "Blood Moon",
+    timestamp: ts,
+    layers: {
+        "4": {
+            affected: permanentQuery(isNonbasicLand),
+            typeAltering: overwriteType({ subtype: ["Mountain"] }),
         },
-    }),
-];
+    },
+});
+
+const state1: GameState = {
+    timestamp: ts,
+    players: [],
+    turnOrder: [],
+    zones: [],
+    currentTurn: undefined,
+    currentPhase: undefined,
+    currentStep: undefined,
+    currentPriorityPlayerIndex: undefined,
+    numberOfPassedPlayers: 0,
+    latestActionPlayerIndex: 0,
+    cleanupAgainFlag: false,
+    objects: [urborg, bloodMoon],
+};
+
+const charas = getAllObjectsAndCharacteristics(state1);
+
 const effects2: ContinuousEffect[] = [
     createCharacteristicsAltering({ source: "Rusted Relic" }),
     createCharacteristicsAltering({ source: "One with the Stars" }),

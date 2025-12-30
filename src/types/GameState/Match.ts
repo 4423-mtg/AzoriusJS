@@ -7,9 +7,19 @@ import type { Card } from "../GameObject/Card/Card.js";
 export type PlayerInfo = {
     id: number;
     name: string;
-    deck: Card[];
-    sideboard: Card[];
+    // deck: Card[];
+    // sideboard: Card[];
 };
+export function isPlayerInfo(arg: unknown): arg is PlayerInfo {
+    return (
+        typeof arg === "object" &&
+        arg !== null &&
+        "id" in arg &&
+        typeof arg.id === "number" &&
+        "name" in arg &&
+        typeof arg.name === "string"
+    );
+}
 
 export class MatchInfo {
     /** ゲームのメタ情報 */

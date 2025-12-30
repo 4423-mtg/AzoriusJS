@@ -1,27 +1,37 @@
-import { Game, GameState } from "../GameState/Game.js";
+import type { Game } from "../GameState/Game.js";
 /** オブジェクトが持つ能力
  * 起動型能力、誘発型能力、呪文能力、常在型能力
  */
 
-import { GameObject } from "./GameObject.js";
+import { GameObject, isGameObject } from "./GameObject.js";
 import { Instruction } from "../Turn/Instruction.js";
 import type { Player } from "./Player.js";
 import type { ContinuousEffect } from "./GeneratedEffect/ContinuousEffect.js";
 
 // ==============================================================================
-
 /** オブジェクトが持つ能力。スタックに乗る方ではない。 */
-export class Ability {
-    static id = 0; // 能力オブジェクトID
+
+export type Ability = {
     id: number; // 能力オブジェクトID。関連している能力などに
     text: string; // ルール文章
-    source?: GameObject; // この能力の生成元
+    source: GameObject | undefined; // この能力の生成元
+};
+let _abilityId = -1;
 
-    constructor({ text }: { text: string }) {
-        this.text = text;
-        this.id = Ability.id;
-        Ability.id += 1;
+export function isAbility(arg: unknown): arg is Ability {
+    if (typeof arg === "object" && arg !== null) {
+        const id = "id" in arg && typeof arg.id === "number";
+        const text = "text" in arg && typeof arg.text === "string";
+        const source =
+            "source" in arg &&
+            (arg.source === undefined || isGameObject(arg.source));
+        return id && text && source;
+    } else {
+        return false;
     }
+}
+export function createAbility(): Ability {
+    //
 }
 
 // ==============================================================================
