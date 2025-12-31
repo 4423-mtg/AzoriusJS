@@ -93,13 +93,8 @@ export function isAnyLayer(arg: unknown): arg is AnyLayer {
     );
 }
 
-const x = { type: "1a" };
-if (isLayer(x, "1a")) {
-    const y = x;
-}
-
 /** コピー可能な効果の適用 */
-type Layer1a = {
+export type Layer1a = {
     type: "1a";
     affected: MultiSpec<GameObject>;
     copyableValueAltering: (
@@ -107,12 +102,12 @@ type Layer1a = {
         source?: GameObject
     ) => SingleSpec<CopiableValue>;
 };
-function isLayer1a(arg: unknown): arg is Layer1a {
+export function isLayer1a(arg: unknown): arg is Layer1a {
     return isLayer(arg, "1a");
 }
 
 /** 裏向きによる特性変更 */
-type Layer1b = {
+export type Layer1b = {
     type: "1b";
     affected: MultiSpec<GameObject>;
     copyableValueAltering: (
@@ -120,12 +115,12 @@ type Layer1b = {
         source?: GameObject
     ) => SingleSpec<CopiableValue>;
 };
-function isLayer1b(arg: unknown): arg is Layer1b {
+export function isLayer1b(arg: unknown): arg is Layer1b {
     return isLayer(arg, "1b");
 }
 
 /** コントロール変更 */
-type Layer2 = {
+export type Layer2 = {
     type: "2";
     affected: MultiSpec<GameObject>;
     controllerAltering: (
@@ -133,22 +128,22 @@ type Layer2 = {
         source?: GameObject
     ) => SingleSpec<Player>;
 };
-function isLayer2(arg: unknown): arg is Layer2 {
+export function isLayer2(arg: unknown): arg is Layer2 {
     return isLayer(arg, "2");
 }
 
 /** 文章変更 */
-type Layer3 = {
+export type Layer3 = {
     type: "3";
     affected: MultiSpec<GameObject>;
     textAltering: (current: Characteristics, source?: GameObject) => any; // FIXME: 文章の型
 };
-function isLayer3(arg: unknown): arg is Layer3 {
+export function isLayer3(arg: unknown): arg is Layer3 {
     return isLayer(arg, "3");
 }
 
 /** タイプ変更 */
-type Layer4 = {
+export type Layer4 = {
     type: "4";
     affected: MultiSpec<GameObject>;
     typeAltering: (
@@ -156,12 +151,12 @@ type Layer4 = {
         source?: GameObject
     ) => CardTypeSet;
 };
-function isLayer4(arg: unknown): arg is Layer4 {
+export function isLayer4(arg: unknown): arg is Layer4 {
     return isLayer(arg, "4");
 }
 
 /** 色変更 */
-type Layer5 = {
+export type Layer5 = {
     type: "5";
     affected: MultiSpec<GameObject>;
     colorAltering: (
@@ -169,12 +164,12 @@ type Layer5 = {
         source?: GameObject
     ) => MultiSpec<Color>;
 };
-function isLayer5(arg: unknown): arg is Layer5 {
+export function isLayer5(arg: unknown): arg is Layer5 {
     return isLayer(arg, "5");
 }
 
 /** 能力変更 */
-type Layer6 = {
+export type Layer6 = {
     type: "6";
     affected: MultiSpec<GameObject>;
     abilityAltering: (
@@ -182,12 +177,12 @@ type Layer6 = {
         source?: GameObject
     ) => MultiSpec<Ability>;
 };
-function isLayer6(arg: unknown): arg is Layer6 {
+export function isLayer6(arg: unknown): arg is Layer6 {
     return isLayer(arg, "6");
 }
 
 /** パワー・タフネスを定義する特性定義能力 */
-type Layer7a = {
+export type Layer7a = {
     type: "7a";
     affected: MultiSpec<GameObject>;
     ptAltering: (
@@ -195,12 +190,12 @@ type Layer7a = {
         source?: GameObject
     ) => SingleSpec<{ power: number; toughness: number }>;
 };
-function isLayer7a(arg: unknown): arg is Layer7a {
+export function isLayer7a(arg: unknown): arg is Layer7a {
     return isLayer(arg, "7a");
 }
 
 /** 基本のパワー・タフネスの変更 */
-type Layer7b = {
+export type Layer7b = {
     type: "7b";
     affected: MultiSpec<GameObject>;
     ptAltering: (
@@ -208,12 +203,12 @@ type Layer7b = {
         source?: GameObject
     ) => SingleSpec<{ basePower: number; baseToughness: number }>;
 };
-function isLayer7b(arg: unknown): arg is Layer7b {
+export function isLayer7b(arg: unknown): arg is Layer7b {
     return isLayer(arg, "7b");
 }
 
 /** パワー・タフネスの修整 */
-type Layer7c = {
+export type Layer7c = {
     type: "7c";
     affected: MultiSpec<GameObject>;
     ptAltering: (
@@ -221,16 +216,16 @@ type Layer7c = {
         source?: GameObject
     ) => SingleSpec<{ modifyPower: number; modifyToughness: number }>;
 };
-function isLayer7c(arg: unknown): arg is Layer7c {
+export function isLayer7c(arg: unknown): arg is Layer7c {
     return isLayer(arg, "7c");
 }
 
 /** パワーとタフネスの入れ替え */
-type Layer7d = {
+export type Layer7d = {
     type: "7d";
     affected: MultiSpec<GameObject>;
 };
-function isLayer7d(arg: unknown): arg is Layer7d {
+export function isLayer7d(arg: unknown): arg is Layer7d {
     return isLayer(arg, "7d");
 }
 

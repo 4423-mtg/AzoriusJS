@@ -3,10 +3,10 @@ import type { Game } from "../GameState/Game.js";
  * 起動型能力、誘発型能力、呪文能力、常在型能力
  */
 
-import { GameObject, isGameObject } from "./GameObject.js";
-import { Instruction } from "../Turn/Instruction.js";
+import { type GameObject, isGameObject } from "./GameObject.js";
 import type { Player } from "./Player.js";
 import type { ContinuousEffect } from "./GeneratedEffect/ContinuousEffect.js";
+import type { Instruction } from "../Instruction/Instruction.js";
 
 // ==============================================================================
 /** オブジェクトが持つ能力。スタックに乗る方ではない。 */
@@ -32,6 +32,10 @@ export function isAbility(arg: unknown): arg is Ability {
 }
 export function createAbility(): Ability {
     //
+}
+
+export function isCharacteristicDefiningAbility(arg: unknown): boolean {
+    return isAbility(arg) && false; // TODO:
 }
 
 // ==============================================================================

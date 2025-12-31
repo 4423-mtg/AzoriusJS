@@ -1,5 +1,5 @@
 - GameState
-  - getAllObjectsAndCharacteristics
+  - getAllObjectsAndCharacteristics(*)
   - getNextInstructionsFromState
   - applyInstruction
 - Instruction.ts

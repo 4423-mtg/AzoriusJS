@@ -1,5 +1,5 @@
 import type { Zone, ZoneType } from "./Zone.js";
-import type { GameObject } from "../GameObject/GameObject.js";
+import type { GameObject, GameObjectId } from "../GameObject/GameObject.js";
 import type { Player } from "../GameObject/Player.js";
 import type { Phase, Step, Turn } from "../Turn.js";
 import type { Characteristics } from "../Characteristics/Characteristic.js";
@@ -8,11 +8,35 @@ import type { Instruction } from "../Instruction/Instruction.js";
 import type { StackedAbility } from "../GameObject/StackedAbility.js";
 import type { Spell } from "../GameObject/Card/Spell.js";
 import {
+    hasLayer,
     isCharacteristicsAlteringEffect,
     isContinuousEffect,
     type CharacteristicsAlteringEffect,
 } from "../GameObject/GeneratedEffect/ContinuousEffect.js";
 import type { Timestamp } from "./Timestamp.js";
+import {
+    isAbility,
+    isCharacteristicDefiningAbility,
+} from "../GameObject/Ability.js";
+import {
+    isAnyLayer,
+    isLayer1a,
+    layerCategories,
+    type AnyLayer,
+    type Layer,
+    type Layer1a,
+    type Layer1b,
+    type Layer2,
+    type Layer3,
+    type Layer4,
+    type Layer5,
+    type Layer6,
+    type Layer7a,
+    type Layer7b,
+    type Layer7c,
+    type Layer7d,
+    type LayerCategory,
+} from "../Characteristics/Layer.js";
 
 export type GameState = {
     timestamp: Timestamp;
@@ -96,43 +120,74 @@ export function getAllObjectsAndCharacteristics(state: GameState): {
     object: Card | Player;
     characteristics: Characteristics;
 }[] {
+    // すべての特性変更効果
     const effects = state.objects.filter((o) =>
         isCharacteristicsAlteringEffect(o)
     );
-    // 適用済みリスト
-    const applied: {
-        effect: CharacteristicsAlteringEffect;
-        applied: boolean;
-    }[] = effects.map((e) => ({ effect: e, applied: false }));
+    // 適用開始済み効果のリスト
+    const appliedEffects: GameObjectId[] = [];
+    // 適用済みレイヤー
+    const appliedLayers: AnyLayer[] = [];
 
-    // 第1種
-    const effects1a = effects.map((e) => ({
-        effect: e,
-        layer1a: e.layers["1a"],
-    }));
+    // サブルーチン
+    function subroutine(
+        _effects: CharacteristicsAlteringEffect[],
+        _layerCategory: LayerCategory
+    ) {
+        // リストアップする
+        const _temp: {
+            effect: CharacteristicsAlteringEffect;
+            layer: Layer<typeof _layerCategory>;
+        }[] = [];
+        _effects.forEach((e) => {
+            if (e.layers[_layerCategory] !== undefined) {
+                // FIXME: 5種以下では能力無効チェックが入る (発生源の能力が失われている場合、
+                // その能力からの継続的効果をすでに適用しているならそのまま適用し、していないならもうその能力からの効果は適用しない)
+                _temp.push({ effect: e, layer: e.layers[_layerCategory] });
+            }
+        });
+        // 順序を決定する＆適用リストに追加
+        _sortLayers<typeof _layerCategory>(state, _temp).forEach(
+            ({ effect, layer }) => {
+                // 効果
+                if (!appliedEffects.includes(effect.objectId)) {
+                    appliedEffects.push(effect.objectId);
+                }
+                // レイヤー
+                appliedLayers.push(layer);
+            }
+        );
+    }
 
-    // TODO:
-    // - 特性定義能力について // TODO: 特性定義能力かどうかは能力に紐づく！
-    //   - すべての継続的効果をすべての順序で適用してみて、依存をチェックする
-    //   - 依存があってループしているならタイムスタンプ順で適用、ループしていないなら依存順で適用、依存がないならタイムスタンプ順で適用する
-    //     - 適用順は1つ適用するごとに再計算する
-    // - その後特性定義能力でない能力について同様に行う
-    // 第1b種
-    // 第2種
-    // 第3種
-    // 第4種
-    // 第5種
-    // - 5種以下では能力無効チェックを行う (その能力からの継続的効果をすでに適用しているならそのまま適用し、していないならもうその能力からの効果は適用しない)
-    // 第6種
-    // 第7a種
-    // 第7b種
-    // 第7c種
-    // 第7d種
-    // TODO: 領域や唱え方、代替の特性などに影響される
-    // 1. 特性定義能力を適用
-    // 2. LayerInstanceの参照をすべて解決してすべての順序で適用してみて、依存をチェック
-    // 3. 依存があってループしているならタイムスタンプ順で適用、ループしていないなら依存順で適用、依存がないならタイムスタンプ順で適用
-    // - 適用順は１つ適用する事に再計算する
+    // 各種類別について
+    for (const cat of layerCategories) {
+        // 特性定義能力
+        subroutine(
+            effects.filter((e) => isCharacteristicDefiningAbility(e.source)),
+            cat
+        );
+        // 非特性定義能力
+        subroutine(
+            effects.filter((e) => !isCharacteristicDefiningAbility(e.source)),
+            cat
+        );
+    }
+
+    // レイヤーを順番に適用する
+    const x = appliedLayers; // TODO: queryを解決しながら適用していく
+}
+
+/** レイヤーの適用順を決定する。 */
+function _sortLayers<T extends LayerCategory>(
+    state: GameState,
+    args: { effect: CharacteristicsAlteringEffect; layer: Layer<T> }[]
+): { effect: CharacteristicsAlteringEffect; layer: Layer<T> }[] {
+    // - すべての継続的効果をすべての順序で適用してみて、依存をチェックする
+    // - 依存があってループしているならタイムスタンプ順で適用、ループしていないなら依存順で適用する。依存がないものはタイムスタンプ順で適用する
+    //   - 適用順は1つ適用するごとに再計算する
+
+    return []; // TODO:
+    // 複数のオブジェクトが同時に領域に入る場合、コントローラーがそれらの相対的なタイムスタンプ順を自由に決定する
 }
 
 export function getAllObjectsInZone(

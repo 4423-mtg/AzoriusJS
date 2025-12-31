@@ -14,6 +14,9 @@ import {
 } from "../../Characteristics/Layer.js";
 import type { Instruction } from "../../Instruction/Instruction.js";
 import { isTimestamp, type Timestamp } from "../../GameState/Timestamp.js";
+import type { StackedAbility } from "../StackedAbility.js";
+import { isAbility, type Ability } from "../Ability.js";
+import type { Spell } from "../Card/Spell.js";
 
 /** 継続的効果。単一の常在型能力からの継続的効果か、または、単一の呪文や能力の解決によって生成された継続的効果 */
 export type ContinuousEffect = GameObject & ContinuousEffectProperty;
@@ -21,10 +24,13 @@ export type ContinuousEffect = GameObject & ContinuousEffectProperty;
 export function isContinuousEffect(obj: unknown): obj is ContinuousEffect {
     return isGameObject(obj) && isContinuousEffectProperty(obj);
 }
+export function createContinuousEffect(): ContinuousEffect {
+    //
+}
 
 // プロパティ
 export type ContinuousEffectProperty = {
-    source: GameObject | undefined | string; // FIXME: 一時的にstringを追加
+    source: Spell | StackedAbility | Ability | undefined | string; // FIXME: 一時的にstringを追加
     timestamp: Timestamp | undefined;
 };
 function isContinuousEffectProperty(arg: unknown) {
@@ -32,8 +38,10 @@ function isContinuousEffectProperty(arg: unknown) {
         const source =
             "source" in arg &&
             (arg.source === undefined ||
-                typeof arg.source === "string" ||
-                isGameObject(arg.source));
+                typeof arg.source === "string" || // FIXME: 一時的にstringを追加
+                isSpell(arg.source) ||
+                isStackedAbility(arg.source) ||
+                isAbility(arg.source));
         const timestamp =
             "timestamp" in arg &&
             (arg.timestamp === undefined || isTimestamp(arg.timestamp));
@@ -50,8 +58,20 @@ export type CharacteristicsAlteringEffect = ContinuousEffect &
 // プロパティ
 export type CharacteristicsAlteringEffectProperty = {
     /** 特性変更 */
-    layers: Partial<{ [K in LayerCategory]: Layer<K> }>;
+    layers: Partial<_Layers>; // FIXME: layersが要らなくて直接のプロパティにしたほうがいいかも
 };
+
+type _Layers = { [K in LayerCategory]: Layer<K> };
+
+/** 指定した種類別の効果を持っているかどうか */
+export function hasLayer<T extends LayerCategory>(
+    effect: CharacteristicsAlteringEffect,
+    layerCategory: T
+): effect is CharacteristicsAlteringEffect & {
+    layers: Record<T, Layer<T>>;
+} {
+    return effect.layers[layerCategory] !== undefined;
+}
 
 export function isCharacteristicsAlteringEffect(
     arg: unknown
