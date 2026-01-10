@@ -1,3 +1,4 @@
+import type { Characteristics } from "../Characteristics/Characteristic.js";
 import { isZone, type Zone } from "../GameState/Zone.js";
 import { isUUID } from "../Other.js";
 import type { Card } from "./Card/Card.js";
@@ -15,6 +16,7 @@ export type GameObject = {
     counters: CounterOnObject[] | undefined;
     stickers: Sticker[] | undefined;
     markers: Marker[] | undefined;
+    characteristics: Characteristics;
 };
 export function isGameObject(arg: unknown): arg is GameObject {
     if (typeof arg === "object" && arg !== null) {

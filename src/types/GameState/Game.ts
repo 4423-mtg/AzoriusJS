@@ -15,6 +15,7 @@ export type Game = {
     matchInfo: MatchInfo;
     history: HistoryEntry[];
 };
+/** ゲームの各瞬間を表す。`GameState`と、直前の状態からどのような操作をしたかを表す`Instruction`の組。 */
 export type HistoryEntry = {
     state: GameState;
     instructions: Instruction[];
@@ -23,32 +24,38 @@ export type HistoryEntry = {
 /** Gameを1つ進める。 */
 export function goToNext(game: Game): void {
     const current = game.history.at(-1);
-    if (current !== undefined) {
+    if (current === undefined) {
+        throw Error();
+    } else {
+        // 次のInstructionを得る
         const nextInstructions = _getNextInstructions(game);
+
+        // Instructionを適用しつつ、historyに入れる
         game.history.push({
             state: applyInstruction(current.state, nextInstructions),
             instructions: nextInstructions,
         });
-    } else {
-        throw Error();
     }
 }
 
-/** 次に行うべき処理を得る。 */
+/** ゲームの次の状態を得るのに必要な、次に行うべき`Instruction`を得る。
+ * 最後に行われた instruction が完了状態なら、stateから取得する。
+ * そうでないなら、instructionから続きを取得する。
+ */
 function _getNextInstructions(game: Game): Instruction[] {
     const current = game.history.at(-1);
-    if (current !== undefined) {
+    if (current === undefined) {
+        throw new Error();
+    } else {
         const _first = current.instructions[0];
-        if (_first !== undefined) {
+        if (_first === undefined) {
+            throw new Error("");
+        } else {
             // 最後に行われた instruction が完了状態なら、stateから取得する。
             // そうでないなら、instructionから続きを取得する。
             return _first.completed
                 ? getNextInstructionsFromState(current.state)
                 : getNextInstructionChain(current.instructions);
-        } else {
-            throw new Error("");
         }
-    } else {
-        throw new Error();
     }
 }

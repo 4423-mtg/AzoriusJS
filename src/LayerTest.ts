@@ -4,7 +4,7 @@ import {
     createCharacteristicsAltering,
 } from "./types/GameObject/GeneratedEffect/ContinuousEffect.js";
 import {
-    getAllObjectsAndCharacteristics,
+    getAllCharacteristics,
     type GameState,
 } from "./types/GameState/GameState.js";
 import { createTimestamp } from "./types/GameState/Timestamp.js";
@@ -37,25 +37,21 @@ const ts = createTimestamp();
 const urborg = createCharacteristicsAltering({
     source: "Urborg, Tomb of Yawgmoth",
     timestamp: ts,
-    layers: {
-        "4": {
-            type: "4",
-            affected: permanentQuery(
-                (chara) => chara.card_types?.includes("Land") ?? false
-            ),
-            typeAltering: addCardType({ cardType: ["Land"] }),
-        },
+    layer4: {
+        type: "4",
+        affected: permanentQuery(
+            (chara) => chara.card_types?.includes("Land") ?? false
+        ),
+        typeAltering: addCardType({ cardType: ["Land"] }),
     },
 });
 const bloodMoon = createCharacteristicsAltering({
     source: "Blood Moon",
     timestamp: ts,
-    layers: {
-        "4": {
-            type: "4",
-            affected: permanentQuery(isNonbasicLand),
-            typeAltering: overwriteType({ subtype: ["Mountain"] }),
-        },
+    layer4: {
+        type: "4",
+        affected: permanentQuery(isNonbasicLand),
+        typeAltering: overwriteType({ subtype: ["Mountain"] }),
     },
 });
 
@@ -74,7 +70,7 @@ const state1: GameState = {
     objects: [urborg, bloodMoon],
 };
 
-const charas = getAllObjectsAndCharacteristics(state1);
+const charas = getAllCharacteristics(state1);
 
 const effects2: ContinuousEffect[] = [
     createCharacteristicsAltering({ source: "Rusted Relic" }),

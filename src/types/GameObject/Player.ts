@@ -2,6 +2,7 @@ import type { GameObject } from "./GameObject.js";
 import { isAbility, type Ability } from "./Ability.js";
 import { isCounterOnObject, type CounterOnObject } from "./Counter.js";
 import { isPlayerInfo, type PlayerInfo } from "../GameState/Match.js";
+import type { Characteristics } from "../Characteristics/Characteristic.js";
 
 /** プレイヤー */
 export type Player = GameObject & {
@@ -12,6 +13,7 @@ export type Player = GameObject & {
     won: boolean;
     lost: boolean;
     controller: Player | undefined;
+    characteristics: Characteristics;
 };
 
 export function isPlayer(arg: unknown): arg is Player {
