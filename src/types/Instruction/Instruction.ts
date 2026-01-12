@@ -192,7 +192,7 @@ export function getNextInstructionChain(chain: Instruction[]): Instruction[] {
     }
 }
 
-/** 完了していないInstructionから、次のInstructionを生成する。 */
+/** 完了していないInstructionから、次のInstructionを生成する。 */ // TODO: 実装
 export function _yieldNext(inst: Instruction): Instruction[] {
     if (inst.completed) {
         throw new Error();

@@ -8,8 +8,18 @@ import type { Player } from "../Player.js";
 import type { GameState } from "../../GameState/GameState.js";
 import {
     isLayer,
-    layerCategories,
     type Layer,
+    type Layer1a,
+    type Layer1b,
+    type Layer2,
+    type Layer3,
+    type Layer4,
+    type Layer5,
+    type Layer6,
+    type Layer7a,
+    type Layer7b,
+    type Layer7c,
+    type Layer7d,
     type LayerCategory,
 } from "../../Characteristics/Layer.js";
 import type { Instruction } from "../../Instruction/Instruction.js";
@@ -18,22 +28,21 @@ import type { StackedAbility } from "../StackedAbility.js";
 import { isAbility, type Ability } from "../Ability.js";
 import type { Spell } from "../Card/Spell.js";
 
+// ====================================================================================================
 /** 継続的効果。単一の常在型能力からの継続的効果か、または、単一の呪文や能力の解決によって生成された継続的効果 */
 export type ContinuousEffect = GameObject & ContinuousEffectProperty;
-
-export function isContinuousEffect(obj: unknown): obj is ContinuousEffect {
-    return isGameObject(obj) && isContinuousEffectProperty(obj);
-}
-export function createContinuousEffect(): ContinuousEffect {
-    //
-}
-
-// プロパティ
 export type ContinuousEffectProperty = {
     source: Spell | StackedAbility | Ability | undefined | string; // FIXME: 一時的にstringを追加
     timestamp: Timestamp | undefined;
 };
-function isContinuousEffectProperty(arg: unknown) {
+
+/** 型ガード */
+export function isContinuousEffect(obj: unknown): obj is ContinuousEffect {
+    return isGameObject(obj) && isContinuousEffectProperty(obj);
+}
+function isContinuousEffectProperty(
+    arg: unknown
+): arg is ContinuousEffectProperty {
     if (typeof arg === "object" && arg !== null) {
         const source =
             "source" in arg &&
@@ -51,56 +60,69 @@ function isContinuousEffectProperty(arg: unknown) {
     }
 }
 
+/** ContinuousEffect を作成する */
+export function createContinuousEffect(): ContinuousEffect {
+    // TODO: 実装
+    //
+}
+
 // ========================================================================
 /** 値や特性を変更する継続的効果 */
 export type CharacteristicsAlteringEffect = ContinuousEffect &
     CharacteristicsAlteringEffectProperty;
 // プロパティ
 export type CharacteristicsAlteringEffectProperty = {
-    /** 特性変更 */
-    layers: Partial<_Layers>; // FIXME: layersが要らなくて直接のプロパティにしたほうがいいかも
+    layer1a: Layer1a | undefined;
+    layer1b: Layer1b | undefined;
+    layer2: Layer2 | undefined;
+    layer3: Layer3 | undefined;
+    layer4: Layer4 | undefined;
+    layer5: Layer5 | undefined;
+    layer6: Layer6 | undefined;
+    layer7a: Layer7a | undefined;
+    layer7b: Layer7b | undefined;
+    layer7c: Layer7c | undefined;
+    layer7d: Layer7d | undefined;
 };
 
-type _Layers = { [K in LayerCategory]: Layer<K> };
-
-/** 指定した種類別の効果を持っているかどうか */
-export function hasLayer<T extends LayerCategory>(
-    effect: CharacteristicsAlteringEffect,
-    layerCategory: T
-): effect is CharacteristicsAlteringEffect & {
-    layers: Record<T, Layer<T>>;
-} {
-    return effect.layers[layerCategory] !== undefined;
-}
-
+/** 型ガード */
 export function isCharacteristicsAlteringEffect(
     arg: unknown
 ): arg is CharacteristicsAlteringEffect {
-    return isContinuousEffect(arg) && "layers" in arg && isLayers(arg.layers);
+    return (
+        isContinuousEffect(arg) && isCharacteristicsAlteringEffectProperty(arg)
+    );
 }
-function isLayers(
+export function isCharacteristicsAlteringEffectProperty(
     arg: unknown
-): arg is Partial<{ [K in LayerCategory]: Layer<K> }> {
-    if (typeof arg === "object" && arg !== null) {
-        for (const k in arg) {
-            const v = (arg as typeof arg & Record<typeof k, unknown>)[k]; // FIXME: no as
-            if (!layerCategories.some((c) => c === k)) {
-                return false;
-            } else if (
-                !isLayer(v, k as (typeof layerCategories)[number]) // FIXME: no as
-            ) {
-                return false;
-            }
-        }
-        return true;
-    } else {
-        return false;
-    }
+): arg is CharacteristicsAlteringEffectProperty {
+    return (
+        typeof arg === "object" &&
+        arg !== null &&
+        "layer1a" in arg &&
+        isLayer(arg.layer1a, "1a") &&
+        "layer1b" in arg &&
+        isLayer(arg.layer1b, "1b") &&
+        "layer2" in arg &&
+        isLayer(arg.layer2, "2") &&
+        "layer3" in arg &&
+        isLayer(arg.layer3, "3") &&
+        "layer4" in arg &&
+        isLayer(arg.layer4, "4") &&
+        "layer5" in arg &&
+        isLayer(arg.layer5, "5") &&
+        "layer6" in arg &&
+        isLayer(arg.layer6, "6") &&
+        "layer7a" in arg &&
+        isLayer(arg.layer7a, "7a") &&
+        "layer7b" in arg &&
+        isLayer(arg.layer7b, "7b") &&
+        "layer7c" in arg &&
+        isLayer(arg.layer7c, "7c") &&
+        "layer7d" in arg &&
+        isLayer(arg.layer7d, "7d")
+    );
 }
-
-// 作成時の引数
-export type CharacteristicsAlteringEffectParameter =
-    Partial<CharacteristicsAlteringEffectProperty>;
 
 /** 値や特性を変更する継続的効果を作成する */
 export function createCharacteristicsAltering(
@@ -113,9 +135,65 @@ export function createCharacteristicsAltering(
         ...obj,
         source: parameters?.source,
         timestamp: parameters?.timestamp,
-        layers: parameters?.layers ?? {},
+        layer1a: parameters.layer1a,
+        layer1b: parameters.layer1b,
+        layer2: parameters.layer2,
+        layer3: parameters.layer3,
+        layer4: parameters.layer4,
+        layer5: parameters.layer5,
+        layer6: parameters.layer6,
+        layer7a: parameters.layer7a,
+        layer7b: parameters.layer7b,
+        layer7c: parameters.layer7c,
+        layer7d: parameters.layer7d,
     };
 }
+// 作成時の引数
+export type CharacteristicsAlteringEffectParameter =
+    Partial<CharacteristicsAlteringEffectProperty>;
+
+/** 指定した種類別のレイヤーを取得する */
+export function getLayer<T extends LayerCategory>(
+    effect: CharacteristicsAlteringEffect,
+    category: T // 型を絞り込むためジェネリクスを使う
+): Layer<T> | undefined {
+    return effect[`layer${category}`];
+}
+
+/** 指定した種類別の効果を持っているかどうか (undefinedも不可) */
+export function hasLayer<T extends LayerCategory>(
+    effect: unknown,
+    layerCategory: T
+): effect is CharacteristicsAlteringEffect & _layerProperty<T> {
+    return (
+        isCharacteristicsAlteringEffect(effect) &&
+        getLayer(effect, layerCategory) !== undefined
+    );
+}
+
+type _layerProperty<T extends LayerCategory> = T extends "1a"
+    ? { layer1a: Layer1a }
+    : T extends "1b"
+    ? { layer1b: Layer1b }
+    : T extends "2"
+    ? { layer2: Layer2 }
+    : T extends "3"
+    ? { layer3: Layer3 }
+    : T extends "4"
+    ? { layer4: Layer4 }
+    : T extends "5"
+    ? { layer5: Layer5 }
+    : T extends "6"
+    ? { layer6: Layer6 }
+    : T extends "7a"
+    ? { layer7a: Layer7a }
+    : T extends "7b"
+    ? { layer7b: Layer7b }
+    : T extends "7c"
+    ? { layer7c: Layer7c }
+    : T extends "7d"
+    ? { layer7d: Layer7d }
+    : never;
 
 // ========================================================================
 /** 手続きを変更する継続的効果 */

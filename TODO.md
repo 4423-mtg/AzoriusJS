@@ -1,9 +1,8 @@
 - GameState
-  - getAllObjectsAndCharacteristics(*)
+  - _sortLayers
+  - _applyLayers
   - getNextInstructionsFromState
   - applyInstruction
-  - 能力は起動回数制限がある（能力自体が状態を持つ）のでGameStateに入れる必要がある
-    - => GameObjectに追加する
 - Instruction.ts
   - _yieldNext
 

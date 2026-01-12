@@ -9,9 +9,7 @@ import type { StackedAbility } from "../GameObject/StackedAbility.js";
 import type { Spell } from "../GameObject/Card/Spell.js";
 import {
     getLayer,
-    hasLayer,
     isCharacteristicsAlteringEffect,
-    isContinuousEffect,
     type CharacteristicsAlteringEffect,
 } from "../GameObject/GeneratedEffect/ContinuousEffect.js";
 import type { Timestamp } from "./Timestamp.js";
@@ -21,22 +19,9 @@ import {
     type Ability,
 } from "../GameObject/Ability.js";
 import {
-    isAnyLayer,
-    isLayer1a,
     layerCategories,
     type AnyLayer,
     type Layer,
-    type Layer1a,
-    type Layer1b,
-    type Layer2,
-    type Layer3,
-    type Layer4,
-    type Layer5,
-    type Layer6,
-    type Layer7a,
-    type Layer7b,
-    type Layer7c,
-    type Layer7d,
     type LayerCategory,
 } from "../Characteristics/Layer.js";
 
@@ -109,13 +94,13 @@ export function getZones(
 // MARK: 特性関連
 // ============================================================================
 const _takeLayer = <T extends LayerCategory>(
-    e: CharacteristicsAlteringEffect[],
+    e: CharacteristicsAlteringEffect,
     lc: T
-) =>
-    e.map((_e) => ({
-        effect: _e,
-        layer: _e[`layer${lc}`] as (typeof _e)[`layer${T}`],
-    }));
+) => ({
+    effect: e,
+    layer: getLayer(e, lc),
+});
+
 const _dropUndefined = <T, U>(arg: {
     effect: T;
     layer: U;
@@ -123,6 +108,9 @@ const _dropUndefined = <T, U>(arg: {
     effect: T;
     layer: Exclude<U, undefined>;
 } => arg.layer !== undefined;
+type _layers<T extends LayerCategory = LayerCategory> = T extends unknown
+    ? { effect: CharacteristicsAlteringEffect; layer: Layer<T> }[]
+    : never;
 
 /** すべてのオブジェクトと、それが現在取っている特性を取得する。 */
 export function getAllCharacteristics(state: GameState): {
@@ -160,45 +148,71 @@ export function getAllCharacteristics(state: GameState): {
         );
 
         // 種類別に応じたレイヤーを取り出す
-        let x;
+        const _take = <T extends LayerCategory>(
+            arg: CharacteristicsAlteringEffect[],
+            category: T
+        ) => arg.map((_e) => _takeLayer(_e, category)).filter(_dropUndefined);
+        let ls;
         switch (category) {
             case "1a":
-                x = _takeLayer(validEffects, category).filter(_dropUndefined);
+                ls = _take(validEffects, category);
                 break;
             case "1b":
-                x = _takeLayer(validEffects, category).filter(_dropUndefined);
+                ls = _take(validEffects, category);
                 break;
             case "2":
-                x = _takeLayer(validEffects, category).filter(_dropUndefined);
+                ls = _take(validEffects, category);
                 break;
             case "3":
-                x = _takeLayer(validEffects, category).filter(_dropUndefined);
+                ls = _take(validEffects, category);
                 break;
             case "4":
-                x = _takeLayer(validEffects, category).filter(_dropUndefined);
+                ls = _take(validEffects, category);
                 break;
             case "5":
-                x = _takeLayer(validEffects, category).filter(_dropUndefined);
+                ls = _take(validEffects, category);
                 break;
             case "6":
-                x = _takeLayer(validEffects, category).filter(_dropUndefined);
+                ls = _take(validEffects, category);
                 break;
             case "7a":
-                x = _takeLayer(validEffects, category).filter(_dropUndefined);
+                ls = _take(validEffects, category);
                 break;
             case "7b":
-                x = _takeLayer(validEffects, category).filter(_dropUndefined);
+                ls = _take(validEffects, category);
                 break;
             case "7c":
-                x = _takeLayer(validEffects, category).filter(_dropUndefined);
+                ls = _take(validEffects, category);
                 break;
             case "7d":
-                x = _takeLayer(validEffects, category).filter(_dropUndefined);
+                ls = _take(validEffects, category);
                 break;
             default:
-                throw new Error();
+                throw new Error(category);
         }
-        _sortLayers(state, x).forEach(({ effect, layer }) => {
+
+        /** レイヤーの適用順を決定する。 */ // TODO: 実装
+        function _sortLayers(state: GameState, args: _layers): typeof args {
+            // - すべての継続的効果をすべての順序で適用してみて、依存をチェックする
+            //   - 適用順を決めるに当たってはそれ以前のレイヤーの影響がある
+            // - 依存があってループしているならタイムスタンプ順で適用、ループしていないなら依存順で適用する。依存がないものはタイムスタンプ順で適用する
+            //   - 適用順は1つ適用するごとに計算し直す
+
+            // - Aを適用することによってBの影響が変わる場合、BはAに依存している。
+            //   CがAやBに直接依存していないがA->Bと適用することによってCの影響が変わる場合、Cは何に依存しているのか？
+            // - A:銀白の突然変異(対象のパーマネントはアーティファクトである)、B:機械の行進(アーティファクトはクリーチャーである)、C:秘技の順応(クリーチャーは指定したタイプである)
+            //   - BはAに依存している。ほかはどれも依存していない
+            //   - Aを適用
+            //   - Cは(アーティファクトがある場合のみ)Bに依存する
+
+            // A<-B, C<-Dと依存している場合ACどちらを先に適用する？
+            // - たぶんどちらでもいい
+
+            return []; // TODO:
+            // 複数のオブジェクトが同時に領域に入る場合、コントローラーがそれらの相対的なタイムスタンプ順を自由に決定する
+        }
+        const sortedLayers = _sortLayers(state, ls);
+        sortedLayers.forEach(({ effect, layer }) => {
             // レイヤーをキューに入れる
             layerQueue.push(layer);
             // 継続的効果を適用済みとしてメモする
@@ -225,63 +239,6 @@ export function getAllCharacteristics(state: GameState): {
     // レイヤーを順番に適用する
     const x = _applyLayers(state, layerQueue);
     return x;
-}
-
-// FIXME:
-type _t2 =
-    | {
-          effect: CharacteristicsAlteringEffect;
-          layer: Layer1a;
-      }[]
-    | {
-          effect: CharacteristicsAlteringEffect;
-          layer: Layer1b;
-      }[]
-    | {
-          effect: CharacteristicsAlteringEffect;
-          layer: Layer2;
-      }[]
-    | {
-          effect: CharacteristicsAlteringEffect;
-          layer: Layer3;
-      }[]
-    | {
-          effect: CharacteristicsAlteringEffect;
-          layer: Layer4;
-      }[]
-    | {
-          effect: CharacteristicsAlteringEffect;
-          layer: Layer5;
-      }[]
-    | {
-          effect: CharacteristicsAlteringEffect;
-          layer: Layer6;
-      }[]
-    | {
-          effect: CharacteristicsAlteringEffect;
-          layer: Layer7a;
-      }[]
-    | {
-          effect: CharacteristicsAlteringEffect;
-          layer: Layer7b;
-      }[]
-    | {
-          effect: CharacteristicsAlteringEffect;
-          layer: Layer7c;
-      }[]
-    | {
-          effect: CharacteristicsAlteringEffect;
-          layer: Layer7d;
-      }[];
-
-/** レイヤーの適用順を決定する。 */ // TODO: 実装
-function _sortLayers(state: GameState, args: _t2): typeof args {
-    // - すべての継続的効果をすべての順序で適用してみて、依存をチェックする
-    // - 依存があってループしているならタイムスタンプ順で適用、ループしていないなら依存順で適用する。依存がないものはタイムスタンプ順で適用する
-    //   - 適用順は1つ適用するごとに再計算する
-
-    return []; // TODO:
-    // 複数のオブジェクトが同時に領域に入る場合、コントローラーがそれらの相対的なタイムスタンプ順を自由に決定する
 }
 
 /** 与えられたレイヤーをGameStateに対して適用してみた場合の、各GameObjectの特性を得る。
