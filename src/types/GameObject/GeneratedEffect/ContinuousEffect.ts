@@ -157,43 +157,23 @@ export function getLayer<T extends LayerCategory>(
     effect: CharacteristicsAlteringEffect,
     category: T // 型を絞り込むためジェネリクスを使う
 ): Layer<T> | undefined {
-    return effect[`layer${category}`];
+    return effect[`layer${category}`] as Layer<typeof category> | undefined; // FIXME: as
 }
 
 /** 指定した種類別の効果を持っているかどうか (undefinedも不可) */
 export function hasLayer<T extends LayerCategory>(
     effect: unknown,
     layerCategory: T
-): effect is CharacteristicsAlteringEffect & _layerProperty<T> {
+): effect is CharacteristicsAlteringEffect & Required<_layerProperty<T>> {
     return (
         isCharacteristicsAlteringEffect(effect) &&
         getLayer(effect, layerCategory) !== undefined
     );
 }
 
-type _layerProperty<T extends LayerCategory> = T extends "1a"
-    ? { layer1a: Layer1a }
-    : T extends "1b"
-    ? { layer1b: Layer1b }
-    : T extends "2"
-    ? { layer2: Layer2 }
-    : T extends "3"
-    ? { layer3: Layer3 }
-    : T extends "4"
-    ? { layer4: Layer4 }
-    : T extends "5"
-    ? { layer5: Layer5 }
-    : T extends "6"
-    ? { layer6: Layer6 }
-    : T extends "7a"
-    ? { layer7a: Layer7a }
-    : T extends "7b"
-    ? { layer7b: Layer7b }
-    : T extends "7c"
-    ? { layer7c: Layer7c }
-    : T extends "7d"
-    ? { layer7d: Layer7d }
-    : never;
+type _layerProperty<T extends LayerCategory> = {
+    [K in `layer${T}`]: Layer<T> | undefined;
+};
 
 // ========================================================================
 /** 手続きを変更する継続的効果 */

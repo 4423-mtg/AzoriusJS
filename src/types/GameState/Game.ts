@@ -1,6 +1,6 @@
 import type { MatchInfo } from "./Match.js";
 import {
-    applyInstruction,
+    deepCopyGamestate,
     getNextInstructionsFromState,
     type GameState,
 } from "./GameState.js";
@@ -8,7 +8,29 @@ import {
     getNextInstructionChain,
     type Instruction,
 } from "../Instruction/Instruction.js";
+import type { GameObjectId } from "../GameObject/GameObject.js";
+import type { Card } from "../GameObject/Card/Card.js";
+import type { Player } from "../GameObject/Player.js";
+import {
+    isAbility,
+    isCharacteristicDefiningAbility,
+    type Ability,
+} from "../GameObject/Ability.js";
+import {
+    getLayer,
+    isCharacteristicsAlteringEffect,
+    type CharacteristicsAlteringEffect,
+} from "../GameObject/GeneratedEffect/ContinuousEffect.js";
+import type { Characteristics } from "../Characteristics/Characteristic.js";
+import {
+    layerCategories,
+    type AnyLayer,
+    type Layer,
+    type LayerCategory,
+} from "../Characteristics/Layer.js";
+import { resolveMultiSpec } from "../Query.js";
 
+// ==========================================================================
 // MARK: Game
 /** ゲーム全体。ゲームのすべての断面を持つ。 */
 export type Game = {
@@ -31,13 +53,17 @@ export function goToNext(game: Game): void {
         const nextInstructions = _getNextInstructions(game);
 
         // Instructionを適用しつつ、historyに入れる
-        game.history.push({
-            state: applyInstruction(current.state, nextInstructions),
-            instructions: nextInstructions,
-        });
+        applyInstruction(game, nextInstructions);
+        // game.history.push({
+        //     state: applyInstruction(current.state, nextInstructions),
+        //     instructions: nextInstructions,
+        // });
     }
 }
 
+// ======================================================================
+// MARK: Instruction関連
+// ======================================================================
 /** ゲームの次の状態を得るのに必要な、次に行うべき`Instruction`を得る。
  * 最後に行われた instruction が完了状態なら、stateから取得する。
  * そうでないなら、instructionから続きを取得する。
@@ -47,15 +73,261 @@ function _getNextInstructions(game: Game): Instruction[] {
     if (current === undefined) {
         throw new Error();
     } else {
-        const _first = current.instructions[0];
-        if (_first === undefined) {
+        const _top = current.instructions[0];
+        if (_top === undefined) {
             throw new Error("");
         } else {
             // 最後に行われた instruction が完了状態なら、stateから取得する。
             // そうでないなら、instructionから続きを取得する。
-            return _first.completed
+            return _top.completed
                 ? getNextInstructionsFromState(current.state)
                 : getNextInstructionChain(current.instructions);
+        }
+    }
+}
+
+/** 処理を1回実行する。 */
+export function applyInstruction(
+    game: Game,
+    instructions: Instruction[]
+): void {
+    const current = game.history.at(-1);
+    if (current === undefined) {
+        throw new Error();
+    } else {
+        // (1) GameStateをコピーする。
+        const newState = deepCopyGamestate(current.state);
+
+        // (2) コピーした GameState に Instruction を適用する。 // TODO: 実装
+        const instructionType = instructions.at(-1)?.type;
+        // TODO: 各Instructionの定義の隣へ飛ばす
+        // TODO: 置換効果等を考慮する
+        switch (instructionType) {
+            case "activate":
+                break;
+            case undefined:
+                break;
+
+            default:
+                throw new Error(instructionType);
+        }
+
+        // (3) 特性を計算して最新の GameState に書き込む
+        setAllCharacteristics(game);
+    }
+}
+
+// ============================================================================
+// MARK: 特性関連
+// ============================================================================
+const _takeLayer = <T extends LayerCategory>(
+    e: CharacteristicsAlteringEffect,
+    lc: T
+) => ({
+    effect: e,
+    layer: getLayer(e, lc),
+});
+
+const _dropUndefined = <T, U>(arg: {
+    effect: T;
+    layer: U;
+}): arg is {
+    effect: T;
+    layer: Exclude<U, undefined>;
+} => arg.layer !== undefined;
+type _layers<T extends LayerCategory = LayerCategory> = T extends unknown
+    ? { effect: CharacteristicsAlteringEffect; layer: Layer<T> }[]
+    : never;
+
+/** すべてのオブジェクトの特性を計算して最新の GameState にセットする。 */
+export function setAllCharacteristics(game: Game): void {
+    const current = game.history.at(-1);
+    if (current === undefined) {
+        throw new Error();
+    }
+
+    // すべての特性変更効果
+    const effects = current.state.objects.filter((o) =>
+        isCharacteristicsAlteringEffect(o)
+    );
+
+    // 適用開始済み効果をメモするリスト
+    const appliedEffects: GameObjectId[] = []; // FIXME: 重複しないのでSetにする
+    // レイヤーを適用順に格納するキュー
+    const layerQueue: AnyLayer[] = [];
+
+    // 各種類別について
+    for (const category of layerCategories) {
+        // 特性定義能力からであるもの
+        _pushToQueue(
+            effects.filter((e) => isCharacteristicDefiningAbility(e.source)),
+            category,
+            layerQueue,
+            appliedEffects,
+            game
+        );
+        // 特性定義能力からでないもの
+        _pushToQueue(
+            effects.filter((e) => !isCharacteristicDefiningAbility(e.source)),
+            category,
+            layerQueue,
+            appliedEffects,
+            game
+        );
+    }
+
+    // 決定された順序でレイヤーを順番に適用し特性を得る
+    const ret = _applyLayers(game, layerQueue);
+
+    // 特性を Game にセットする
+    for (const obj of current.state.objects) {
+        // FIXME: 適用される継続的効果が特にない場合
+        obj.characteristics = ret.find(
+            ({ object: _obj }) => _obj.objectId === obj.objectId
+        );
+    }
+}
+
+/** 指定した効果の指定された種類別のレイヤーについて、依存関係とタイムスタンプにもとづいて適用順を決定してキューに入れる。 */
+function _pushToQueue(
+    effects: CharacteristicsAlteringEffect[],
+    category: LayerCategory,
+    queue: AnyLayer[],
+    appliedEffect: GameObjectId[],
+    game: Game
+) {
+    /** 能力が無効化されているならTrue */
+    const _isExist = (ability: Ability): boolean => {
+        // ここまでのレイヤーを適用してみて、能力が無効化されていないか確認する
+        return _applyLayers(game, queue).some(({ characteristics }) => {
+            characteristics.abilities !== undefined &&
+                characteristics.abilities.some((_a) => _a.id === ability.id);
+        });
+    };
+    // 能力無効化チェック
+    const validEffects = effects.filter(
+        (e) => !(isAbility(e.source) && !_isExist(e.source))
+    );
+
+    // 種類別に応じたレイヤーを取り出す
+    const _take = <T extends LayerCategory>(
+        arg: CharacteristicsAlteringEffect[],
+        category: T
+    ) => arg.map((_e) => _takeLayer(_e, category)).filter(_dropUndefined);
+    let ls;
+    switch (category) {
+        case "1a":
+            ls = _take(validEffects, category);
+            break;
+        case "1b":
+            ls = _take(validEffects, category);
+            break;
+        case "2":
+            ls = _take(validEffects, category);
+            break;
+        case "3":
+            ls = _take(validEffects, category);
+            break;
+        case "4":
+            ls = _take(validEffects, category);
+            break;
+        case "5":
+            ls = _take(validEffects, category);
+            break;
+        case "6":
+            ls = _take(validEffects, category);
+            break;
+        case "7a":
+            ls = _take(validEffects, category);
+            break;
+        case "7b":
+            ls = _take(validEffects, category);
+            break;
+        case "7c":
+            ls = _take(validEffects, category);
+            break;
+        case "7d":
+            ls = _take(validEffects, category);
+            break;
+        default:
+            throw new Error(category);
+    }
+
+    // 適用順を決定する
+    const sorted = _sortLayers(game, ls);
+    // キューに入れる
+    sorted.forEach(({ effect, layer }) => {
+        // レイヤーをキューに入れる
+        queue.push(layer);
+        // 継続的効果を適用済みとしてメモする
+        if (!appliedEffect.includes(effect.objectId)) {
+            appliedEffect.push(effect.objectId);
+        }
+    });
+}
+/** レイヤーの適用順を決定する。 */ // TODO: 実装
+function _sortLayers(game: Game, args: _layers): typeof args {
+    // - すべての継続的効果をすべての順序で適用してみて、依存をチェックする
+    //   - 適用順を決めるに当たってはそれ以前のレイヤーの影響がある
+    // - 依存があってループしているならタイムスタンプ順で適用、ループしていないなら依存順で適用する。依存がないものはタイムスタンプ順で適用する
+    //   - 適用順は1つ適用するごとに計算し直す
+
+    // - Aを適用することによってBの影響が変わる場合、BはAに依存している。
+    //   CがAやBに直接依存していないがA->Bと適用することによってCの影響が変わる場合、Cは何に依存しているのか？
+    // - A:銀白の突然変異(対象のパーマネントはアーティファクトである)、B:機械の行進(アーティファクトはクリーチャーである)、C:秘技の順応(クリーチャーは指定したタイプである)
+    //   - BはAに依存している。ほかはどれも依存していない
+    //   - Aを適用
+    //   - Cは(アーティファクトがある場合のみ)Bに依存する
+
+    // A<-B, C<-Dと依存している場合ACどちらを先に適用する？
+    // - たぶんどちらでもいい
+
+    return []; // TODO:
+    // 複数のオブジェクトが同時に領域に入る場合、コントローラーがそれらの相対的なタイムスタンプ順を自由に決定する
+}
+
+/** 与えられたレイヤーをGameStateに対して適用してみた場合の、各GameObjectの特性を得る。
+ * なお、GameStateを変更はしない。
+ */
+export function _applyLayers( // TODO: 実装
+    game: Game,
+    layers: AnyLayer[]
+): {
+    object: Card | Player;
+    characteristics: Characteristics;
+}[] {
+    // TODO: queryを解決しながら適用していく
+    for (const layer of layers) {
+        switch (layer.type) {
+            case "1a":
+                resolveMultiSpec(layer.affected, {
+                    game: game,
+                    self: undefined, // FIXME: selfとは?
+                });
+                layer.copyableValueAltering();
+                break;
+            case "1b":
+                break;
+            case "2":
+                break;
+            case "3":
+                break;
+            case "4":
+                break;
+            case "5":
+                break;
+            case "6":
+                break;
+            case "7a":
+                break;
+            case "7b":
+                break;
+            case "7c":
+                break;
+            case "7d":
+                break;
+            default:
+                break;
         }
     }
 }

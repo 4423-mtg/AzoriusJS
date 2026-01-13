@@ -29,6 +29,7 @@ export const layerCategories = [
 /** 種類別 */
 export type LayerCategory = (typeof layerCategories)[number];
 
+// ---------------------------------------------------------------
 /** 種類別に対応するレイヤー */
 export type Layer<T extends LayerCategory> = T extends "1a"
     ? Layer1a
@@ -51,18 +52,39 @@ export type Layer<T extends LayerCategory> = T extends "1a"
     : T extends "7c"
     ? Layer7c
     : T extends "7d"
-    ? Layer7d // FIXME: フロート表示が {layerOrder;affected} になるのがいまいち
+    ? Layer7d
     : never;
+/** 型ガード */
 export function isLayer<T extends LayerCategory>(
     arg: unknown,
-    type: T
+    category: T
 ): arg is Layer<T> {
-    return (
-        typeof arg === "object" &&
-        arg !== null &&
-        "type" in arg &&
-        arg.type === type
-    );
+    switch (category) {
+        case "1a":
+            return isLayer1a(arg);
+        case "1b":
+            return isLayer1b(arg);
+        case "2":
+            return isLayer2(arg);
+        case "3":
+            return isLayer3(arg);
+        case "4":
+            return isLayer4(arg);
+        case "5":
+            return isLayer5(arg);
+        case "6":
+            return isLayer6(arg);
+        case "7a":
+            return isLayer7a(arg);
+        case "7b":
+            return isLayer7b(arg);
+        case "7c":
+            return isLayer7c(arg);
+        case "7d":
+            return isLayer7d(arg);
+        default:
+            throw new Error(category);
+    }
 }
 
 export type AnyLayer =
@@ -93,6 +115,8 @@ export function isAnyLayer(arg: unknown): arg is AnyLayer {
     );
 }
 
+// ======================================================
+// MARK: 1a
 /** コピー可能な効果の適用 */
 export type Layer1a = {
     type: "1a";
@@ -104,8 +128,10 @@ export type Layer1a = {
 };
 export function isLayer1a(arg: unknown): arg is Layer1a {
     return isLayer(arg, "1a");
+    // FIXME: 実装
 }
 
+// MARK: 1b
 /** 裏向きによる特性変更 */
 export type Layer1b = {
     type: "1b";
@@ -117,8 +143,10 @@ export type Layer1b = {
 };
 export function isLayer1b(arg: unknown): arg is Layer1b {
     return isLayer(arg, "1b");
+    // FIXME: 実装
 }
 
+// MARK: 2
 /** コントロール変更 */
 export type Layer2 = {
     type: "2";
@@ -130,8 +158,10 @@ export type Layer2 = {
 };
 export function isLayer2(arg: unknown): arg is Layer2 {
     return isLayer(arg, "2");
+    // FIXME: 実装
 }
 
+// MARK: 3
 /** 文章変更 */
 export type Layer3 = {
     type: "3";
@@ -140,8 +170,10 @@ export type Layer3 = {
 };
 export function isLayer3(arg: unknown): arg is Layer3 {
     return isLayer(arg, "3");
+    // FIXME: 実装
 }
 
+// MARK: 4
 /** タイプ変更 */
 export type Layer4 = {
     type: "4";
@@ -153,8 +185,10 @@ export type Layer4 = {
 };
 export function isLayer4(arg: unknown): arg is Layer4 {
     return isLayer(arg, "4");
+    // FIXME: 実装
 }
 
+// MARK: 5
 /** 色変更 */
 export type Layer5 = {
     type: "5";
@@ -166,8 +200,10 @@ export type Layer5 = {
 };
 export function isLayer5(arg: unknown): arg is Layer5 {
     return isLayer(arg, "5");
+    // FIXME: 実装
 }
 
+// MARK: 6
 /** 能力変更 */
 export type Layer6 = {
     type: "6";
@@ -179,8 +215,10 @@ export type Layer6 = {
 };
 export function isLayer6(arg: unknown): arg is Layer6 {
     return isLayer(arg, "6");
+    // FIXME: 実装
 }
 
+// MARK: 7a
 /** パワー・タフネスを定義する特性定義能力 */
 export type Layer7a = {
     type: "7a";
@@ -192,8 +230,10 @@ export type Layer7a = {
 };
 export function isLayer7a(arg: unknown): arg is Layer7a {
     return isLayer(arg, "7a");
+    // FIXME: 実装
 }
 
+// MARK: 7b
 /** 基本のパワー・タフネスの変更 */
 export type Layer7b = {
     type: "7b";
@@ -205,8 +245,10 @@ export type Layer7b = {
 };
 export function isLayer7b(arg: unknown): arg is Layer7b {
     return isLayer(arg, "7b");
+    // FIXME: 実装
 }
 
+// MARK: 7c
 /** パワー・タフネスの修整 */
 export type Layer7c = {
     type: "7c";
@@ -218,8 +260,10 @@ export type Layer7c = {
 };
 export function isLayer7c(arg: unknown): arg is Layer7c {
     return isLayer(arg, "7c");
+    // FIXME: 実装
 }
 
+// MARK: 7d
 /** パワーとタフネスの入れ替え */
 export type Layer7d = {
     type: "7d";
@@ -227,6 +271,10 @@ export type Layer7d = {
 };
 export function isLayer7d(arg: unknown): arg is Layer7d {
     return isLayer(arg, "7d");
+    // FIXME: 実装
 }
 
 // =================================================================
+export function applyLayerEffect(params: type) {
+    // FIXME:
+}
