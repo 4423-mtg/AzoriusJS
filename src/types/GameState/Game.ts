@@ -120,26 +120,7 @@ export function applyInstruction(
 // ============================================================================
 // MARK: 特性関連
 // ============================================================================
-const _takeLayer = <T extends LayerCategory>(
-    e: CharacteristicsAlteringEffect,
-    lc: T
-) => ({
-    effect: e,
-    layer: getLayer(e, lc),
-});
-
-const _dropUndefined = <T, U>(arg: {
-    effect: T;
-    layer: U;
-}): arg is {
-    effect: T;
-    layer: Exclude<U, undefined>;
-} => arg.layer !== undefined;
-type _layers<T extends LayerCategory = LayerCategory> = T extends unknown
-    ? { effect: CharacteristicsAlteringEffect; layer: Layer<T> }[]
-    : never;
-
-/** すべてのオブジェクトの特性を計算して最新の GameState にセットする。 */
+/** 最新の GameState でのすべてのオブジェクトの特性を計算してセットする。 */
 export function setAllCharacteristics(game: Game): void {
     const current = game.history.at(-1);
     if (current === undefined) {
@@ -176,7 +157,7 @@ export function setAllCharacteristics(game: Game): void {
         );
     }
 
-    // 決定された順序でレイヤーを順番に適用し特性を得る
+    // 各レイヤーを決定された順序で順番に適用し特性を得る
     const ret = _applyLayers(game, layerQueue);
 
     // 特性を Game にセットする
@@ -204,17 +185,30 @@ function _pushToQueue(
                 characteristics.abilities.some((_a) => _a.id === ability.id);
         });
     };
-    // 能力無効化チェック
+    // 発生源が無効化されていない効果を抽出
     const validEffects = effects.filter(
         (e) => !(isAbility(e.source) && !_isExist(e.source))
     );
 
-    // 種類別に応じたレイヤーを取り出す
+    // 指定した種類別のレイヤーを取り出す
+    const _dropUndefined = <T, U>(arg: {
+        effect: T;
+        layer: U;
+    }): arg is {
+        effect: T;
+        layer: Exclude<U, undefined>;
+    } => arg.layer !== undefined;
     const _take = <T extends LayerCategory>(
         arg: CharacteristicsAlteringEffect[],
         category: T
-    ) => arg.map((_e) => _takeLayer(_e, category)).filter(_dropUndefined);
-    let ls;
+    ): {
+        effect: CharacteristicsAlteringEffect;
+        layer: Layer<T>;
+    }[] =>
+        arg
+            .map((_e) => ({ effect: _e, layer: getLayer(_e, category) }))
+            .filter(_dropUndefined);
+    let ls: _layers;
     switch (category) {
         case "1a":
             ls = _take(validEffects, category);
@@ -252,6 +246,7 @@ function _pushToQueue(
         default:
             throw new Error(category);
     }
+    ls;
 
     // 適用順を決定する
     const sorted = _sortLayers(game, ls);
@@ -265,6 +260,11 @@ function _pushToQueue(
         }
     });
 }
+
+type _layers<T extends LayerCategory = LayerCategory> = T extends unknown
+    ? { effect: CharacteristicsAlteringEffect; layer: Layer<T> }[]
+    : never;
+
 /** レイヤーの適用順を決定する。 */ // TODO: 実装
 function _sortLayers(game: Game, args: _layers): typeof args {
     // - すべての継続的効果をすべての順序で適用してみて、依存をチェックする
