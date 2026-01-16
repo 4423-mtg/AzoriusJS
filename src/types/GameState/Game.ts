@@ -162,10 +162,14 @@ export function setAllCharacteristics(game: Game): void {
 
     // 特性を Game にセットする
     for (const obj of current.state.objects) {
-        // FIXME: 適用される継続的効果が特にない場合
-        obj.characteristics = ret.find(
+        const _chara = ret.find(
             ({ object: _obj }) => _obj.objectId === obj.objectId
         );
+        if (_chara !== undefined) {
+            obj.characteristics = _chara.characteristics;
+        } else {
+            // TODO: 適用される継続的効果が特にない場合は印刷された特性を使う
+        }
     }
 }
 
@@ -265,8 +269,16 @@ type _layers<T extends LayerCategory = LayerCategory> = T extends unknown
     ? { effect: CharacteristicsAlteringEffect; layer: Layer<T> }[]
     : never;
 
+type EffectAndLayer<T extends LayerCategory = LayerCategory> = {
+    effect: CharacteristicsAlteringEffect;
+    layer: Layer<T>;
+};
+
 /** レイヤーの適用順を決定する。 */ // TODO: 実装
-function _sortLayers(game: Game, args: _layers): typeof args {
+function _sortLayers<T extends LayerCategory>(
+    game: Game,
+    args: EffectAndLayer[]
+): typeof args {
     // - すべての継続的効果をすべての順序で適用してみて、依存をチェックする
     //   - 適用順を決めるに当たってはそれ以前のレイヤーの影響がある
     // - 依存があってループしているならタイムスタンプ順で適用、ループしていないなら依存順で適用する。依存がないものはタイムスタンプ順で適用する
@@ -278,12 +290,68 @@ function _sortLayers(game: Game, args: _layers): typeof args {
     //   - BはAに依存している。ほかはどれも依存していない
     //   - Aを適用
     //   - Cは(アーティファクトがある場合のみ)Bに依存する
+    type _argType = (typeof args)[number];
 
-    // A<-B, C<-Dと依存している場合ACどちらを先に適用する？
-    // - たぶんどちらでもいい
+    const stack: _argType[] = []; // 適用順
+    while (stack.length < args.length) {
+        // 依存性のループのチェック。ループしている場合はそれらをタイムスタンプ順で適用する
+        const loops: EffectAndLayer[][] = _getLoops(args, game);
+        // TODO: ある効果が複数のループに関与している場合、それらのループすべてに含まれるすべての効果をタイムスタンプ順で適用する
 
-    return []; // TODO:
+        // TODO: 続いて、それらの効果にループではない依存をしている効果を直後に適用する。
+        // このときに適用される効果が複数あるなら、それらはタイムスタンプに従う
+
+        // TODO: 依存していないものを適用する。
+
+        // A<-B, A<-C で、A適用によりB<-Cが依存するようになるケースはある
+        // アーティファクトがない状況
+        // A: あるパーマネントをアーティファクト化
+        // B: すべてのアーティファクトをクリーチャー化
+        // C: すべてのクリーチャーでないアーティファクトをエンチャント化し、すべてのアーティファクト・クリーチャーを土地化
+
+        // 他の効果に依存している効果は、依存先が適用されたらすぐに適用するというルールは意味があるのだろうか？
+    }
+
+    return stack;
     // 複数のオブジェクトが同時に領域に入る場合、コントローラーがそれらの相対的なタイムスタンプ順を自由に決定する
+}
+
+function _getLoops(args: EffectAndLayer[], game: Game): EffectAndLayer[][] {
+    // 再帰的に探索する
+    function _step(
+        arg: EffectAndLayer, // 探索起点
+        args: EffectAndLayer[], // 探索範囲
+        _stack: EffectAndLayer[]
+    ): EffectAndLayer[][] {
+        return args
+            .filter((_a) => isDependingOn(arg, _a, game))
+            .map((_a): EffectAndLayer[][] => {
+                if (_stack.filter((_a2) => Object.is(_a2, _a)).length > 0) {
+                    return [[_a]];
+                } else {
+                    return _step(_a, args, [..._stack, _a]);
+                }
+            })
+            .flat()
+            .map((_array) => [arg, ..._array]);
+    }
+
+    // 全効果を起点として探索し、ループになっているものを返す
+    return args
+        .flatMap((_a) => _step(_a, args, [_a]))
+        .filter((_array) => Object.is(_array.at(0), _array.at(-1)));
+}
+
+function isDependingOn<T extends LayerCategory>(
+    effect1: { effect: CharacteristicsAlteringEffect; layer: Layer<T> },
+    effect2: { effect: CharacteristicsAlteringEffect; layer: Layer<T> },
+    game: Game
+): boolean {
+    if (Object.is(effect1, effect2)) {
+        return false;
+    } else {
+        return false; // TODO:
+    }
 }
 
 /** 与えられたレイヤーをGameStateに対して適用してみた場合の、各GameObjectの特性を得る。
