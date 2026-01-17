@@ -21,8 +21,8 @@ export type Move = DefineInstruction<
         objects: MultiSpec<GameObject>;
         destination: (
             object: GameObject,
-            source: GameObject
-        ) => SingleSpec<Zone | undefined>;
+            source: GameObject,
+        ) => SingleSpec<Zone | undefined>; // FIXME: 関数は型ガードが不可能...
     }
 >;
 

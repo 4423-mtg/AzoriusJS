@@ -1,6 +1,6 @@
 - Game
   - applyInstruction (instructionの実行)
-  - _sortLayers (レイヤーの適用順決定)⭐️
+  - ~~_sortLayers (レイヤーの適用順決定)~~
   - _applyLayers (レイヤーの適用)
 - GameState
   - getNextInstructionsFromState
