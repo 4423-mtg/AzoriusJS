@@ -1,7 +1,7 @@
 import type { Player } from "../GameObject/Player.js";
 import type { Ability } from "../GameObject/Ability.js";
 import type { Color } from "./Color.js";
-import type { SingleSpec, MultiSpec } from "../Query.js";
+import type { SingleSpec, MultiSpec } from "../Query/Query.js";
 import type { GameObject } from "../GameObject/GameObject.js";
 import type {
     CardTypeSet,

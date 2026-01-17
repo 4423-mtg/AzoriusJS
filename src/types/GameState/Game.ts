@@ -29,7 +29,7 @@ import {
     type Layer,
     type LayerCategory,
 } from "../Characteristics/Layer.js";
-import { resolveMultiSpec } from "../Query.js";
+import { resolveMultiSpec } from "../Query/Query.js";
 import { compareTimestamp } from "./Timestamp.js";
 
 // ==========================================================================

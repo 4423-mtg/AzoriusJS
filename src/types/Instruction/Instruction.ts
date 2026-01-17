@@ -1,6 +1,6 @@
 /** 効果やルールによってゲーム中に行われる指示。 */
 import type { Player } from "../GameObject/Player.js";
-import type { SingleSpec } from "../Query.js";
+import type { SingleSpec } from "../Query/Query.js";
 import type { InstructionType } from "./InstructionType.js";
 import type {
     BeginPhaseAndStep,

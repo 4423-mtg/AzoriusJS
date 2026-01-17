@@ -8,7 +8,11 @@ import {
     type GameState,
 } from "./types/GameState/GameState.js";
 import { createTimestamp } from "./types/GameState/Timestamp.js";
-import { addCardType, overwriteType, permanentQuery } from "./types/Query.js";
+import {
+    addCardType,
+    overwriteType,
+    permanentQuery,
+} from "./types/Query/Query.js";
 
 // 特性を変更する継続的効果の適用順は
 // - オブジェクト単位では決まらず、存在するすべてのオブジェクト（戦場以外も含む）を俯瞰したうえで決まる。
@@ -40,7 +44,7 @@ const urborg = createCharacteristicsAltering({
     layer4: {
         type: "4",
         affected: permanentQuery(
-            (chara) => chara.card_types?.includes("Land") ?? false
+            (chara) => chara.card_types?.includes("Land") ?? false,
         ),
         typeAltering: addCardType({ cardType: ["Land"] }),
     },

@@ -1,14 +1,14 @@
-import type { Game } from "./GameState/Game.js";
-import { isInBattlefield, type GameObject } from "./GameObject/GameObject.js";
-import { getObjectsWithCharacteristics } from "./GameState/GameState.js";
+import type { Game } from "../GameState/Game.js";
+import { isInBattlefield, type GameObject } from "../GameObject/GameObject.js";
+import { getObjectsWithCharacteristics } from "../GameState/GameState.js";
 import type {
     CardTypeSet,
     Characteristics,
-} from "./Characteristics/Characteristic.js";
-import type { CardType } from "./Characteristics/CardType.js";
-import type { Subtype } from "./Characteristics/Subtype.js";
-import type { Supertype } from "./Characteristics/Supertype.js";
-import type { Card } from "./GameObject/Card/Card.js";
+} from "../Characteristics/Characteristic.js";
+import type { CardType } from "../Characteristics/CardType.js";
+import type { Subtype } from "../Characteristics/Subtype.js";
+import type { Supertype } from "../Characteristics/Supertype.js";
+import type { Card } from "../GameObject/Card/Card.js";
 
 // export type QueryParams = {
 //     state: GameState;
@@ -39,6 +39,9 @@ export class SingleQuery<T> {
         return this.query(args);
     }
 }
+export function isSingleQuery(obj: unknown): obj is SingleQuery<unknown> {
+    return obj instanceof SingleQuery;
+}
 
 // MultiQuery ===============================================================
 export class MultiQuery<T> {
@@ -50,16 +53,30 @@ export class MultiQuery<T> {
 
     resolve: (args: QueryArgument) => T[] = (args) => this.query(args);
 }
-
-export type SingleSpec<T> = T | SingleQuery<T>;
-export type MultiSpec<T> = SingleSpec<T>[] | MultiQuery<T>;
-export type Spec<T> = SingleSpec<T> | MultiSpec<T>;
-
-export function isSingleSpec<T>(spec: Spec<T>): spec is T | SingleQuery<T> {
-    return !isMultiSpec(spec);
+export function isMultiQuery(obj: unknown): obj is MultiQuery<unknown> {
+    return obj instanceof MultiQuery;
 }
-export function isMultiSpec<T>(spec: Spec<T>): spec is MultiSpec<T> {
-    return spec instanceof MultiQuery || Array.isArray(spec);
+
+// Spec ===============================================================
+export type SingleSpec<T> = T | SingleQuery<T>;
+export function isSingleSpec<T>(
+    obj: unknown,
+    type: new (...args: unknown[]) => T,
+): obj is SingleSpec<T> {
+    return obj instanceof T;
+}
+
+export type MultiSpec<T> = SingleSpec<T>[] | MultiQuery<T>;
+export function isMultiSpec(obj: unknown): obj is MultiSpec<unknown> {
+    return (
+        obj instanceof MultiQuery ||
+        (Array.isArray(obj) && obj.every((o) => isSingleSpec(o)))
+    );
+}
+
+export type Spec<T> = SingleSpec<T> | MultiSpec<T>;
+export function isSpec(obj: unknown): obj is Spec<unknown> {
+    //
 }
 
 // Specの解決 ===============================================================
@@ -72,13 +89,13 @@ export function resolveSpec<T>(spec: Spec<T>, args: QueryArgument): T | T[] {
 }
 export function resolveSingleSpec<T>(
     spec: SingleSpec<T>,
-    args: QueryArgument
+    args: QueryArgument,
 ): T {
     return spec instanceof SingleQuery ? spec.resolve(args) : spec;
 }
 export function resolveMultiSpec<T>(
     spec: MultiSpec<T>,
-    args: QueryArgument
+    args: QueryArgument,
 ): T[] {
     return Array.isArray(spec)
         ? spec.map((s) => resolveSingleSpec(s, args))
@@ -88,7 +105,7 @@ export function resolveMultiSpec<T>(
 // ==============================================================================
 /** 指定の特性を満たすパーマネント */
 export function permanentQuery(
-    query: (characteristics: Characteristics) => boolean
+    query: (characteristics: Characteristics) => boolean,
 ): MultiQuery<Card> {
     return new MultiQuery(({ game, self }: QueryArgument) => {
         const state = game.gameStates.at(-1);
@@ -104,7 +121,7 @@ export function permanentQuery(
 
 /** カードタイプ・サブタイプ・特殊タイプを追加する。 */
 export function addCardType(
-    added: Partial<CardTypeSet>
+    added: Partial<CardTypeSet>,
 ): (current: Characteristics) => CardTypeSet {
     return (current) => {
         const _cardt = added.cardType;
@@ -116,24 +133,24 @@ export function addCardType(
                     ? current.card_types
                     : new MultiQuery((_args) =>
                           (current.card_types ?? []).concat(
-                              resolveMultiSpec(_cardt, _args)
-                          )
+                              resolveMultiSpec(_cardt, _args),
+                          ),
                       ),
             subtype:
                 _subt === undefined
                     ? current.subtypes
                     : new MultiQuery((_args) =>
                           (current.subtypes ?? []).concat(
-                              resolveMultiSpec(_subt, _args)
-                          )
+                              resolveMultiSpec(_subt, _args),
+                          ),
                       ),
             supertype:
                 _supert === undefined
                     ? current.supertypes
                     : new MultiQuery((_args) =>
                           (current.supertypes ?? []).concat(
-                              resolveMultiSpec(_supert, _args)
-                          )
+                              resolveMultiSpec(_supert, _args),
+                          ),
                       ),
         };
     };
@@ -141,7 +158,7 @@ export function addCardType(
 
 /** カードタイプ・サブタイプ・特殊タイプを、指定したタイプで上書きする。指定がないものは元のタイプを残す。 */
 export function overwriteType(
-    newtype: Partial<CardTypeSet>
+    newtype: Partial<CardTypeSet>,
 ): (current: Characteristics) => CardTypeSet {
     return (current) => {
         const _cardt = newtype.cardType;

@@ -1,4 +1,4 @@
-import type { QueryArgument, SingleSpec } from "../../Query.js";
+import type { QueryArgument, SingleSpec } from "../../Query/Query.js";
 import type { Phase, Step, Turn } from "../../Turn.js";
 import { GameObject, type GameObjectOptions } from "../GameObject.js";
 
@@ -12,7 +12,7 @@ export class AdditionalTurnEffect extends GameObject {
     constructor(
         condition: SingleSpec<boolean>,
         generateTurn: (params: QueryArgument) => Turn,
-        options: GameObjectOptions
+        options: GameObjectOptions,
     ) {
         super(options);
         this.condition = condition;
@@ -30,7 +30,7 @@ export class AdditionalPhaseEffect extends GameObject {
     constructor(
         condition: SingleSpec<boolean>,
         generatePhase: (params: QueryArgument) => Phase,
-        options: GameObjectOptions
+        options: GameObjectOptions,
     ) {
         super(options);
         this.condition = condition;
@@ -48,7 +48,7 @@ export class AdditionalStepEffect extends GameObject {
     constructor(
         condition: SingleSpec<boolean>,
         generateStep: (params: QueryArgument) => Step,
-        options: GameObjectOptions
+        options: GameObjectOptions,
     ) {
         super(options);
         this.condition = condition;

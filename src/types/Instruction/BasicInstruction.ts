@@ -4,7 +4,7 @@ import type { GameObject } from "../GameObject/GameObject.js";
 import type { Player } from "../GameObject/Player.js";
 import type { StackedAbility } from "../GameObject/StackedAbility.js";
 import type { Zone } from "../GameState/Zone.js";
-import type { MultiSpec, SingleSpec } from "../Query.js";
+import type { MultiSpec, SingleSpec } from "../Query/Query.js";
 import type {
     PhaseParameters,
     StepParameters,
