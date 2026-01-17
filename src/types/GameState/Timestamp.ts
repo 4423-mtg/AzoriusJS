@@ -21,7 +21,7 @@ export function isTimestamp(arg: unknown): arg is Timestamp {
 /** `timestamp1` が `timestamp2` よりも前なら負の値、同じなら `0` 、後なら正の値。 */
 export function compareTimestamp(
     timestamp1: Timestamp,
-    timestamp2: Timestamp
+    timestamp2: Timestamp,
 ): number {
     return compareTimestampId(timestamp1.id, timestamp2.id);
 }

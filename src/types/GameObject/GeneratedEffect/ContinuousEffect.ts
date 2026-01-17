@@ -33,7 +33,7 @@ import type { Spell } from "../Card/Spell.js";
 export type ContinuousEffect = GameObject & ContinuousEffectProperty;
 export type ContinuousEffectProperty = {
     source: Spell | StackedAbility | Ability | undefined | string; // FIXME: 一時的にstringを追加
-    timestamp: Timestamp | undefined;
+    timestamp: Timestamp;
 };
 
 /** 型ガード */
@@ -41,7 +41,7 @@ export function isContinuousEffect(obj: unknown): obj is ContinuousEffect {
     return isGameObject(obj) && isContinuousEffectProperty(obj);
 }
 function isContinuousEffectProperty(
-    arg: unknown
+    arg: unknown,
 ): arg is ContinuousEffectProperty {
     if (typeof arg === "object" && arg !== null) {
         const source =
@@ -87,14 +87,14 @@ export type CharacteristicsAlteringEffectProperty = {
 
 /** 型ガード */
 export function isCharacteristicsAlteringEffect(
-    arg: unknown
+    arg: unknown,
 ): arg is CharacteristicsAlteringEffect {
     return (
         isContinuousEffect(arg) && isCharacteristicsAlteringEffectProperty(arg)
     );
 }
 export function isCharacteristicsAlteringEffectProperty(
-    arg: unknown
+    arg: unknown,
 ): arg is CharacteristicsAlteringEffectProperty {
     return (
         typeof arg === "object" &&
@@ -128,7 +128,7 @@ export function isCharacteristicsAlteringEffectProperty(
 export function createCharacteristicsAltering(
     parameters: GameObjectParameters &
         Partial<ContinuousEffectProperty> &
-        CharacteristicsAlteringEffectParameter
+        CharacteristicsAlteringEffectParameter,
 ): CharacteristicsAlteringEffect {
     const obj = createGameObject(parameters);
     return {
@@ -155,7 +155,7 @@ export type CharacteristicsAlteringEffectParameter =
 /** 指定した種類別のレイヤーを取得する */
 export function getLayer<T extends LayerCategory>(
     effect: CharacteristicsAlteringEffect,
-    category: T // 型を絞り込むためジェネリクスを使う
+    category: T, // 型を絞り込むためジェネリクスを使う
 ): Layer<T> | undefined {
     return effect[`layer${category}`] as Layer<typeof category> | undefined; // FIXME: as
 }
@@ -163,7 +163,7 @@ export function getLayer<T extends LayerCategory>(
 /** 指定した種類別の効果を持っているかどうか (undefinedも不可) */
 export function hasLayer<T extends LayerCategory>(
     effect: unknown,
-    layerCategory: T
+    layerCategory: T,
 ): effect is CharacteristicsAlteringEffect & Required<_layerProperty<T>> {
     return (
         isCharacteristicsAlteringEffect(effect) &&
@@ -189,7 +189,7 @@ export type ModifyProcedureEffectParameter = {
 export function createModifyingProcedureEffect(
     parameters?: GameObjectParameters &
         Partial<ContinuousEffectProperty> &
-        ModifyProcedureEffectParameter
+        ModifyProcedureEffectParameter,
 ): ModifyProcedureEffect {
     const obj = createGameObject(parameters);
     return {
@@ -212,7 +212,7 @@ export type ForbidActionEffectParameters = {
 export function createForbidActionEffect(
     parameters?: GameObjectParameters &
         Partial<ContinuousEffectProperty> &
-        ForbidActionEffectParameters
+        ForbidActionEffectParameters,
 ): ForbidActionEffect {
     const obj = createGameObject(parameters);
     return {

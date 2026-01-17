@@ -29,6 +29,7 @@ import {
     type LayerCategory,
 } from "../Characteristics/Layer.js";
 import { resolveMultiSpec } from "../Query.js";
+import { compareTimestamp } from "./Timestamp.js";
 
 // ==========================================================================
 // MARK: Game
@@ -89,7 +90,7 @@ function _getNextInstructions(game: Game): Instruction[] {
 /** 処理を1回実行する。 */
 export function applyInstruction(
     game: Game,
-    instructions: Instruction[]
+    instructions: Instruction[],
 ): void {
     const current = game.history.at(-1);
     if (current === undefined) {
@@ -129,7 +130,7 @@ export function setAllCharacteristics(game: Game): void {
 
     // すべての特性変更効果
     const effects = current.state.objects.filter((o) =>
-        isCharacteristicsAlteringEffect(o)
+        isCharacteristicsAlteringEffect(o),
     );
 
     // 適用開始済み効果をメモするリスト
@@ -145,7 +146,7 @@ export function setAllCharacteristics(game: Game): void {
             category,
             layerQueue,
             appliedEffects,
-            game
+            game,
         );
         // 特性定義能力からでないもの
         _pushToQueue(
@@ -153,7 +154,7 @@ export function setAllCharacteristics(game: Game): void {
             category,
             layerQueue,
             appliedEffects,
-            game
+            game,
         );
     }
 
@@ -163,7 +164,7 @@ export function setAllCharacteristics(game: Game): void {
     // 特性を Game にセットする
     for (const obj of current.state.objects) {
         const _chara = ret.find(
-            ({ object: _obj }) => _obj.objectId === obj.objectId
+            ({ object: _obj }) => _obj.objectId === obj.objectId,
         );
         if (_chara !== undefined) {
             obj.characteristics = _chara.characteristics;
@@ -179,7 +180,7 @@ function _pushToQueue(
     category: LayerCategory,
     queue: AnyLayer[],
     appliedEffect: GameObjectId[],
-    game: Game
+    game: Game,
 ) {
     /** 能力が無効化されているならTrue */
     const _isExist = (ability: Ability): boolean => {
@@ -191,7 +192,7 @@ function _pushToQueue(
     };
     // 発生源が無効化されていない効果を抽出
     const validEffects = effects.filter(
-        (e) => !(isAbility(e.source) && !_isExist(e.source))
+        (e) => !(isAbility(e.source) && !_isExist(e.source)),
     );
 
     // 指定した種類別のレイヤーを取り出す
@@ -204,7 +205,7 @@ function _pushToQueue(
     } => arg.layer !== undefined;
     const _take = <T extends LayerCategory>(
         arg: CharacteristicsAlteringEffect[],
-        category: T
+        category: T,
     ): {
         effect: CharacteristicsAlteringEffect;
         layer: Layer<T>;
@@ -275,10 +276,7 @@ type EffectAndLayer<T extends LayerCategory = LayerCategory> = {
 };
 
 /** レイヤーの適用順を決定する。 */ // TODO: 実装
-function _sortLayers<T extends LayerCategory>(
-    game: Game,
-    args: EffectAndLayer[]
-): typeof args {
+function _sortLayers(game: Game, args: EffectAndLayer[]): typeof args {
     // - すべての継続的効果をすべての順序で適用してみて、依存をチェックする
     //   - 適用順を決めるに当たってはそれ以前のレイヤーの影響がある
     // - 依存があってループしているならタイムスタンプ順で適用、ループしていないなら依存順で適用する。依存がないものはタイムスタンプ順で適用する
@@ -290,43 +288,84 @@ function _sortLayers<T extends LayerCategory>(
     //   - BはAに依存している。ほかはどれも依存していない
     //   - Aを適用
     //   - Cは(アーティファクトがある場合のみ)Bに依存する
-    type _argType = (typeof args)[number];
 
-    const stack: _argType[] = []; // 適用順
+    const stack: EffectAndLayer[] = []; // 適用順
+    let latestStacked: EffectAndLayer[] = [];
     while (stack.length < args.length) {
-        // 依存性のループのチェック。ループしている場合はそれらをタイムスタンプ順で適用する
-        const loops: EffectAndLayer[][] = _getLoops(args, game);
-        // TODO: ある効果が複数のループに関与している場合、それらのループすべてに含まれるすべての効果をタイムスタンプ順で適用する
-
-        // TODO: 続いて、それらの効果にループではない依存をしている効果を直後に適用する。
-        // このときに適用される効果が複数あるなら、それらはタイムスタンプに従う
-
-        // TODO: 依存していないものを適用する。
-
-        // A<-B, A<-C で、A適用によりB<-Cが依存するようになるケースはある
+        // まだ適用順の決定していないもの
+        const unstacked = args.filter((_a) => !stack.includes(_a));
+        // FIXME: どれから適用するかは任意ではなく、直前に適用した効果に依存しているものを優先的に適用を試みる。それがまだ他の効果にも依存していることもある
+        // 例: A<-B, A<-C で、A適用によりB<-Cが依存するようになるケースはある
         // アーティファクトがない状況
         // A: あるパーマネントをアーティファクト化
         // B: すべてのアーティファクトをクリーチャー化
         // C: すべてのクリーチャーでないアーティファクトをエンチャント化し、すべてのアーティファクト・クリーチャーを土地化
 
-        // 他の効果に依存している効果は、依存先が適用されたらすぐに適用するというルールは意味があるのだろうか？
+        // 1. 依存性のループを取得し、ループしている場合はそれらをタイムスタンプ順で適用する。
+        // ある効果が複数のループに関与している場合は、それらのループすべてに含まれるすべての効果をタイムスタンプ順で適用する
+        const loops: EffectAndLayer[][] = _getDependencyLoops(unstacked, game); // FIXME: gameにstack内のレイヤーを仮適用した状態での依存関係を見る
+        if (loops.length > 0) {
+            const loop1 = loops.at(0) as EffectAndLayer[];
+            // そのループ自身およびそのループと同じ要素を持つすべてのループからすべての要素を取り出し、重複を削除する
+            const effects: EffectAndLayer[] = new Set<EffectAndLayer>([
+                ...loop1,
+                ...loops
+                    .slice(1)
+                    .filter((_loop) => _includesSameObject(loop1, _loop))
+                    .flat(),
+            ])
+                .values()
+                .toArray();
+            // タイムスタンプ順でスタックに入れる
+            effects
+                .toSorted((e1, e2) =>
+                    compareTimestamp(e1.effect.timestamp, e2.effect.timestamp),
+                )
+                .forEach((e) => stack.push(e));
+
+            // 2. それらの効果にループではない依存をしている効果を直後に適用する。
+            // このときに適用される効果が複数あるなら、それらはタイムスタンプに従う
+            getDependencies(unstacked, game) // FIXME: gameにstack内のレイヤーを仮適用した状態での依存関係を見る
+                .filter(
+                    ({ depending, depended }) =>
+                        effects.includes(depended) &&
+                        !effects.includes(depending),
+                )
+                .map(({ depending }) => depending)
+                .toSorted((e1, e2) =>
+                    compareTimestamp(e1.effect.timestamp, e2.effect.timestamp),
+                );
+
+            continue;
+        }
+
+        // 3. 依存していないものを適用する。
+        // TODO:
     }
 
     return stack;
     // 複数のオブジェクトが同時に領域に入る場合、コントローラーがそれらの相対的なタイムスタンプ順を自由に決定する
 }
 
-function _getLoops(args: EffectAndLayer[], game: Game): EffectAndLayer[][] {
+function _includesSameObject<T>(array1: T[], array2: T[]) {
+    return array1.some((t1) => array2.some((t2) => t1 === t2));
+}
+
+function _getDependencyLoops(
+    args: EffectAndLayer[],
+    game: Game,
+): EffectAndLayer[][] {
+    // FIXME: getDependencies を使って書き直す
     // 再帰的に探索する
     function _step(
         arg: EffectAndLayer, // 探索起点
         args: EffectAndLayer[], // 探索範囲
-        _stack: EffectAndLayer[]
+        _stack: EffectAndLayer[],
     ): EffectAndLayer[][] {
         return args
             .filter((_a) => isDependingOn(arg, _a, game))
             .map((_a): EffectAndLayer[][] => {
-                if (_stack.filter((_a2) => Object.is(_a2, _a)).length > 0) {
+                if (_stack.filter((_a2) => _a2 === _a).length > 0) {
                     return [[_a]];
                 } else {
                     return _step(_a, args, [..._stack, _a]);
@@ -339,19 +378,32 @@ function _getLoops(args: EffectAndLayer[], game: Game): EffectAndLayer[][] {
     // 全効果を起点として探索し、ループになっているものを返す
     return args
         .flatMap((_a) => _step(_a, args, [_a]))
-        .filter((_array) => Object.is(_array.at(0), _array.at(-1)));
+        .filter((_array) => _array.at(0) === _array.at(-1));
 }
 
 function isDependingOn<T extends LayerCategory>(
-    effect1: { effect: CharacteristicsAlteringEffect; layer: Layer<T> },
-    effect2: { effect: CharacteristicsAlteringEffect; layer: Layer<T> },
-    game: Game
+    layer1: { effect: CharacteristicsAlteringEffect; layer: Layer<T> },
+    layer2: { effect: CharacteristicsAlteringEffect; layer: Layer<T> },
+    game: Game,
 ): boolean {
-    if (Object.is(effect1, effect2)) {
+    if (layer1 === layer2) {
         return false;
     } else {
-        return false; // TODO:
+        // TODO:
+
+        return false;
     }
+}
+
+function getDependencies(
+    layers: EffectAndLayer[],
+    game: Game,
+): { depending: EffectAndLayer; depended: EffectAndLayer }[] {
+    return layers.flatMap((_a1) =>
+        layers
+            .filter((_a2) => isDependingOn(_a1, _a2, game))
+            .map((_a2) => ({ depending: _a1, depended: _a2 })),
+    );
 }
 
 /** 与えられたレイヤーをGameStateに対して適用してみた場合の、各GameObjectの特性を得る。
@@ -359,7 +411,7 @@ function isDependingOn<T extends LayerCategory>(
  */
 export function _applyLayers( // TODO: 実装
     game: Game,
-    layers: AnyLayer[]
+    layers: AnyLayer[],
 ): {
     object: Card | Player;
     characteristics: Characteristics;

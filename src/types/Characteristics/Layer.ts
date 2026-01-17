@@ -57,7 +57,7 @@ export type Layer<T extends LayerCategory> = T extends "1a"
 /** 型ガード */
 export function isLayer<T extends LayerCategory>(
     arg: unknown,
-    category: T
+    category: T,
 ): arg is Layer<T> {
     switch (category) {
         case "1a":
@@ -123,7 +123,7 @@ export type Layer1a = {
     affected: MultiSpec<GameObject>;
     copyableValueAltering: (
         current: Characteristics,
-        source?: GameObject
+        source?: GameObject,
     ) => SingleSpec<CopiableValue>;
 };
 export function isLayer1a(arg: unknown): arg is Layer1a {
@@ -138,7 +138,7 @@ export type Layer1b = {
     affected: MultiSpec<GameObject>;
     copyableValueAltering: (
         current: Characteristics,
-        source?: GameObject
+        source?: GameObject,
     ) => SingleSpec<CopiableValue>;
 };
 export function isLayer1b(arg: unknown): arg is Layer1b {
@@ -153,7 +153,7 @@ export type Layer2 = {
     affected: MultiSpec<GameObject>;
     controllerAltering: (
         current: Characteristics,
-        source?: GameObject
+        source?: GameObject,
     ) => SingleSpec<Player>;
 };
 export function isLayer2(arg: unknown): arg is Layer2 {
@@ -180,7 +180,7 @@ export type Layer4 = {
     affected: MultiSpec<GameObject>;
     typeAltering: (
         current: Characteristics,
-        source?: GameObject
+        source?: GameObject,
     ) => CardTypeSet;
 };
 export function isLayer4(arg: unknown): arg is Layer4 {
@@ -195,7 +195,7 @@ export type Layer5 = {
     affected: MultiSpec<GameObject>;
     colorAltering: (
         current: Characteristics,
-        source?: GameObject
+        source?: GameObject,
     ) => MultiSpec<Color>;
 };
 export function isLayer5(arg: unknown): arg is Layer5 {
@@ -210,7 +210,7 @@ export type Layer6 = {
     affected: MultiSpec<GameObject>;
     abilityAltering: (
         current: Characteristics,
-        source?: GameObject
+        source?: GameObject,
     ) => MultiSpec<Ability>;
 };
 export function isLayer6(arg: unknown): arg is Layer6 {
@@ -225,7 +225,7 @@ export type Layer7a = {
     affected: MultiSpec<GameObject>;
     ptAltering: (
         current: Characteristics,
-        source?: GameObject
+        source?: GameObject,
     ) => SingleSpec<{ power: number; toughness: number }>;
 };
 export function isLayer7a(arg: unknown): arg is Layer7a {
@@ -240,7 +240,7 @@ export type Layer7b = {
     affected: MultiSpec<GameObject>;
     ptAltering: (
         current: Characteristics,
-        source?: GameObject
+        source?: GameObject,
     ) => SingleSpec<{ basePower: number; baseToughness: number }>;
 };
 export function isLayer7b(arg: unknown): arg is Layer7b {
@@ -255,7 +255,7 @@ export type Layer7c = {
     affected: MultiSpec<GameObject>;
     ptAltering: (
         current: Characteristics,
-        source?: GameObject
+        source?: GameObject,
     ) => SingleSpec<{ modifyPower: number; modifyToughness: number }>;
 };
 export function isLayer7c(arg: unknown): arg is Layer7c {

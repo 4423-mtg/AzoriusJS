@@ -164,7 +164,7 @@ export type DefineInstruction<
     T extends InstructionType,
     U extends { [K: PropertyKey]: unknown } & _ForbidKeys<
         keyof _InstructionCommonAttributes<T>
-    > = {}
+    > = {},
 > = _InstructionCommonAttributes<T> & U;
 
 /** Instructionの共通フィールド */

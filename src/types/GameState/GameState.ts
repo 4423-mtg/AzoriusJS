@@ -65,16 +65,16 @@ export function getPlayersByTurnOrder(state: GameState): Player[] {
 /** 指定した領域を取得する */
 export function getZones(
     state: GameState,
-    option: { type: ZoneType; owner?: Player }
+    option: { type: ZoneType; owner?: Player },
 ): Zone[] {
     return state.zones.filter(
-        (z) => z.owner === option.owner && z.type === option.type
+        (z) => z.owner === option.owner && z.type === option.type,
     );
 }
 
 export function getAllObjectsInZone(
     state: GameState,
-    zone: Zone
+    zone: Zone,
 ): GameObject[] {
     return state.objects.filter((obj) => obj.zone === zone);
 }
