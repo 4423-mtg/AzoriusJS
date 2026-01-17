@@ -1,7 +1,11 @@
 import type { Player } from "../GameObject/Player.js";
 import type { Ability } from "../GameObject/Ability.js";
 import type { Color } from "./Color.js";
-import type { SingleSpec, MultiSpec } from "../Query/Query.js";
+import {
+    type SingleSpec,
+    type MultiSpec,
+    resolveMultiSpec,
+} from "../Query/Query.js";
 import type { GameObject } from "../GameObject/GameObject.js";
 import type {
     CardTypeSet,
@@ -14,6 +18,8 @@ import { compareTimestamp } from "../GameState/Timestamp.js";
 
 // 単一の常在型能力からの継続的効果または呪文や能力の解決によって生成された単一の継続的効果の中に含まれる、各種類別の効果
 
+// ================================================================
+// MARK: 型定義
 /** 種類別 */
 export const layerCategories = [
     "1a", // コピー可能な効果の適用
@@ -119,7 +125,7 @@ export function isAnyLayer(arg: unknown): arg is AnyLayer {
 }
 
 // ======================================================
-// MARK: 1a
+// MARK: 型定義: 1a
 /** コピー可能な効果の適用 */
 export type Layer1a = {
     type: "1a";
@@ -133,8 +139,15 @@ export function isLayer1a(arg: unknown): arg is Layer1a {
     return isLayer(arg, "1a");
     // FIXME: 実装
 }
+function applyLayer1a(
+    layer: Layer1a,
+    game: Game,
+): { object: GameObject; characteristics: Characteristics }[] {
+    // TODO:
+    return [];
+}
 
-// MARK: 1b
+// MARK: 型定義: 1b
 /** 裏向きによる特性変更 */
 export type Layer1b = {
     type: "1b";
@@ -149,7 +162,7 @@ export function isLayer1b(arg: unknown): arg is Layer1b {
     // FIXME: 実装
 }
 
-// MARK: 2
+// MARK: 型定義: 2
 /** コントロール変更 */
 export type Layer2 = {
     type: "2";
@@ -164,7 +177,7 @@ export function isLayer2(arg: unknown): arg is Layer2 {
     // FIXME: 実装
 }
 
-// MARK: 3
+// MARK: 型定義: 3
 /** 文章変更 */
 export type Layer3 = {
     type: "3";
@@ -176,7 +189,7 @@ export function isLayer3(arg: unknown): arg is Layer3 {
     // FIXME: 実装
 }
 
-// MARK: 4
+// MARK: 型定義: 4
 /** タイプ変更 */
 export type Layer4 = {
     type: "4";
@@ -191,7 +204,7 @@ export function isLayer4(arg: unknown): arg is Layer4 {
     // FIXME: 実装
 }
 
-// MARK: 5
+// MARK: 型定義: 5
 /** 色変更 */
 export type Layer5 = {
     type: "5";
@@ -206,7 +219,7 @@ export function isLayer5(arg: unknown): arg is Layer5 {
     // FIXME: 実装
 }
 
-// MARK: 6
+// MARK: 型定義: 6
 /** 能力変更 */
 export type Layer6 = {
     type: "6";
@@ -221,7 +234,7 @@ export function isLayer6(arg: unknown): arg is Layer6 {
     // FIXME: 実装
 }
 
-// MARK: 7a
+// MARK: 型定義: 7a
 /** パワー・タフネスを定義する特性定義能力 */
 export type Layer7a = {
     type: "7a";
@@ -236,7 +249,7 @@ export function isLayer7a(arg: unknown): arg is Layer7a {
     // FIXME: 実装
 }
 
-// MARK: 7b
+// MARK: 型定義: 7b
 /** 基本のパワー・タフネスの変更 */
 export type Layer7b = {
     type: "7b";
@@ -251,7 +264,7 @@ export function isLayer7b(arg: unknown): arg is Layer7b {
     // FIXME: 実装
 }
 
-// MARK: 7c
+// MARK: 型定義: 7c
 /** パワー・タフネスの修整 */
 export type Layer7c = {
     type: "7c";
@@ -266,7 +279,7 @@ export function isLayer7c(arg: unknown): arg is Layer7c {
     // FIXME: 実装
 }
 
-// MARK: 7d
+// MARK: 型定義: 7d
 /** パワーとタフネスの入れ替え */
 export type Layer7d = {
     type: "7d";
@@ -278,6 +291,48 @@ export function isLayer7d(arg: unknown): arg is Layer7d {
 }
 
 // =================================================================
+// MARK: レイヤーの適用
+function _applyLayer(
+    layer: AnyLayer,
+    game: Game,
+    characteristics: {
+        object: GameObject;
+        characteristics: Characteristics;
+    }[],
+): {
+    object: GameObject;
+    characteristics: Characteristics;
+}[] {
+    const latest = game.history.at(-1);
+    if (latest === undefined) {
+        throw new Error();
+    }
+    const affected = resolveMultiSpec(layer.affected, {
+        game: game,
+        self: undefined, // FIXME: 特性に関してはcharacteristicsから取る必要がある
+    }); // FIXME: self
+
+    // TODO:
+    return [];
+}
+
+/** Gameの最新の状態に対してレイヤーを適用し、各オブジェクトの特性を得る。このときGameは変更しない。 */
+export function applyLayers(
+    layers: AnyLayer[],
+    game: Game,
+): {
+    object: GameObject;
+    characteristics: Characteristics;
+}[] {
+    let ret: ReturnType<typeof applyLayers> = [];
+    for (const _layer of layers) {
+        ret = _applyLayer(_layer, game, ret);
+    }
+    return ret;
+}
+
+// =================================================================
+// MARK: レイヤーの解決
 export function applyLayerEffect(params: type) {
     // FIXME:
 }

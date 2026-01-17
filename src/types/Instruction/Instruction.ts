@@ -55,6 +55,8 @@ import type {
     Untap,
 } from "./KeywordAction.ts/Evergreen.js";
 
+// ==========================================================================
+// MARK: 型定義
 /** 処理。 */
 export type Instruction<T extends InstructionType = InstructionType> =
     T extends "simultaneous"
@@ -178,6 +180,8 @@ type _ForbidKeys<K extends PropertyKey> = {
     [P in K]?: never;
 };
 
+// ==========================================================================
+// MARK: 関数
 // - Instruction は入れ子になることがある。
 //   - どのような入れ子になるかは各 Instruction が各自定義する。
 /** Instructionのチェーンから、次の瞬間のInstructionのチェーンを得る。 */
@@ -320,7 +324,10 @@ export function _yieldNext(inst: Instruction): Instruction[] {
     }
 }
 
-// MARK: 基本 ************************************************
+export function executeInstruction(params: type) {}
+
+// ==========================================================
+// MARK: 基本
 /** 複数の処理を同時に行う指示。 */ // ゴブリンの溶接工
 export type SimultaneousInstructions = DefineInstruction<
     "simultaneous",

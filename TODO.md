@@ -1,15 +1,16 @@
 - Game
   - applyInstruction (instructionの実行)
   - ~~_sortLayers (レイヤーの適用順決定)~~
-  - _applyLayers (レイヤーの適用)
 - GameState
   - getNextInstructionsFromState
   - deepCopyGameState
 - Instruction.ts
   - _yieldNext
-
 - Layer.ts
+  - _applyLayer (レイヤーの適用)
+    - Queryも見直す
   - 文章変更効果
+
 - その他
   - Spell.ts
   - AdditionalTurnEffect.ts

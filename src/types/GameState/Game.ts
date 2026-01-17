@@ -9,8 +9,6 @@ import {
     type Instruction,
 } from "../Instruction/Instruction.js";
 import type { GameObjectId } from "../GameObject/GameObject.js";
-import type { Card } from "../GameObject/Card/Card.js";
-import type { Player } from "../GameObject/Player.js";
 import {
     isAbility,
     isCharacteristicDefiningAbility,
@@ -21,16 +19,14 @@ import {
     isCharacteristicsAlteringEffect,
     type CharacteristicsAlteringEffect,
 } from "../GameObject/GeneratedEffect/ContinuousEffect.js";
-import type { Characteristics } from "../Characteristics/Characteristic.js";
 import {
+    applyLayers,
     layerCategories,
     sortLayers,
     type AnyLayer,
     type Layer,
     type LayerCategory,
 } from "../Characteristics/Layer.js";
-import { resolveMultiSpec } from "../Query/Query.js";
-import { compareTimestamp } from "./Timestamp.js";
 
 // ==========================================================================
 // MARK: Game
@@ -46,7 +42,7 @@ export type HistoryEntry = {
 };
 
 /** Gameを1つ進める。 */
-export function goToNext(game: Game): void {
+export function incrementGameState(game: Game): void {
     const current = game.history.at(-1);
     if (current === undefined) {
         throw Error();
@@ -91,7 +87,7 @@ function _getNextInstructions(game: Game): Instruction[] {
 /** 処理を1回実行する。 */
 export function applyInstruction(
     game: Game,
-    instructions: Instruction[],
+    instructions: Instruction[], // 実行後、gameの最新のstateのinstructionになる
 ): void {
     const current = game.history.at(-1);
     if (current === undefined) {
@@ -160,19 +156,14 @@ export function setAllCharacteristics(game: Game): void {
     }
 
     // 各レイヤーを決定された順序で順番に適用し特性を得る
-    const ret = _applyLayers(game, layerQueue);
+    const ret = applyLayers(layerQueue, game);
 
     // 特性を Game にセットする
-    for (const obj of current.state.objects) {
-        const _chara = ret.find(
-            ({ object: _obj }) => _obj.objectId === obj.objectId,
-        );
-        if (_chara !== undefined) {
-            obj.characteristics = _chara.characteristics;
-        } else {
-            // TODO: 適用される継続的効果が特にない場合は印刷された特性を使う
-        }
-    }
+    current.state.objects.forEach((_obj1) => {
+        _obj1.characteristics =
+            ret.find(({ object: _obj2 }) => _obj2.objectId === _obj1.objectId)
+                ?.characteristics ?? _obj1.printed; // FIXME: GameObject.printed
+    });
 }
 
 /** 指定した効果の指定された種類別のレイヤーについて、依存関係とタイムスタンプにもとづいて適用順を決定してキューに入れる。 */
@@ -186,7 +177,7 @@ function _pushToQueue(
     /** 能力が無効化されているならTrue */
     const _isExist = (ability: Ability): boolean => {
         // ここまでのレイヤーを適用してみて、能力が無効化されていないか確認する
-        return _applyLayers(game, queue).some(({ characteristics }) => {
+        return applyLayers(queue, game).some(({ characteristics }) => {
             characteristics.abilities !== undefined &&
                 characteristics.abilities.some((_a) => _a.id === ability.id);
         });
@@ -270,50 +261,3 @@ function _pushToQueue(
 type _layers<T extends LayerCategory = LayerCategory> = T extends unknown
     ? { effect: CharacteristicsAlteringEffect; layer: Layer<T> }[]
     : never;
-
-/** 与えられたレイヤーをGameStateに対して適用してみた場合の、各GameObjectの特性を得る。
- * なお、GameStateを変更はしない。
- */
-function _applyLayers( // TODO: 実装
-    game: Game,
-    layers: AnyLayer[],
-): {
-    object: Card | Player;
-    characteristics: Characteristics;
-}[] {
-    // TODO: queryを解決しながら適用していく
-    // FIXME: queryのプロパティはレイヤーによらず同名にした方が良い
-    for (const layer of layers) {
-        switch (layer.type) {
-            case "1a":
-                resolveMultiSpec(layer.affected, {
-                    game: game,
-                    self: undefined, // FIXME: selfとは?
-                });
-                layer.copyableValueAltering();
-                break;
-            case "1b":
-                break;
-            case "2":
-                break;
-            case "3":
-                break;
-            case "4":
-                break;
-            case "5":
-                break;
-            case "6":
-                break;
-            case "7a":
-                break;
-            case "7b":
-                break;
-            case "7c":
-                break;
-            case "7d":
-                break;
-            default:
-                break;
-        }
-    }
-}
