@@ -1,20 +1,32 @@
-import type { Player } from "../GameObject/Player.js";
-import type { Ability } from "../GameObject/Ability.js";
-import type { Color } from "./Color.js";
+import { resolveMultiSpec, type MultiSpec } from "../../Query/Query.js";
+import type { GameObject } from "../../GameObject/GameObject.js";
+import type { Characteristics } from "../Characteristic.js";
+import type { CharacteristicsAlteringEffect } from "../../GameObject/GeneratedEffect/ContinuousEffect.js";
+import type { Game } from "../../GameState/Game.js";
+import { compareTimestamp } from "../../GameState/Timestamp.js";
+
+import { isLayer1a, isLayer1b, type Layer1a, type Layer1b } from "./Layer1.js";
+import { isLayer2, type Layer2 } from "./Layer2.js";
+import { isLayer3, type Layer3 } from "./Layer3.js";
+import { isLayer4, type Layer4 } from "./Layer4.js";
+import { isLayer5, type Layer5 } from "./Layer5.js";
+import { isLayer6, type Layer6 } from "./Layer6.js";
 import {
-    type SingleSpec,
-    type MultiSpec,
-    resolveMultiSpec,
-} from "../Query/Query.js";
-import type { GameObject } from "../GameObject/GameObject.js";
-import type {
-    CardTypeSet,
-    Characteristics,
-    CopiableValue,
-} from "./Characteristic.js";
-import type { CharacteristicsAlteringEffect } from "../GameObject/GeneratedEffect/ContinuousEffect.js";
-import type { Game } from "../GameState/Game.js";
-import { compareTimestamp } from "../GameState/Timestamp.js";
+    isLayer7a,
+    isLayer7b,
+    isLayer7c,
+    isLayer7d,
+    type Layer7a,
+    type Layer7b,
+    type Layer7c,
+    type Layer7d,
+} from "./Layer7.js";
+import {
+    isGameObjectQuery,
+    isPlayerQuery,
+    type GameObjectQuery,
+    type PlayerQuery,
+} from "../../Query/GameObjectQuery.js";
 
 // 単一の常在型能力からの継続的効果または呪文や能力の解決によって生成された単一の継続的効果の中に含まれる、各種類別の効果
 
@@ -37,8 +49,32 @@ export const layerCategories = [
 
 /** 種類別 */
 export type LayerCategory = (typeof layerCategories)[number];
+export function isLayerCategory(arg: unknown): arg is LayerCategory {
+    return (
+        typeof arg === "string" &&
+        (layerCategories as readonly string[]).includes(arg)
+    );
+}
 
 // ---------------------------------------------------------------
+export type LayerCommonParameter = {
+    type: LayerCategory;
+    affected: GameObjectQuery | PlayerQuery;
+    // FIXME: affectedは各レイヤーごとに必要なのか？
+};
+export function isLayerCommonParameter(
+    arg: unknown,
+): arg is LayerCommonParameter {
+    return (
+        typeof arg === "object" &&
+        arg !== null &&
+        "type" in arg &&
+        isLayerCategory(arg.type) &&
+        "affected" in arg &&
+        (isGameObjectQuery(arg.affected) || isPlayerQuery(arg.affected))
+    );
+}
+
 /** 種類別に対応するレイヤー */
 export type Layer<T extends LayerCategory> = T extends "1a"
     ? Layer1a
@@ -63,7 +99,6 @@ export type Layer<T extends LayerCategory> = T extends "1a"
     : T extends "7d"
     ? Layer7d
     : never;
-/** 型ガード */
 export function isLayer<T extends LayerCategory>(
     arg: unknown,
     category: T,
@@ -92,10 +127,11 @@ export function isLayer<T extends LayerCategory>(
         case "7d":
             return isLayer7d(arg);
         default:
-            throw new Error(category);
+            throw new TypeError(category);
     }
 }
 
+/** 任意のレイヤー */
 export type AnyLayer =
     | Layer1a
     | Layer1b
@@ -124,177 +160,12 @@ export function isAnyLayer(arg: unknown): arg is AnyLayer {
     );
 }
 
-// ======================================================
-// MARK: 型定義: 1a
-/** コピー可能な効果の適用 */
-export type Layer1a = {
-    type: "1a";
-    affected: MultiSpec<GameObject>;
-    copyableValueAltering: (
-        current: Characteristics,
-        source?: GameObject,
-    ) => SingleSpec<CopiableValue>; // FIXME: 関数は型ガードが不可能...
-};
-export function isLayer1a(arg: unknown): arg is Layer1a {
-    return isLayer(arg, "1a");
-    // FIXME: 実装
-}
-function applyLayer1a(
-    layer: Layer1a,
-    game: Game,
-): { object: GameObject; characteristics: Characteristics }[] {
-    // TODO:
-    return [];
-}
-
-// MARK: 型定義: 1b
-/** 裏向きによる特性変更 */
-export type Layer1b = {
-    type: "1b";
-    affected: MultiSpec<GameObject>;
-    copyableValueAltering: (
-        current: Characteristics,
-        source?: GameObject,
-    ) => SingleSpec<CopiableValue>;
-};
-export function isLayer1b(arg: unknown): arg is Layer1b {
-    return isLayer(arg, "1b");
-    // FIXME: 実装
-}
-
-// MARK: 型定義: 2
-/** コントロール変更 */
-export type Layer2 = {
-    type: "2";
-    affected: MultiSpec<GameObject>;
-    controllerAltering: (
-        current: Characteristics,
-        source?: GameObject,
-    ) => SingleSpec<Player>;
-};
-export function isLayer2(arg: unknown): arg is Layer2 {
-    return isLayer(arg, "2");
-    // FIXME: 実装
-}
-
-// MARK: 型定義: 3
-/** 文章変更 */
-export type Layer3 = {
-    type: "3";
-    affected: MultiSpec<GameObject>;
-    textAltering: (current: Characteristics, source?: GameObject) => any; // FIXME: 文章の型
-};
-export function isLayer3(arg: unknown): arg is Layer3 {
-    return isLayer(arg, "3");
-    // FIXME: 実装
-}
-
-// MARK: 型定義: 4
-/** タイプ変更 */
-export type Layer4 = {
-    type: "4";
-    affected: MultiSpec<GameObject>;
-    typeAltering: (
-        current: Characteristics,
-        source?: GameObject,
-    ) => CardTypeSet;
-};
-export function isLayer4(arg: unknown): arg is Layer4 {
-    return isLayer(arg, "4");
-    // FIXME: 実装
-}
-
-// MARK: 型定義: 5
-/** 色変更 */
-export type Layer5 = {
-    type: "5";
-    affected: MultiSpec<GameObject>;
-    colorAltering: (
-        current: Characteristics,
-        source?: GameObject,
-    ) => MultiSpec<Color>;
-};
-export function isLayer5(arg: unknown): arg is Layer5 {
-    return isLayer(arg, "5");
-    // FIXME: 実装
-}
-
-// MARK: 型定義: 6
-/** 能力変更 */
-export type Layer6 = {
-    type: "6";
-    affected: MultiSpec<GameObject>;
-    abilityAltering: (
-        current: Characteristics,
-        source?: GameObject,
-    ) => MultiSpec<Ability>;
-};
-export function isLayer6(arg: unknown): arg is Layer6 {
-    return isLayer(arg, "6");
-    // FIXME: 実装
-}
-
-// MARK: 型定義: 7a
-/** パワー・タフネスを定義する特性定義能力 */
-export type Layer7a = {
-    type: "7a";
-    affected: MultiSpec<GameObject>;
-    ptAltering: (
-        current: Characteristics,
-        source?: GameObject,
-    ) => SingleSpec<{ power: number; toughness: number }>;
-};
-export function isLayer7a(arg: unknown): arg is Layer7a {
-    return isLayer(arg, "7a");
-    // FIXME: 実装
-}
-
-// MARK: 型定義: 7b
-/** 基本のパワー・タフネスの変更 */
-export type Layer7b = {
-    type: "7b";
-    affected: MultiSpec<GameObject>;
-    ptAltering: (
-        current: Characteristics,
-        source?: GameObject,
-    ) => SingleSpec<{ basePower: number; baseToughness: number }>;
-};
-export function isLayer7b(arg: unknown): arg is Layer7b {
-    return isLayer(arg, "7b");
-    // FIXME: 実装
-}
-
-// MARK: 型定義: 7c
-/** パワー・タフネスの修整 */
-export type Layer7c = {
-    type: "7c";
-    affected: MultiSpec<GameObject>;
-    ptAltering: (
-        current: Characteristics,
-        source?: GameObject,
-    ) => SingleSpec<{ modifyPower: number; modifyToughness: number }>;
-};
-export function isLayer7c(arg: unknown): arg is Layer7c {
-    return isLayer(arg, "7c");
-    // FIXME: 実装
-}
-
-// MARK: 型定義: 7d
-/** パワーとタフネスの入れ替え */
-export type Layer7d = {
-    type: "7d";
-    affected: MultiSpec<GameObject>;
-};
-export function isLayer7d(arg: unknown): arg is Layer7d {
-    return isLayer(arg, "7d");
-    // FIXME: 実装
-}
-
 // =================================================================
 // MARK: レイヤーの適用
 function _applyLayer(
     layer: AnyLayer,
     game: Game,
+    // 現在の特性
     characteristics: {
         object: GameObject;
         characteristics: Characteristics;

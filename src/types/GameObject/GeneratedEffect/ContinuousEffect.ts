@@ -9,24 +9,25 @@ import type { GameState } from "../../GameState/GameState.js";
 import {
     isLayer,
     type Layer,
-    type Layer1a,
-    type Layer1b,
-    type Layer2,
-    type Layer3,
-    type Layer4,
-    type Layer5,
-    type Layer6,
-    type Layer7a,
-    type Layer7b,
-    type Layer7c,
-    type Layer7d,
     type LayerCategory,
-} from "../../Characteristics/Layer.js";
+} from "../../Characteristics/Layer/Layer.js";
 import type { Instruction } from "../../Instruction/Instruction.js";
 import { isTimestamp, type Timestamp } from "../../GameState/Timestamp.js";
 import type { StackedAbility } from "../StackedAbility.js";
 import { isAbility, type Ability } from "../Ability.js";
 import type { Spell } from "../Card/Spell.js";
+import type { Layer1a, Layer1b } from "../../Characteristics/Layer/Layer1.js";
+import type { Layer2 } from "../../Characteristics/Layer/Layer2.js";
+import type { Layer3 } from "../../Characteristics/Layer/Layer3.js";
+import type { Layer4 } from "../../Characteristics/Layer/Layer4.js";
+import type { Layer5 } from "../../Characteristics/Layer/Layer5.js";
+import type { Layer6 } from "../../Characteristics/Layer/Layer6.js";
+import type {
+    Layer7a,
+    Layer7b,
+    Layer7c,
+    Layer7d,
+} from "../../Characteristics/Layer/Layer7.js";
 
 // ====================================================================================================
 /** 継続的効果。単一の常在型能力からの継続的効果か、または、単一の呪文や能力の解決によって生成された継続的効果 */

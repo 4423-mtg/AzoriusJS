@@ -26,7 +26,7 @@ import {
     type AnyLayer,
     type Layer,
     type LayerCategory,
-} from "../Characteristics/Layer.js";
+} from "../Characteristics/Layer/Layer.js";
 
 // ==========================================================================
 // MARK: Game

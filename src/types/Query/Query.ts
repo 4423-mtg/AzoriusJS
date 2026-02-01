@@ -22,7 +22,8 @@ export type QueryArgument = {
     self: GameObject | undefined;
 };
 
-// ==============================================================================
+// ==========================================================================
+// MARK: SingleQuery
 // 「前のターンに続唱で唱えたカード」をJSONで書ける？
 // 関数を保存することはできないので、実装済み処理のタグを保存する
 // どうせテンプレ作ってまとめたくなるので最初からタグ方式でいい
@@ -43,7 +44,8 @@ export function isSingleQuery(obj: unknown): obj is SingleQuery<unknown> {
     return obj instanceof SingleQuery;
 }
 
-// MultiQuery ===============================================================
+// ==========================================================================
+// MARK: MultiQuery
 export class MultiQuery<T> {
     query: (args: QueryArgument) => T[];
 
@@ -57,7 +59,8 @@ export function isMultiQuery(obj: unknown): obj is MultiQuery<unknown> {
     return obj instanceof MultiQuery;
 }
 
-// Spec ===============================================================
+// ==========================================================================
+// MARK: Spec
 export type SingleSpec<T> = T | SingleQuery<T>;
 export function isSingleSpec<T>(
     obj: unknown,
