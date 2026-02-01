@@ -12,7 +12,7 @@ import {
     addCardType,
     overwriteType,
     permanentQuery,
-} from "./types/Query/Query.js";
+} from "./types/Query/QueryFunction.js";
 
 // 特性を変更する継続的効果の適用順は
 // - オブジェクト単位では決まらず、存在するすべてのオブジェクト（戦場以外も含む）を俯瞰したうえで決まる。

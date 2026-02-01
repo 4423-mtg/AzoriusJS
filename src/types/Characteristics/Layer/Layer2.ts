@@ -2,7 +2,7 @@
 
 import type { GameObject } from "../../GameObject/GameObject.js";
 import type { Player } from "../../GameObject/Player.js";
-import type { MultiSpec, SingleSpec } from "../../Query/Query.js";
+import type { MultiSpec, SingleSpec } from "../../Query/QueryFunction.js";
 import type { Characteristics } from "../Characteristic.js";
 
 /** コントロール変更 */

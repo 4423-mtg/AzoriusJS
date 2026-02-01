@@ -1,57 +1,56 @@
 // MARK: 型定義: 7a
-
-import type { GameObject } from "../../GameObject/GameObject.js";
-import { isPTSpec, type PTSpec } from "../../Query/GameObjectQuery.js";
-import type { MultiSpec, SingleSpec } from "../../Query/Query.js";
-import type { Characteristics } from "../Characteristic.js";
+import { isPTQuery, type PTQuery } from "../../Query/Query.js";
 import { isLayerCommonParameter, type LayerCommonParameter } from "./Layer.js";
 
 /** パワー・タフネスを定義する特性定義能力 */
 export type Layer7a = LayerCommonParameter & {
     type: "7a";
-    PT: PTSpec;
+    PT: PTQuery;
 };
 export function isLayer7a(arg: unknown): arg is Layer7a {
-    return isLayerCommonParameter(arg) && "PT" in arg && isPTSpec(arg.PT);
+    return (
+        isLayerCommonParameter(arg) &&
+        arg.type === "7a" &&
+        "PT" in arg &&
+        isPTQuery(arg.PT)
+    );
 }
 
 // MARK: 型定義: 7b
 /** 基本のパワー・タフネスの変更 */
-export type Layer7b = {
+export type Layer7b = LayerCommonParameter & {
     type: "7b";
-    affected: MultiSpec<GameObject>;
-    PT: (
-        current: Characteristics,
-        source?: GameObject,
-    ) => SingleSpec<{ basePower: number; baseToughness: number }>;
+    PT: PTQuery;
 };
 export function isLayer7b(arg: unknown): arg is Layer7b {
-    // return isLayer(arg, "7b");
-    // FIXME: 実装
+    return (
+        isLayerCommonParameter(arg) &&
+        arg.type === "7b" &&
+        "PT" in arg &&
+        isPTQuery(arg.PT)
+    );
 }
 
 // MARK: 型定義: 7c
 /** パワー・タフネスの修整 */
-export type Layer7c = {
+export type Layer7c = LayerCommonParameter & {
     type: "7c";
-    affected: MultiSpec<GameObject>;
-    PT: (
-        current: Characteristics,
-        source?: GameObject,
-    ) => SingleSpec<{ modifyPower: number; modifyToughness: number }>;
+    PT: PTQuery;
 };
 export function isLayer7c(arg: unknown): arg is Layer7c {
-    // return isLayer(arg, "7c");
-    // FIXME: 実装
+    return (
+        isLayerCommonParameter(arg) &&
+        arg.type === "7c" &&
+        "PT" in arg &&
+        isPTQuery(arg.PT)
+    );
 }
 
 // MARK: 型定義: 7d
 /** パワーとタフネスの入れ替え */
-export type Layer7d = {
+export type Layer7d = LayerCommonParameter & {
     type: "7d";
-    affected: MultiSpec<GameObject>;
 };
 export function isLayer7d(arg: unknown): arg is Layer7d {
-    // return isLayer(arg, "7d");
-    // FIXME: 実装
+    return isLayerCommonParameter(arg) && arg.type === "7d";
 }

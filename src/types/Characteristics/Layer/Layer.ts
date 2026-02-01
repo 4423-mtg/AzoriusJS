@@ -1,4 +1,4 @@
-import { resolveMultiSpec, type MultiSpec } from "../../Query/Query.js";
+import { resolveMultiSpec, type MultiSpec } from "../../Query/QueryFunction.js";
 import type { GameObject } from "../../GameObject/GameObject.js";
 import type { Characteristics } from "../Characteristic.js";
 import type { CharacteristicsAlteringEffect } from "../../GameObject/GeneratedEffect/ContinuousEffect.js";
@@ -26,7 +26,7 @@ import {
     isPlayerQuery,
     type GameObjectQuery,
     type PlayerQuery,
-} from "../../Query/GameObjectQuery.js";
+} from "../../Query/Query.js";
 
 // 単一の常在型能力からの継続的効果または呪文や能力の解決によって生成された単一の継続的効果の中に含まれる、各種類別の効果
 

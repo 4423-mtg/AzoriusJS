@@ -1,4 +1,4 @@
-import type { QueryArgument, SingleSpec } from "../../Query/Query.js";
+import type { QueryArgument, SingleSpec } from "../../Query/QueryFunction.js";
 import type { Phase, Step, Turn } from "../../Turn.js";
 import { GameObject, type GameObjectOptions } from "../GameObject.js";
 

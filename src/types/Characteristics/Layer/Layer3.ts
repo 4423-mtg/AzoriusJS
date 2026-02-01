@@ -1,7 +1,7 @@
 // MARK: 型定義: 3
 
 import type { GameObject } from "../../GameObject/GameObject.js";
-import type { MultiSpec } from "../../Query/Query.js";
+import type { MultiSpec } from "../../Query/QueryFunction.js";
 import type { Characteristics } from "../Characteristic.js";
 
 /** 文章変更 */

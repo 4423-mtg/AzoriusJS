@@ -4,7 +4,7 @@ import type { CardType } from "./CardType.js";
 import type { Subtype } from "./Subtype.js";
 import type { Supertype } from "./Supertype.js";
 import type { Ability } from "../GameObject/Ability.js";
-import type { MultiSpec } from "../Query/Query.js";
+import type { MultiSpec } from "../Query/QueryFunction.js";
 
 // CR 109.3 オブジェクトの特性とは、
 // 名前、マナ・コスト、色、色指標、

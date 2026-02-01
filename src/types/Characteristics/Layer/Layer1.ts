@@ -1,7 +1,7 @@
 // MARK: 型定義: 1a
 import type { GameObject } from "../../GameObject/GameObject.js";
 import type { Game } from "../../GameState/Game.js";
-import type { MultiSpec, SingleSpec } from "../../Query/Query.js";
+import type { MultiSpec, SingleSpec } from "../../Query/QueryFunction.js";
 import type { Characteristics, CopiableValue } from "../Characteristic.js";
 
 /** コピー可能な効果の適用 */ // FIXME: シリアライズ可能にする必要あり

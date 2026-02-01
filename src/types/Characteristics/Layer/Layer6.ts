@@ -2,7 +2,7 @@
 
 import type { Ability } from "../../GameObject/Ability.js";
 import type { GameObject } from "../../GameObject/GameObject.js";
-import type { MultiSpec } from "../../Query/Query.js";
+import type { MultiSpec } from "../../Query/QueryFunction.js";
 import type { Characteristics } from "../Characteristic.js";
 
 /** 能力変更 */

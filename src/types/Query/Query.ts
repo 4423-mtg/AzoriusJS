@@ -1,199 +1,156 @@
-import type { Game } from "../GameState/Game.js";
-import { isInBattlefield, type GameObject } from "../GameObject/GameObject.js";
-import { getObjectsWithCharacteristics } from "../GameState/GameState.js";
-import type {
-    CardTypeSet,
-    Characteristics,
-} from "../Characteristics/Characteristic.js";
 import type { CardType } from "../Characteristics/CardType.js";
+import type {
+    Characteristics,
+    CopiableValue,
+} from "../Characteristics/Characteristic.js";
+import type { Color } from "../Characteristics/Color.js";
 import type { Subtype } from "../Characteristics/Subtype.js";
 import type { Supertype } from "../Characteristics/Supertype.js";
-import type { Card } from "../GameObject/Card/Card.js";
+import type { Ability } from "../GameObject/Ability.js";
+import type { GameObject, GameObjectId } from "../GameObject/GameObject.js";
+import type { Player } from "../GameObject/Player.js";
+import type { PlayerInfo } from "../GameState/Match.js";
+import type { Zone } from "../GameState/Zone.js";
 
-// export type QueryParams = {
-//     state: GameState;
-//     history: GameHistory;
-//     self: GameObject;
-// };
+// 種類別（レイヤー）に関してはこれでOK。
+// 手続き変更効果・処理禁止効果・置換効果・追加ターン効果についてはどう？
 
-/** Queryの解決に必要な値。 */
-export type QueryArgument = {
-    game: Game;
-    self: GameObject | undefined;
+// 特性変化は常時再計算するため、関数である必要がある。
+// 関数はシリアライズできない（＝効果をファイルに保存できない）
+// => レイヤーではなく効果をシリアライズ保存対象にする。（レイヤーは静的なものにする）
+//    対象や解決時の選択などは効果に保存する
+//    - レイヤーは効果にどう記述する？
+//      => とりあえずソースコードに書いてもいい。そのうちタグ化すれば保存もできる
+// => クラスにする必要はある？しなくてもいいが、型ガードはできない
+//   - 効果の定義を書くときに型ガードがないとチェックができない
+//     => タグ化しよう
+
+// arguments: { name: string; id?: GameObjectId }[]; // FIXME: argumentの仕組みは分離が必要
+// - 対象
+// - 発生源
+// - 選択した値
+//   - 関連した能力
+
+// =========================================================
+// 1種
+export type CopiableValueQuery =
+    // 固定値
+    | CopiableValue
+    // 他のオブジェクト
+    | {
+          original: GameObjectQuery;
+          overwrite?: Partial<CopiableValue>;
+          add?: Partial<CopiableValue>;
+      };
+// TODO: argument
+export function isCopiableValueQuery(arg: unknown) {
+    return typeof arg === "object" && arg !== null; // TODO:
+}
+
+// =========================================================
+// 2種
+export type PlayerQuery =
+    // 固定
+    | Player
+    | {
+          info: PlayerInfo;
+      }
+    // オブジェクトの参照
+    | {
+          type: "owner" | "controller";
+          object: GameObjectQuery;
+      }
+    // プレイヤーの参照
+    | {
+          type: "opponent" | "teammate";
+          player: PlayerQuery;
+      };
+export function isPlayerQuery(arg: unknown): arg is PlayerQuery {
+    return typeof arg === "object" && arg !== null; // TODO:
+}
+
+// =========================================================
+// 3種
+export type TextQuery = {};
+// TODO:
+export function isTextQuery(arg: unknown) {
+    return typeof arg === "object" && arg !== null; // TODO:
+}
+
+// =========================================================
+// 4種
+export type TypeQuery = {
+    cardType: CardType;
+    subtype: Subtype;
+    supertype: Supertype;
+};
+export function isTypeQuery(arg: unknown) {
+    return typeof arg === "object" && arg !== null; // TODO:
+}
+
+// =========================================================
+// 5種
+export type ColorQuery = Color | Color[];
+export function isColorQuery(arg: unknown) {
+    return typeof arg === "object" && arg !== null; // TODO:
+}
+
+// =========================================================
+// 6種
+export type AbilityQuery =
+    | Ability[]
+    | {
+          lose?: Ability[]; // TODO: 能力の同一性の検査
+          add?: Ability[];
+      };
+export function isAbilityQuery(arg: unknown) {
+    return typeof arg === "object" && arg !== null; // TODO:
+}
+
+// =========================================================
+// 7種
+export type PTQuery = {
+    power: ValueQuery;
+    toughness: ValueQuery;
 };
 
-// ==========================================================================
-// MARK: SingleQuery
-// 「前のターンに続唱で唱えたカード」をJSONで書ける？
-// 関数を保存することはできないので、実装済み処理のタグを保存する
-// どうせテンプレ作ってまとめたくなるので最初からタグ方式でいい
-// - メソッドチェーンできるようにしたい
-// - resolveは関数でいい？
-export class SingleQuery<T> {
-    query: (args: QueryArgument) => T;
-
-    constructor(query: (args: QueryArgument) => T) {
-        this.query = query;
-    }
-
-    resolve(args: QueryArgument): T {
-        return this.query(args);
-    }
-}
-export function isSingleQuery(obj: unknown): obj is SingleQuery<unknown> {
-    return obj instanceof SingleQuery;
+export function isPTQuery(arg: unknown): arg is PTQuery {
+    return typeof arg === "object" && arg !== null; // TODO:
 }
 
-// ==========================================================================
-// MARK: MultiQuery
-export class MultiQuery<T> {
-    query: (args: QueryArgument) => T[];
-
-    constructor(query: (args: QueryArgument) => T[]) {
-        this.query = query;
-    }
-
-    resolve: (args: QueryArgument) => T[] = (args) => this.query(args);
-}
-export function isMultiQuery(obj: unknown): obj is MultiQuery<unknown> {
-    return obj instanceof MultiQuery;
-}
-
-// ==========================================================================
-// MARK: Spec
-export type SingleSpec<T> = T | SingleQuery<T>;
-export function isSingleSpec<T>(
-    obj: unknown,
-    type: new (...args: unknown[]) => T,
-): obj is SingleSpec<T> {
-    return obj instanceof T;
+// =========================================================
+// 値の参照
+export type ValueQuery =
+    // 固定値
+    | number
+    // オブジェクトの数値 FIXME: 他にも信心、タイプの数など
+    | {
+          type: "power" | "toughness" | "manaValue";
+          object: GameObject | GameObjectId;
+      }
+    // 何かの個数
+    | { type: "number"; objects: GameObjectQuery }
+    // 何かの合計値
+    | {
+          type: "total"; // 減算や乗算はあるのだろうか
+          values: ValueQuery[];
+      }
+    // 履歴 このターンに〇〇した数など
+    | { type: "stormCount" };
+export function isValueQuery(arg: unknown): arg is ValueQuery {
+    return typeof arg === "object" && arg !== null; // TODO:
 }
 
-export type MultiSpec<T> = SingleSpec<T>[] | MultiQuery<T>;
-export function isMultiSpec(obj: unknown): obj is MultiSpec<unknown> {
-    return (
-        obj instanceof MultiQuery ||
-        (Array.isArray(obj) && obj.every((o) => isSingleSpec(o)))
-    );
+// =========================================================
+// オブジェクトの参照
+export type GameObjectQuery =
+    | { argument: string } // FIXME: source, 「これでない」
+    | {
+          zone?: Zone;
+          characteristics?: Partial<Characteristics>;
+      }
+    // 履歴参照 TODO:
+    | {};
+export function isGameObjectQuery(arg: unknown): arg is GameObjectQuery {
+    return typeof arg === "object" && arg !== null; // TODO:
 }
-
-export type Spec<T> = SingleSpec<T> | MultiSpec<T>;
-export function isSpec(obj: unknown): obj is Spec<unknown> {
-    //
-}
-
-// Specの解決 ===============================================================
-export function resolveSpec<T>(spec: Spec<T>, args: QueryArgument): T | T[] {
-    return isSingleSpec<T>(spec)
-        ? resolveSingleSpec(spec, args)
-        : isMultiSpec(spec)
-        ? resolveMultiSpec(spec, args)
-        : spec;
-}
-export function resolveSingleSpec<T>(
-    spec: SingleSpec<T>,
-    args: QueryArgument,
-): T {
-    return spec instanceof SingleQuery ? spec.resolve(args) : spec;
-}
-export function resolveMultiSpec<T>(
-    spec: MultiSpec<T>,
-    args: QueryArgument,
-): T[] {
-    return Array.isArray(spec)
-        ? spec.map((s) => resolveSingleSpec(s, args))
-        : spec.resolve(args);
-}
-
-// ==============================================================================
-/** 指定の特性を満たすパーマネント */
-export function permanentQuery(
-    query: (characteristics: Characteristics) => boolean,
-): MultiQuery<Card> {
-    return new MultiQuery(({ game, self }: QueryArgument) => {
-        const state = game.gameStates.at(-1);
-        if (state === undefined) {
-            throw Error();
-        } else {
-            return getObjectsWithCharacteristics(state, query)
-                .map(({ object, characteristics }) => object)
-                .filter((obj) => isInBattlefield(obj));
-        }
-    });
-}
-
-/** カードタイプ・サブタイプ・特殊タイプを追加する。 */
-export function addCardType(
-    added: Partial<CardTypeSet>,
-): (current: Characteristics) => CardTypeSet {
-    return (current) => {
-        const _cardt = added.cardType;
-        const _subt = added.subtype;
-        const _supert = added.supertype;
-        return {
-            cardType:
-                _cardt === undefined
-                    ? current.card_types
-                    : new MultiQuery((_args) =>
-                          (current.card_types ?? []).concat(
-                              resolveMultiSpec(_cardt, _args),
-                          ),
-                      ),
-            subtype:
-                _subt === undefined
-                    ? current.subtypes
-                    : new MultiQuery((_args) =>
-                          (current.subtypes ?? []).concat(
-                              resolveMultiSpec(_subt, _args),
-                          ),
-                      ),
-            supertype:
-                _supert === undefined
-                    ? current.supertypes
-                    : new MultiQuery((_args) =>
-                          (current.supertypes ?? []).concat(
-                              resolveMultiSpec(_supert, _args),
-                          ),
-                      ),
-        };
-    };
-}
-
-/** カードタイプ・サブタイプ・特殊タイプを、指定したタイプで上書きする。指定がないものは元のタイプを残す。 */
-export function overwriteType(
-    newtype: Partial<CardTypeSet>,
-): (current: Characteristics) => CardTypeSet {
-    return (current) => {
-        const _cardt = newtype.cardType;
-        const _subt = newtype.subtype;
-        const _supert = newtype.supertype;
-        return {
-            cardType:
-                _cardt !== undefined
-                    ? new MultiQuery((args) => resolveMultiSpec(_cardt, args))
-                    : current.card_types,
-            subtype:
-                _subt !== undefined
-                    ? new MultiQuery((args) => resolveMultiSpec(_subt, args))
-                    : current.subtypes,
-            supertype:
-                _supert !== undefined
-                    ? new MultiQuery((args) => resolveMultiSpec(_supert, args))
-                    : current.supertypes,
-        };
-    };
-}
-
-// TODO
-// プレイヤーの領域
-// SingleSpec<Player>.zone: (zonetype) => SingleSpec<Zone>
-// プレイヤーのパーマネント
-// SingleSpec<Player>.permanent: () => MultiSpec<GameObject>
-// ある領域にあるオブジェクト
-// SingleSpec<Zone>.objects: () => MultiSpec<GameObject>
-// 特定の条件を満たすパーマネント
-// permanent: (spec) => MultiSpec<GameObject>
-// プレイヤーのライブラリーの一番上
-// SingleSpec<Player>.top_of_library: () => SingleSpec<GameObject>
-// オブジェクトの対象
-// SingleSpec<GameObject>.target: () => MultiSpec<GameObject | Player>

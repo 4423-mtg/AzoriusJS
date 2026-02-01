@@ -1,7 +1,7 @@
 // MARK: 型定義: 4
 
 import type { GameObject } from "../../GameObject/GameObject.js";
-import type { MultiSpec } from "../../Query/Query.js";
+import type { MultiSpec } from "../../Query/QueryFunction.js";
 import type { CardType } from "../CardType.js";
 import type { CardTypeSet, Characteristics } from "../Characteristic.js";
 import type { Subtype } from "../Subtype.js";
