@@ -1,11 +1,15 @@
 // MARK: 型定義: 7a
-import { isPTQuery, type PTQuery } from "../../Query/Query.js";
+import {
+    isPTQuery,
+    type PTQuery,
+    type QueryReference,
+} from "../../Query/Query.js";
 import { isLayerCommonParameter, type LayerCommonParameter } from "./Layer.js";
 
 /** パワー・タフネスを定義する特性定義能力 */
-export type Layer7a = LayerCommonParameter & {
+export type Layer7a<T extends QueryReference[]> = LayerCommonParameter<T> & {
     type: "7a";
-    PT: PTQuery;
+    PT: PTQuery<T>;
 };
 export function isLayer7a(arg: unknown): arg is Layer7a {
     return (

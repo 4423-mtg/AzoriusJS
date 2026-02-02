@@ -4,6 +4,8 @@ import type {
     CopiableValue,
 } from "../Characteristics/Characteristic.js";
 import type { Color } from "../Characteristics/Color.js";
+import type { Layer } from "../Characteristics/Layer/Layer.js";
+import type { Layer7a } from "../Characteristics/Layer/Layer7.js";
 import type { Subtype } from "../Characteristics/Subtype.js";
 import type { Supertype } from "../Characteristics/Supertype.js";
 import type { Ability } from "../GameObject/Ability.js";
@@ -11,6 +13,7 @@ import type { GameObject, GameObjectId } from "../GameObject/GameObject.js";
 import type { Player } from "../GameObject/Player.js";
 import type { PlayerInfo } from "../GameState/Match.js";
 import type { Zone } from "../GameState/Zone.js";
+import type { QueryArgument } from "./QueryFunction.js";
 
 // 種類別（レイヤー）に関してはこれでOK。
 // 手続き変更効果・処理禁止効果・置換効果・追加ターン効果についてはどう？
@@ -25,20 +28,63 @@ import type { Zone } from "../GameState/Zone.js";
 //   - 効果の定義を書くときに型ガードがないとチェックができない
 //     => タグ化しよう
 
-// arguments: { name: string; id?: GameObjectId }[]; // FIXME: argumentの仕組みは分離が必要
-// - 対象
+// Queryで参照値として使う
+export type QueryReference = {
+    name: string;
+} & (
+    | {
+          type: "gameObject";
+          value?: GameObject;
+      }
+    | {
+          type: "player";
+          value?: Player;
+      }
+    | {
+          type: "number";
+          value?: number;
+      }
+    | {
+          type: "string";
+          value?: string;
+      }
+);
+export type QueryReferenceValueType = QueryReference["type"];
+// - なんらかのオブジェクト
 // - 発生源
 // - 選択した値
 //   - 関連した能力
+//     - 関連先の能力をどうやって指定するか？
+//       - 後から付与された能力も対象になりうる（コピーなど）
+//       - つまり、 Ability.id を指定する
+
+export type ReferenceOfSpecificType<
+    T extends QueryReference[],
+    U extends QueryReferenceValueType,
+> = Extract<T[number], { type: U }>;
+
+// すべてのクリーチャーは、X/1になる。Xは指定されたクリーチャーのパワーである
+const l7a: Layer7a<[{ name: "obj1"; type: "gameObject" }]> = {
+    type: "7a",
+    affected: { characteristics: { card_types: ["Creature"] } },
+    PT: {
+        power: {
+            type: "characteristics",
+            kind: "power",
+            object: { argumentName: "obj1" },
+        },
+        toughness: 1,
+    },
+};
 
 // =========================================================
 // 1種
-export type CopiableValueQuery =
+export type CopiableValueQuery<T extends QueryReference[]> =
     // 固定値
     | CopiableValue
     // 他のオブジェクト
     | {
-          original: GameObjectQuery;
+          original: GameObjectQuery<T>;
           overwrite?: Partial<CopiableValue>;
           add?: Partial<CopiableValue>;
       };
@@ -49,7 +95,7 @@ export function isCopiableValueQuery(arg: unknown) {
 
 // =========================================================
 // 2種
-export type PlayerQuery =
+export type PlayerQuery<T extends QueryReference[]> =
     // 固定
     | Player
     | {
@@ -58,14 +104,16 @@ export type PlayerQuery =
     // オブジェクトの参照
     | {
           type: "owner" | "controller";
-          object: GameObjectQuery;
+          object: GameObjectQuery<T>;
       }
     // プレイヤーの参照
     | {
           type: "opponent" | "teammate";
-          player: PlayerQuery;
+          player: PlayerQuery<T>;
       };
-export function isPlayerQuery(arg: unknown): arg is PlayerQuery {
+export function isPlayerQuery<T extends QueryReference[]>(
+    arg: unknown,
+): arg is PlayerQuery<T> {
     return typeof arg === "object" && arg !== null; // TODO:
 }
 
@@ -109,48 +157,66 @@ export function isAbilityQuery(arg: unknown) {
 
 // =========================================================
 // 7種
-export type PTQuery = {
-    power: ValueQuery;
-    toughness: ValueQuery;
+export type PTQuery<T extends QueryReference[]> = {
+    power: number | NumberQuery<T>;
+    toughness: number | NumberQuery<T>;
 };
 
-export function isPTQuery(arg: unknown): arg is PTQuery {
+export function isPTQuery<T extends QueryReference[]>(
+    arg: unknown,
+): arg is PTQuery<T> {
     return typeof arg === "object" && arg !== null; // TODO:
 }
 
 // =========================================================
 // 値の参照
-export type ValueQuery =
-    // 固定値
-    | number
-    // オブジェクトの数値 FIXME: 他にも信心、タイプの数など
+export type NumberQuery<T extends QueryReference[]> =
+    // オブジェクトの数値
     | {
-          type: "power" | "toughness" | "manaValue";
-          object: GameObject | GameObjectId;
+          type: "characteristics";
+          object: GameObject | GameObjectId | GameObjectQuery<T>;
+          kind: "manaValue" | "power" | "toughenss"; // ほかにタイプの数、色の数など
       }
-    // 何かの個数
-    | { type: "number"; objects: GameObjectQuery }
+    | {
+          type: "devotion";
+          object: GameObject | GameObjectId | GameObjectQuery<T>;
+          colors: (Color | ColorQuery)[];
+      }
+    // オブジェクトの個数
+    | { type: "number"; objects: GameObjectQuery<T> }
     // 何かの合計値
     | {
           type: "total"; // 減算や乗算はあるのだろうか
-          values: ValueQuery[];
+          values: NumberQuery<[Extract<T[number], { type: "number" }>]>[]; // ?
       }
-    // 履歴 このターンに〇〇した数など
-    | { type: "stormCount" };
-export function isValueQuery(arg: unknown): arg is ValueQuery {
+    // 履歴 このターンに〇〇した数など TODO:
+    | { type: "stormCount" }
+    // 引数 FIXME: 引数の値の型
+    | { argument: ReferenceOfSpecificType<T, "number">["name"] };
+
+const q1: NumberQuery<
+    [{ name: "arg1"; type: "number" }, { name: "arg2"; type: "gameObject" }]
+> = {
+    argument: "arg1",
+};
+
+export function isNumberQuery<T extends QueryReference[]>(
+    arg: unknown,
+): arg is NumberQuery<T> {
     return typeof arg === "object" && arg !== null; // TODO:
 }
 
 // =========================================================
 // オブジェクトの参照
-export type GameObjectQuery =
-    | { argument: string } // FIXME: source, 「これでない」
+export type GameObjectQuery<T extends QueryReference[]> =
+    | { argumentName: ReferenceOfSpecificType<T, "gameObject">["name"] } // FIXME: source, 「これでない」
     | {
           zone?: Zone;
-          characteristics?: Partial<Characteristics>;
-      }
-    // 履歴参照 TODO:
-    | {};
-export function isGameObjectQuery(arg: unknown): arg is GameObjectQuery {
+          characteristics?: Partial<Characteristics>; // FIXME: and, or
+      }; // FIXME: {} が通るのは良くない
+// 履歴参照 TODO:
+export function isGameObjectQuery<T extends QueryReference[]>(
+    arg: unknown,
+): arg is GameObjectQuery<T> {
     return typeof arg === "object" && arg !== null; // TODO:
 }
