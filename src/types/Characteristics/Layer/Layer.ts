@@ -26,7 +26,7 @@ import {
     isPlayerQuery,
     type GameObjectQuery,
     type PlayerQuery,
-    type QueryReference,
+    type QueryParameter,
 } from "../../Query/Query.js";
 
 // 単一の常在型能力からの継続的効果または呪文や能力の解決によって生成された単一の継続的効果の中に含まれる、各種類別の効果
@@ -58,7 +58,7 @@ export function isLayerCategory(arg: unknown): arg is LayerCategory {
 }
 
 // ---------------------------------------------------------------
-export type LayerCommonParameter<T extends QueryReference[]> = {
+export type LayerCommonParameter<T extends QueryParameter[]> = {
     type: LayerCategory;
     affected: GameObjectQuery<T> | PlayerQuery<T>;
     // FIXME: affectedは各レイヤーごとに必要なのか？

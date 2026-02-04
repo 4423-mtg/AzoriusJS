@@ -2,12 +2,12 @@
 import {
     isPTQuery,
     type PTQuery,
-    type QueryReference,
+    type QueryParameter,
 } from "../../Query/Query.js";
 import { isLayerCommonParameter, type LayerCommonParameter } from "./Layer.js";
 
 /** パワー・タフネスを定義する特性定義能力 */
-export type Layer7a<T extends QueryReference[]> = LayerCommonParameter<T> & {
+export type Layer7a<T extends QueryParameter[]> = LayerCommonParameter<T> & {
     type: "7a";
     PT: PTQuery<T>;
 };
