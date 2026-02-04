@@ -8,8 +8,12 @@ import type { Layer7a } from "../Characteristics/Layer/Layer7.js";
 import type { Subtype } from "../Characteristics/Subtype.js";
 import type { Supertype } from "../Characteristics/Supertype.js";
 import type { Ability } from "../GameObject/Ability.js";
-import type { GameObject, GameObjectId } from "../GameObject/GameObject.js";
-import type { Player } from "../GameObject/Player.js";
+import {
+    isGameObject,
+    type GameObject,
+    type GameObjectId,
+} from "../GameObject/GameObject.js";
+import { isPlayer, type Player } from "../GameObject/Player.js";
 import type { PlayerInfo } from "../GameState/Match.js";
 import type { Zone } from "../GameState/Zone.js";
 
@@ -34,6 +38,53 @@ export type QueryParameter = Record<
     | { type: "number"; value?: number }
     | { type: "string"; value?: string }
 >;
+export function isQueryParameter(arg: unknown): arg is QueryParameter {
+    if (!isRecord(arg)) {
+        return false;
+    }
+
+    for (const key in arg) {
+        const e = arg[key];
+        if (!isRecord(e)) {
+            return false;
+        }
+        switch (e["type"]) {
+            case "gameObject":
+                if (!isGameObject(e["value"]) && e["value"] !== undefined) {
+                    return false;
+                }
+                break;
+            case "player":
+                if (!isPlayer(e["value"]) && e["value"] !== undefined) {
+                    return false;
+                }
+                break;
+            case "number":
+                if (
+                    !(typeof e["value"] !== "number") &&
+                    e["value"] !== undefined
+                ) {
+                    return false;
+                }
+                break;
+            case "string":
+                if (
+                    !(typeof e["value"] !== "string") &&
+                    e["value"] !== undefined
+                ) {
+                    return false;
+                }
+                break;
+            default:
+                return false;
+        }
+    }
+    return true;
+}
+
+function isRecord(arg: unknown): arg is Record<string, unknown> {
+    return typeof arg === "object" && arg !== null;
+}
 
 export type TypeOfQueryParameter =
     | "gameObject"
@@ -47,6 +98,14 @@ export type TypeOfQueryParameter =
 //     - 関連先の能力をどうやって指定するか？
 //       - 後から付与された能力も対象になりうる（コピーなど）
 //       - つまり、 Ability.id を指定する
+function isTypeOfQueryParameter(arg: unknown): arg is TypeOfQueryParameter {
+    return (
+        arg === "gameObject" ||
+        arg === "player" ||
+        arg === "number" ||
+        arg === "string"
+    );
+}
 
 export type QueryParameterOfSpecificType<
     T extends QueryParameter,
