@@ -27,27 +27,19 @@ import type { Zone } from "../GameState/Zone.js";
 //     => タグ化しよう
 
 // Queryで参照値として使う
-export type QueryParameter = {
-    name: string;
-} & (
-    | {
-          type: "gameObject";
-          value?: GameObject;
-      }
-    | {
-          type: "player";
-          value?: Player;
-      }
-    | {
-          type: "number";
-          value?: number;
-      }
-    | {
-          type: "string";
-          value?: string;
-      }
-);
-export type TypeOfQueryParameter = QueryParameter["type"];
+export type QueryParameter = Record<
+    string,
+    | { type: "gameObject"; value?: GameObject }
+    | { type: "player"; value?: Player }
+    | { type: "number"; value?: number }
+    | { type: "string"; value?: string }
+>;
+
+export type TypeOfQueryParameter =
+    | "gameObject"
+    | "player"
+    | "number"
+    | "string";
 // - なんらかのオブジェクト
 // - 発生源
 // - 選択した値
@@ -56,15 +48,15 @@ export type TypeOfQueryParameter = QueryParameter["type"];
 //       - 後から付与された能力も対象になりうる（コピーなど）
 //       - つまり、 Ability.id を指定する
 
-export type ReferenceOfSpecificType<
-    T extends QueryParameter[],
+export type QueryParameterOfSpecificType<
+    T extends QueryParameter,
     U extends TypeOfQueryParameter,
-> = Extract<T[number], { type: U }>;
-
-// すべてのクリーチャーは、X/1になる。Xは指定されたクリーチャーのパワーである
-const l7a: Layer7a<
-    [{ name: "obj1"; type: "gameObject" }, { name: "obj2"; type: "gameObject" }]
 > = {
+    [K in keyof T as T[K] extends { type: U } ? K : never]: T[K];
+};
+
+// すべてのクリーチャーは、X/1になる。Xは指定されたオブジェクトのパワーである
+const l7a: Layer7a<{ obj1: { type: "gameObject" } }> = {
     type: "7a",
     affected: { characteristics: { card_types: ["Creature"] } },
     PT: {
@@ -79,7 +71,7 @@ const l7a: Layer7a<
 
 // =========================================================
 // 1種
-export type CopiableValueQuery<T extends QueryParameter[]> =
+export type CopiableValueQuery<T extends QueryParameter> =
     // 固定値
     | CopiableValue
     // 他のオブジェクト
@@ -95,7 +87,7 @@ export function isCopiableValueQuery(arg: unknown) {
 
 // =========================================================
 // 2種
-export type PlayerQuery<T extends QueryParameter[]> =
+export type PlayerQuery<T extends QueryParameter> =
     // 固定
     | Player
     | {
@@ -111,7 +103,7 @@ export type PlayerQuery<T extends QueryParameter[]> =
           type: "opponent" | "teammate";
           player: PlayerQuery<T>;
       };
-export function isPlayerQuery<T extends QueryParameter[]>(
+export function isPlayerQuery<T extends QueryParameter>(
     arg: unknown,
 ): arg is PlayerQuery<T> {
     return typeof arg === "object" && arg !== null; // TODO:
@@ -157,12 +149,12 @@ export function isAbilityQuery(arg: unknown) {
 
 // =========================================================
 // 7種
-export type PTQuery<T extends QueryParameter[]> = {
+export type PTQuery<T extends QueryParameter> = {
     power: number | NumberQuery<T>;
     toughness: number | NumberQuery<T>;
 };
 
-export function isPTQuery<T extends QueryParameter[]>(
+export function isPTQuery<T extends QueryParameter>(
     arg: unknown,
 ): arg is PTQuery<T> {
     return typeof arg === "object" && arg !== null; // TODO:
@@ -170,12 +162,12 @@ export function isPTQuery<T extends QueryParameter[]>(
 
 // =========================================================
 // 値の参照
-export type NumberQuery<T extends QueryParameter[]> =
+export type NumberQuery<T extends QueryParameter> =
     // オブジェクトの数値
     | {
           type: "characteristics";
-          object: GameObject | GameObjectId | GameObjectQuery<T>;
           kind: "manaValue" | "power" | "toughenss"; // ほかにタイプの数、色の数など
+          object: GameObject | GameObjectId | GameObjectQuery<T>;
       }
     | {
           type: "devotion";
@@ -187,20 +179,14 @@ export type NumberQuery<T extends QueryParameter[]> =
     // 何かの合計値
     | {
           type: "total"; // 減算や乗算はあるのだろうか
-          values: NumberQuery<[Extract<T[number], { type: "number" }>]>[]; // ?
+          values: NumberQuery<T>[];
       }
     // 履歴 このターンに〇〇した数など TODO:
     | { type: "stormCount" }
-    // 引数 FIXME: 引数の値の型
-    | { argument: ReferenceOfSpecificType<T, "number">["name"] };
+    // 引数
+    | { argument: keyof QueryParameterOfSpecificType<T, "number"> };
 
-const q1: NumberQuery<
-    [{ name: "arg1"; type: "number" }, { name: "arg2"; type: "gameObject" }]
-> = {
-    argument: "arg1",
-};
-
-export function isNumberQuery<T extends QueryParameter[]>(
+export function isNumberQuery<T extends QueryParameter>(
     arg: unknown,
 ): arg is NumberQuery<T> {
     return typeof arg === "object" && arg !== null; // TODO:
@@ -208,15 +194,18 @@ export function isNumberQuery<T extends QueryParameter[]>(
 
 // =========================================================
 // オブジェクトの参照
-export type GameObjectQuery<T extends QueryParameter[]> =
-    | { argumentName: ReferenceOfSpecificType<T, "gameObject">["name"] } // FIXME: source, 「これでない」
+export type GameObjectQuery<T extends QueryParameter> =
+    | { argumentName: keyof QueryParameterOfSpecificType<T, "gameObject"> }
     | {
           zone?: Zone;
           characteristics?: Partial<Characteristics>; // FIXME: and, or
-      }; // FIXME: {} が通るのは良くない
-// 履歴参照 TODO:
-export function isGameObjectQuery<T extends QueryParameter[]>(
+          // FIXME: 「これでない」
+          // FIXME: {} が通るのは良くない
+      };
+export function isGameObjectQuery<T extends QueryParameter>(
     arg: unknown,
 ): arg is GameObjectQuery<T> {
     return typeof arg === "object" && arg !== null; // TODO:
 }
+
+// 履歴参照 TODO:

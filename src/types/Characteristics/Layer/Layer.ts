@@ -58,7 +58,7 @@ export function isLayerCategory(arg: unknown): arg is LayerCategory {
 }
 
 // ---------------------------------------------------------------
-export type LayerCommonParameter<T extends QueryParameter[]> = {
+export type LayerCommonParameter<T extends QueryParameter> = {
     type: LayerCategory;
     affected: GameObjectQuery<T> | PlayerQuery<T>;
     // FIXME: affectedは各レイヤーごとに必要なのか？
