@@ -107,12 +107,26 @@ function isTypeOfQueryParameter(arg: unknown): arg is TypeOfQueryParameter {
     );
 }
 
-export type QueryParameterOfSpecificType<
+export type SpecificTypeParameterName<
     T extends QueryParameter,
     U extends TypeOfQueryParameter,
-> = {
+> = keyof {
     [K in keyof T as T[K] extends { type: U } ? K : never]: T[K];
 };
+function isSpecificTypeParameterName<
+    T extends QueryParameter,
+    U extends TypeOfQueryParameter,
+>(
+    parameters: T,
+    type: U,
+    arg: unknown,
+): arg is SpecificTypeParameterName<T, U> {
+    if (typeof arg === "string" && parameters[arg] !== undefined) {
+        return parameters[arg]["type"] === type;
+    } else {
+        return false;
+    }
+}
 
 // すべてのクリーチャーは、X/1になる。Xは指定されたオブジェクトのパワーである
 const l7a: Layer7a<{ obj1: { type: "gameObject" } }> = {
@@ -163,6 +177,7 @@ export type PlayerQuery<T extends QueryParameter> =
           player: PlayerQuery<T>;
       };
 export function isPlayerQuery<T extends QueryParameter>(
+    parameters: T,
     arg: unknown,
 ): arg is PlayerQuery<T> {
     return typeof arg === "object" && arg !== null; // TODO:
@@ -243,7 +258,7 @@ export type NumberQuery<T extends QueryParameter> =
     // 履歴 このターンに〇〇した数など TODO:
     | { type: "stormCount" }
     // 引数
-    | { argument: keyof QueryParameterOfSpecificType<T, "number"> };
+    | { argument: SpecificTypeParameterName<T, "number"> };
 
 export function isNumberQuery<T extends QueryParameter>(
     arg: unknown,
@@ -254,7 +269,7 @@ export function isNumberQuery<T extends QueryParameter>(
 // =========================================================
 // オブジェクトの参照
 export type GameObjectQuery<T extends QueryParameter> =
-    | { argumentName: keyof QueryParameterOfSpecificType<T, "gameObject"> }
+    | { argumentName: SpecificTypeParameterName<T, "gameObject"> }
     | {
           zone?: Zone;
           characteristics?: Partial<Characteristics>; // FIXME: and, or
@@ -262,9 +277,21 @@ export type GameObjectQuery<T extends QueryParameter> =
           // FIXME: {} が通るのは良くない
       };
 export function isGameObjectQuery<T extends QueryParameter>(
+    parameters: T,
     arg: unknown,
 ): arg is GameObjectQuery<T> {
-    return typeof arg === "object" && arg !== null; // TODO:
+    if (!isRecord(arg)) {
+        return false;
+    }
+    const argumentName = arg["argumentName"];
+    if (
+        argumentName !== undefined &&
+        isSpecificTypeParameterName(parameters, "gameObject", argumentName)
+    ) {
+        return true;
+    }
+    // TODO: 続き
+    return false;
 }
 
 // 履歴参照 TODO:

@@ -63,16 +63,18 @@ export type LayerCommonParameter<T extends QueryParameter> = {
     affected: GameObjectQuery<T> | PlayerQuery<T>;
     // FIXME: affectedは各レイヤーごとに必要なのか？
 };
-export function isLayerCommonParameter(
+export function isLayerCommonParameter<T extends QueryParameter>(
+    parameters: T,
     arg: unknown,
-): arg is LayerCommonParameter {
+): arg is LayerCommonParameter<T> {
     return (
         typeof arg === "object" &&
         arg !== null &&
         "type" in arg &&
         isLayerCategory(arg.type) &&
         "affected" in arg &&
-        (isGameObjectQuery(arg.affected) || isPlayerQuery(arg.affected))
+        (isGameObjectQuery(parameters, arg.affected) ||
+            isPlayerQuery(parameters, arg.affected))
     );
 }
 

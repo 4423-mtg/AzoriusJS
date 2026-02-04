@@ -11,9 +11,12 @@ export type Layer7a<T extends QueryParameter> = LayerCommonParameter<T> & {
     type: "7a";
     PT: PTQuery<T>;
 };
-export function isLayer7a(arg: unknown): arg is Layer7a {
+export function isLayer7a<T extends QueryParameter>(
+    parameters: T,
+    arg: unknown,
+): arg is Layer7a<T> {
     return (
-        isLayerCommonParameter(arg) &&
+        isLayerCommonParameter(parameters, arg) &&
         arg.type === "7a" &&
         "PT" in arg &&
         isPTQuery(arg.PT)
@@ -22,13 +25,16 @@ export function isLayer7a(arg: unknown): arg is Layer7a {
 
 // MARK: 型定義: 7b
 /** 基本のパワー・タフネスの変更 */
-export type Layer7b = LayerCommonParameter & {
+export type Layer7b<T extends QueryParameter> = LayerCommonParameter<T> & {
     type: "7b";
-    PT: PTQuery;
+    PT: PTQuery<T>;
 };
-export function isLayer7b(arg: unknown): arg is Layer7b {
+export function isLayer7b<T extends QueryParameter>(
+    parameters: T,
+    arg: unknown,
+): arg is Layer7b<T> {
     return (
-        isLayerCommonParameter(arg) &&
+        isLayerCommonParameter(parameters, arg) &&
         arg.type === "7b" &&
         "PT" in arg &&
         isPTQuery(arg.PT)
@@ -37,13 +43,16 @@ export function isLayer7b(arg: unknown): arg is Layer7b {
 
 // MARK: 型定義: 7c
 /** パワー・タフネスの修整 */
-export type Layer7c = LayerCommonParameter & {
+export type Layer7c<T extends QueryParameter> = LayerCommonParameter<T> & {
     type: "7c";
-    PT: PTQuery;
+    PT: PTQuery<T>;
 };
-export function isLayer7c(arg: unknown): arg is Layer7c {
+export function isLayer7c<T extends QueryParameter>(
+    parameters: T,
+    arg: unknown,
+): arg is Layer7c<T> {
     return (
-        isLayerCommonParameter(arg) &&
+        isLayerCommonParameter(parameters, arg) &&
         arg.type === "7c" &&
         "PT" in arg &&
         isPTQuery(arg.PT)
@@ -52,9 +61,12 @@ export function isLayer7c(arg: unknown): arg is Layer7c {
 
 // MARK: 型定義: 7d
 /** パワーとタフネスの入れ替え */
-export type Layer7d = LayerCommonParameter & {
+export type Layer7d<T extends QueryParameter> = LayerCommonParameter<T> & {
     type: "7d";
 };
-export function isLayer7d(arg: unknown): arg is Layer7d {
-    return isLayerCommonParameter(arg) && arg.type === "7d";
+export function isLayer7d<T extends QueryParameter>(
+    parameters: T,
+    arg: unknown,
+): arg is Layer7d<T> {
+    return isLayerCommonParameter(parameters, arg) && arg.type === "7d";
 }
