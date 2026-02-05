@@ -7,7 +7,7 @@ import {
 import { isLayerCommonProperty, type LayerCommonProperty } from "./Layer.js";
 
 /** コントロール変更 */
-export type Layer2<T extends QueryParameter> = LayerCommonProperty<T> & {
+export type Layer2<T extends QueryParameter = {}> = LayerCommonProperty<T> & {
     type: "2";
     controller: PlayerQuery<T>;
 };

@@ -7,7 +7,7 @@ import {
 import { isLayerCommonProperty, type LayerCommonProperty } from "./Layer.js";
 
 /** パワー・タフネスを定義する特性定義能力 */
-export type Layer7a<T extends QueryParameter> = LayerCommonProperty<T> & {
+export type Layer7a<T extends QueryParameter = {}> = LayerCommonProperty<T> & {
     type: "7a";
     PT: PTQuery<T>;
 };
@@ -25,7 +25,7 @@ export function isLayer7a<T extends QueryParameter>(
 
 // MARK: 型定義: 7b
 /** 基本のパワー・タフネスの変更 */
-export type Layer7b<T extends QueryParameter> = LayerCommonProperty<T> & {
+export type Layer7b<T extends QueryParameter = {}> = LayerCommonProperty<T> & {
     type: "7b";
     PT: PTQuery<T>;
 };
@@ -43,7 +43,7 @@ export function isLayer7b<T extends QueryParameter>(
 
 // MARK: 型定義: 7c
 /** パワー・タフネスの修整 */
-export type Layer7c<T extends QueryParameter> = LayerCommonProperty<T> & {
+export type Layer7c<T extends QueryParameter = {}> = LayerCommonProperty<T> & {
     type: "7c";
     PT: PTQuery<T>;
 };
@@ -61,7 +61,7 @@ export function isLayer7c<T extends QueryParameter>(
 
 // MARK: 型定義: 7d
 /** パワーとタフネスの入れ替え */
-export type Layer7d<T extends QueryParameter> = LayerCommonProperty<T> & {
+export type Layer7d<T extends QueryParameter = {}> = LayerCommonProperty<T> & {
     type: "7d";
 };
 export function isLayer7d<T extends QueryParameter>(

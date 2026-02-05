@@ -15,7 +15,7 @@ import {
 } from "../GameObject/GameObject.js";
 import { isPlayer, type Player } from "../GameObject/Player.js";
 import type { PlayerInfo } from "../GameState/Match.js";
-import type { Zone } from "../GameState/Zone.js";
+import type { Zone, ZoneType } from "../GameState/Zone.js";
 
 // 種類別（レイヤー）に関してはこれでOK。
 // 手続き変更効果・処理禁止効果・置換効果・追加ターン効果についてはどう？
@@ -199,16 +199,47 @@ export function isTextQuery<T extends QueryParameter>(
 
 // =========================================================
 // MARK: 4種(タイプ)
-export type TypeQuery<T extends QueryParameter> = {
-    cardType: CardType;
-    subtype: Subtype;
-    supertype: Supertype;
-};
-export function isTypeQuery<T extends QueryParameter>(
-    parameter: T,
+export type CardTypeQuery<T extends QueryParameter> =
+    | CardType[]
+    | {
+          object: GameObjectQuery<T>;
+          append?: CardTypeQuery<T>;
+          omit?: CardTypeQuery<T>;
+      };
+export function isCardTypeQuery<T extends QueryParameter>(
     arg: unknown,
-) {
-    return typeof arg === "object" && arg !== null; // TODO:
+    parameter: T,
+): arg is CardTypeQuery<T> {
+    // TODO:
+    return false;
+}
+export type SubtypeQuery<T extends QueryParameter> =
+    | Subtype[]
+    | {
+          object: GameObjectQuery<T>;
+          append?: SubtypeQuery<T>;
+          omit?: SubtypeQuery<T>;
+      };
+export function isSubtypeQuery<T extends QueryParameter>(
+    arg: unknown,
+    parameter: T,
+): arg is SubtypeQuery<T> {
+    // TODO:
+    return false;
+}
+export type SupertypeQuery<T extends QueryParameter> =
+    | Supertype[]
+    | {
+          object: GameObjectQuery<T>;
+          append?: SupertypeQuery<T>;
+          omit?: SupertypeQuery<T>;
+      };
+export function isSupertypeQuery<T extends QueryParameter>(
+    arg: unknown,
+    parameter: T,
+): arg is SupertypeQuery<T> {
+    // TODO:
+    return false;
 }
 
 // =========================================================
@@ -288,11 +319,13 @@ export function isNumberQuery<T extends QueryParameter>(
 export type GameObjectQuery<T extends QueryParameter> =
     | { argumentName: SpecificTypeParameterName<T, "gameObject"> }
     | {
-          zone?: Zone;
+          zone?: Zone | ZoneType;
           characteristics?: Partial<Characteristics>; // FIXME: and, or
-          // FIXME: 「これでない」
+          // FIXME: 「これでない」(exclude)
           // FIXME: {} が通るのは良くない
       };
+// TODO: 「特定の特性でない」が欲しい。集合演算する必要がある
+
 export function isGameObjectQuery<T extends QueryParameter>(
     parameters: T,
     arg: unknown,

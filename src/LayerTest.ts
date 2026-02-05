@@ -1,18 +1,7 @@
-import { isNonbasicLand } from "./types/Characteristics/Characteristic.js";
 import {
     type ContinuousEffect,
     createCharacteristicsAltering,
 } from "./types/GameObject/GeneratedEffect/ContinuousEffect.js";
-import {
-    getAllCharacteristics,
-    type GameState,
-} from "./types/GameState/GameState.js";
-import { createTimestamp } from "./types/GameState/Timestamp.js";
-import {
-    addCardType,
-    overwriteType,
-    permanentQuery,
-} from "./types/Query/QueryFunction.js";
 
 // 特性を変更する継続的効果の適用順は
 // - オブジェクト単位では決まらず、存在するすべてのオブジェクト（戦場以外も含む）を俯瞰したうえで決まる。
@@ -36,45 +25,6 @@ import {
 //   - 4種 : 錆びた秘宝（金属術でクリーチャーになる）機械の行進（アーティファクトはクリーチャーになる）
 //   - 6種 : 逃亡した多相の戦士（対戦相手のクリーチャーが飛行を持つなら飛行を持つ）
 //   - 7種 : 縫合グール（追放したクリーチャーのP/Tを持つ）
-
-const ts = createTimestamp();
-const urborg = createCharacteristicsAltering({
-    source: "Urborg, Tomb of Yawgmoth",
-    timestamp: ts,
-    layer4: {
-        type: "4",
-        affected: permanentQuery(
-            (chara) => chara.card_types?.includes("Land") ?? false,
-        ),
-        typeAltering: addCardType({ cardType: ["Land"] }),
-    },
-});
-const bloodMoon = createCharacteristicsAltering({
-    source: "Blood Moon",
-    timestamp: ts,
-    layer4: {
-        type: "4",
-        affected: permanentQuery(isNonbasicLand),
-        typeAltering: overwriteType({ subtype: ["Mountain"] }),
-    },
-});
-
-const state1: GameState = {
-    timestamp: ts,
-    players: [],
-    turnOrder: [],
-    zones: [],
-    currentTurn: undefined,
-    currentPhase: undefined,
-    currentStep: undefined,
-    currentPriorityPlayerIndex: undefined,
-    numberOfPassedPlayers: 0,
-    latestActionPlayerIndex: 0,
-    cleanupAgainFlag: false,
-    objects: [urborg, bloodMoon],
-};
-
-const charas = getAllCharacteristics(state1);
 
 const effects2: ContinuousEffect[] = [
     createCharacteristicsAltering({ source: "Rusted Relic" }),
