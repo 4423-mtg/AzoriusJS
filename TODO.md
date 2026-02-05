@@ -8,7 +8,7 @@
   - _yieldNext
 - Layer.ts
   - _applyLayer (レイヤーの適用)
-    - Queryも見直す
+    - ~~Queryも見直す~~ ☑️
   - 文章変更効果
 
 - その他

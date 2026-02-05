@@ -8,6 +8,7 @@ import {
     type SubtypeQuery,
     type SupertypeQuery,
 } from "../../Query/Query.js";
+import { landTypes, type Subtype } from "../Subtype.js";
 import { isLayerCommonProperty, type LayerCommonProperty } from "./Layer.js";
 
 /** タイプ変更 */
@@ -58,10 +59,20 @@ const urborg: Layer4 = {
 const bloodMoon: Layer4 = {
     type: "4",
     affected: {
-        zone: "Battlefield",
-        characteristics: { card_types: ["Land"], supertypes: [] }, // FIXME: 特性クエリ
+        action: "difference",
+        left: {
+            zone: "Battlefield",
+            characteristics: { card_types: ["Land"] },
+        },
+        right: {
+            zone: "Battlefield",
+            characteristics: { supertypes: ["Basic"] },
+        },
     },
-    types: [{ action: "set", typeQuery: ["Mountain"] }],
+    types: [
+        { action: "remove", typeQuery: [...landTypes] }, // FIXME: readonlyのせいでリマップが必要になっている
+        { action: "set", typeQuery: ["Mountain"] },
+    ],
 };
 
 // Sample2

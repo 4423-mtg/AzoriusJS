@@ -144,7 +144,7 @@ const l7a: Layer7a<{ obj1: { type: "gameObject" } }> = {
 
 // =========================================================
 // MARK: 1種(コピー)
-export type CopiableValueQuery<T extends QueryParameter> =
+export type CopiableValueQuery<T extends QueryParameter = {}> =
     // 固定値
     | CopiableValue
     // 他のオブジェクト
@@ -163,7 +163,7 @@ export function isCopiableValueQuery<T extends QueryParameter>(
 
 // =========================================================
 // MARK: 2種(コントローラー)
-export type PlayerQuery<T extends QueryParameter> =
+export type PlayerQuery<T extends QueryParameter = {}> =
     // 固定
     | Player
     | {
@@ -199,7 +199,7 @@ export function isTextQuery<T extends QueryParameter>(
 
 // =========================================================
 // MARK: 4種(タイプ)
-export type CardTypeQuery<T extends QueryParameter> =
+export type CardTypeQuery<T extends QueryParameter = {}> =
     | CardType[]
     | {
           object: GameObjectQuery<T>;
@@ -213,7 +213,7 @@ export function isCardTypeQuery<T extends QueryParameter>(
     // TODO:
     return false;
 }
-export type SubtypeQuery<T extends QueryParameter> =
+export type SubtypeQuery<T extends QueryParameter = {}> =
     | Subtype[]
     | {
           object: GameObjectQuery<T>;
@@ -227,7 +227,7 @@ export function isSubtypeQuery<T extends QueryParameter>(
     // TODO:
     return false;
 }
-export type SupertypeQuery<T extends QueryParameter> =
+export type SupertypeQuery<T extends QueryParameter = {}> =
     | Supertype[]
     | {
           object: GameObjectQuery<T>;
@@ -244,7 +244,7 @@ export function isSupertypeQuery<T extends QueryParameter>(
 
 // =========================================================
 // MARK: 5種(色)
-export type ColorQuery<T extends QueryParameter> = Color | Color[];
+export type ColorQuery<T extends QueryParameter = {}> = Color | Color[];
 export function isColorQuery<T extends QueryParameter>(
     parameter: T,
     arg: unknown,
@@ -254,7 +254,7 @@ export function isColorQuery<T extends QueryParameter>(
 
 // =========================================================
 // MARK: 6種(能力)
-export type AbilityQuery<T extends QueryParameter> =
+export type AbilityQuery<T extends QueryParameter = {}> =
     | Ability[]
     | {
           lose?: Ability[]; // TODO: 能力の同一性の検査
@@ -269,7 +269,7 @@ export function isAbilityQuery<T extends QueryParameter>(
 
 // =========================================================
 // MARK: 7種(PT)
-export type PTQuery<T extends QueryParameter> = {
+export type PTQuery<T extends QueryParameter = {}> = {
     power: number | NumberQuery<T>;
     toughness: number | NumberQuery<T>;
 };
@@ -283,7 +283,7 @@ export function isPTQuery<T extends QueryParameter>(
 
 // =========================================================
 // MARK: 数値
-export type NumberQuery<T extends QueryParameter> =
+export type NumberQuery<T extends QueryParameter = {}> =
     // オブジェクトの数値
     | {
           type: "characteristics";
@@ -316,15 +316,22 @@ export function isNumberQuery<T extends QueryParameter>(
 
 // =========================================================
 // MARK: オブジェクト
-export type GameObjectQuery<T extends QueryParameter> =
+export type GameObjectQuery<T extends QueryParameter = {}> =
     | { argumentName: SpecificTypeParameterName<T, "gameObject"> }
     | {
           zone?: Zone | ZoneType;
-          characteristics?: Partial<Characteristics>; // FIXME: and, or
-          // FIXME: 「これでない」(exclude)
-          // FIXME: {} が通るのは良くない
+          characteristics?: Partial<Characteristics>;
+      }
+    | {
+          action: "union" | "intersection";
+          query: GameObjectQuery<T>[];
+      }
+    | {
+          action: "difference";
+          left: GameObjectQuery<T>;
+          right: GameObjectQuery<T>;
       };
-// TODO: 「特定の特性でない」が欲しい。集合演算する必要がある
+// 履歴 TODO:
 
 export function isGameObjectQuery<T extends QueryParameter>(
     parameters: T,
@@ -343,5 +350,3 @@ export function isGameObjectQuery<T extends QueryParameter>(
     // TODO: 続き
     return false;
 }
-
-// MARK: 履歴 TODO:
