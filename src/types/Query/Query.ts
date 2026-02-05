@@ -143,7 +143,7 @@ const l7a: Layer7a<{ obj1: { type: "gameObject" } }> = {
 };
 
 // =========================================================
-// 1種
+// MARK: 1種(コピー)
 export type CopiableValueQuery<T extends QueryParameter> =
     // 固定値
     | CopiableValue
@@ -154,12 +154,15 @@ export type CopiableValueQuery<T extends QueryParameter> =
           add?: Partial<CopiableValue>;
       };
 // TODO: argument
-export function isCopiableValueQuery(arg: unknown) {
+export function isCopiableValueQuery<T extends QueryParameter>(
+    parameter: T,
+    arg: unknown,
+) {
     return typeof arg === "object" && arg !== null; // TODO:
 }
 
 // =========================================================
-// 2種
+// MARK: 2種(コントローラー)
 export type PlayerQuery<T extends QueryParameter> =
     // 固定
     | Player
@@ -184,58 +187,71 @@ export function isPlayerQuery<T extends QueryParameter>(
 }
 
 // =========================================================
-// 3種
-export type TextQuery = {};
+// MARK: 3種(文章)
+export type TextQuery<T extends QueryParameter> = {};
 // TODO:
-export function isTextQuery(arg: unknown) {
+export function isTextQuery<T extends QueryParameter>(
+    parameter: T,
+    arg: unknown,
+) {
     return typeof arg === "object" && arg !== null; // TODO:
 }
 
 // =========================================================
-// 4種
-export type TypeQuery = {
+// MARK: 4種(タイプ)
+export type TypeQuery<T extends QueryParameter> = {
     cardType: CardType;
     subtype: Subtype;
     supertype: Supertype;
 };
-export function isTypeQuery(arg: unknown) {
+export function isTypeQuery<T extends QueryParameter>(
+    parameter: T,
+    arg: unknown,
+) {
     return typeof arg === "object" && arg !== null; // TODO:
 }
 
 // =========================================================
-// 5種
-export type ColorQuery = Color | Color[];
-export function isColorQuery(arg: unknown) {
+// MARK: 5種(色)
+export type ColorQuery<T extends QueryParameter> = Color | Color[];
+export function isColorQuery<T extends QueryParameter>(
+    parameter: T,
+    arg: unknown,
+) {
     return typeof arg === "object" && arg !== null; // TODO:
 }
 
 // =========================================================
-// 6種
-export type AbilityQuery =
+// MARK: 6種(能力)
+export type AbilityQuery<T extends QueryParameter> =
     | Ability[]
     | {
           lose?: Ability[]; // TODO: 能力の同一性の検査
           add?: Ability[];
       };
-export function isAbilityQuery(arg: unknown) {
+export function isAbilityQuery<T extends QueryParameter>(
+    parameter: T,
+    arg: unknown,
+) {
     return typeof arg === "object" && arg !== null; // TODO:
 }
 
 // =========================================================
-// 7種
+// MARK: 7種(PT)
 export type PTQuery<T extends QueryParameter> = {
     power: number | NumberQuery<T>;
     toughness: number | NumberQuery<T>;
 };
 
 export function isPTQuery<T extends QueryParameter>(
+    parameter: T,
     arg: unknown,
 ): arg is PTQuery<T> {
     return typeof arg === "object" && arg !== null; // TODO:
 }
 
 // =========================================================
-// 値の参照
+// MARK: 数値
 export type NumberQuery<T extends QueryParameter> =
     // オブジェクトの数値
     | {
@@ -246,7 +262,7 @@ export type NumberQuery<T extends QueryParameter> =
     | {
           type: "devotion";
           object: GameObject | GameObjectId | GameObjectQuery<T>;
-          colors: (Color | ColorQuery)[];
+          colors: (Color | ColorQuery<T>)[];
       }
     // オブジェクトの個数
     | { type: "number"; objects: GameObjectQuery<T> }
@@ -261,13 +277,14 @@ export type NumberQuery<T extends QueryParameter> =
     | { argument: SpecificTypeParameterName<T, "number"> };
 
 export function isNumberQuery<T extends QueryParameter>(
+    parameter: T,
     arg: unknown,
 ): arg is NumberQuery<T> {
     return typeof arg === "object" && arg !== null; // TODO:
 }
 
 // =========================================================
-// オブジェクトの参照
+// MARK: オブジェクト
 export type GameObjectQuery<T extends QueryParameter> =
     | { argumentName: SpecificTypeParameterName<T, "gameObject"> }
     | {
@@ -294,4 +311,4 @@ export function isGameObjectQuery<T extends QueryParameter>(
     return false;
 }
 
-// 履歴参照 TODO:
+// MARK: 履歴 TODO:

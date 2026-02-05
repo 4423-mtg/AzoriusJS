@@ -1,22 +1,24 @@
 // MARK: 型定義: 3
-
-import type { GameObject } from "../../GameObject/GameObject.js";
-import type { MultiSpec } from "../../Query/QueryFunction.js";
-import type { Characteristics } from "../Characteristic.js";
+import {
+    isTextQuery,
+    type QueryParameter,
+    type TextQuery,
+} from "../../Query/Query.js";
+import { isLayerCommonProperty, type LayerCommonProperty } from "./Layer.js";
 
 /** 文章変更 */
-export type Layer3 = {
+export type Layer3<T extends QueryParameter> = LayerCommonProperty<T> & {
     type: "3";
-    affected: MultiSpec<GameObject>;
-    textAltering: (current: Characteristics, source?: GameObject) => any; // FIXME: 文章の型
+    text: TextQuery<T>; // FIXME: 文章の型
 };
-export function isLayer3(arg: unknown): arg is Layer3 {
-    // return isLayer(arg, "3");
-    // FIXME: 実装
-}
-class AlterText {
-    alter: () => MultiSpec<CardText>;
-    constructor(alter: () => MultiSpec<CardText>) {
-        this.alter = alter;
-    }
+export function isLayer3<T extends QueryParameter>(
+    parameter: T,
+    arg: unknown,
+): arg is Layer3<T> {
+    return (
+        isLayerCommonProperty(parameter, arg) &&
+        arg.type === "3" &&
+        "text" in arg &&
+        isTextQuery(parameter, arg.text)
+    );
 }

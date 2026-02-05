@@ -1,26 +1,24 @@
 // MARK: 型定義: 6
-
-import type { Ability } from "../../GameObject/Ability.js";
-import type { GameObject } from "../../GameObject/GameObject.js";
-import type { MultiSpec } from "../../Query/QueryFunction.js";
-import type { Characteristics } from "../Characteristic.js";
+import {
+    isAbilityQuery,
+    type AbilityQuery,
+    type QueryParameter,
+} from "../../Query/Query.js";
+import { isLayerCommonProperty, type LayerCommonProperty } from "./Layer.js";
 
 /** 能力変更 */
-export type Layer6 = {
+export type Layer6<T extends QueryParameter> = LayerCommonProperty<T> & {
     type: "6";
-    affected: MultiSpec<GameObject>;
-    abilityAltering: (
-        current: Characteristics,
-        source?: GameObject,
-    ) => MultiSpec<Ability>;
+    ability: AbilityQuery<T>;
 };
-export function isLayer6(arg: unknown): arg is Layer6 {
-    // return isLayer(arg, "6");
-    // FIXME: 実装
-}
-class AlterAbility {
-    alter: () => MultiSpec<Ability>;
-    constructor(alter: () => MultiSpec<Ability>) {
-        this.alter = alter;
-    }
+export function isLayer6<T extends QueryParameter>(
+    parameter: T,
+    arg: unknown,
+): arg is Layer6<T> {
+    return (
+        isLayerCommonProperty(parameter, arg) &&
+        arg.type === "6" &&
+        "ability" in arg &&
+        isAbilityQuery(parameter, arg.ability)
+    );
 }

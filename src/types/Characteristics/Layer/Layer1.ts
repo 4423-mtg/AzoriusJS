@@ -1,41 +1,52 @@
 // MARK: 型定義: 1a
 import type { GameObject } from "../../GameObject/GameObject.js";
 import type { Game } from "../../GameState/Game.js";
-import type { MultiSpec, SingleSpec } from "../../Query/QueryFunction.js";
-import type { Characteristics, CopiableValue } from "../Characteristic.js";
+import {
+    isCopiableValueQuery,
+    type CopiableValueQuery,
+    type QueryParameter,
+} from "../../Query/Query.js";
+import type { Characteristics } from "../Characteristic.js";
+import { isLayerCommonProperty, type LayerCommonProperty } from "./Layer.js";
 
-/** コピー可能な効果の適用 */ // FIXME: シリアライズ可能にする必要あり
-export type Layer1a = {
+/** コピー可能な効果の適用 */
+export type Layer1a<T extends QueryParameter> = LayerCommonProperty<T> & {
     type: "1a";
-    affected: MultiSpec<GameObject>;
-    spec: AlterCopyableValueSpec; // TODO: タグ化処理
+    copiableValue: CopiableValueQuery<T>;
 };
-export function isLayer1a(arg: unknown): arg is Layer1a {
-    // return isLayer(arg, "1a");
-    // FIXME: 実装
+export function isLayer1a<T extends QueryParameter>(
+    parameter: T,
+    arg: unknown,
+): arg is Layer1a<T> {
+    return (
+        isLayerCommonProperty(parameter, arg) &&
+        arg.type === "1a" &&
+        "copiableValue" in arg &&
+        isCopiableValueQuery(parameter, arg.copiableValue)
+    );
 }
-function applyLayer1a(
-    layer: Layer1a,
+function applyLayer1a<T extends QueryParameter>(
+    layer: Layer1a<T>,
     game: Game,
 ): { object: GameObject; characteristics: Characteristics }[] {
     // TODO:
     return [];
 }
 
-type AlterCopyableValueSpec = { type: "" };
-type AlterCopyableValue = () => SingleSpec<CopiableValue>;
-
 // MARK: 型定義: 1b
 /** 裏向きによる特性変更 */
-export type Layer1b = {
+export type Layer1b<T extends QueryParameter> = LayerCommonProperty<T> & {
     type: "1b";
-    affected: MultiSpec<GameObject>;
-    copyableValueAltering: (
-        current: Characteristics,
-        source?: GameObject,
-    ) => SingleSpec<CopiableValue>;
+    copiableValue: CopiableValueQuery<T>;
 };
-export function isLayer1b(arg: unknown): arg is Layer1b {
-    // return isLayer(arg, "1b");
-    // FIXME: 実装
+export function isLayer1b<T extends QueryParameter>(
+    parameter: T,
+    arg: unknown,
+): arg is Layer1b<T> {
+    return (
+        isLayerCommonProperty(parameter, arg) &&
+        arg.type === "1b" &&
+        "copiableValue" in arg &&
+        isCopiableValueQuery(parameter, arg.copiableValue)
+    );
 }

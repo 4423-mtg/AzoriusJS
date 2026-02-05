@@ -58,15 +58,15 @@ export function isLayerCategory(arg: unknown): arg is LayerCategory {
 }
 
 // ---------------------------------------------------------------
-export type LayerCommonParameter<T extends QueryParameter> = {
+export type LayerCommonProperty<T extends QueryParameter> = {
     type: LayerCategory;
     affected: GameObjectQuery<T> | PlayerQuery<T>;
     // FIXME: affectedは各レイヤーごとに必要なのか？
 };
-export function isLayerCommonParameter<T extends QueryParameter>(
+export function isLayerCommonProperty<T extends QueryParameter>(
     parameters: T,
     arg: unknown,
-): arg is LayerCommonParameter<T> {
+): arg is LayerCommonProperty<T> {
     return (
         typeof arg === "object" &&
         arg !== null &&
@@ -79,94 +79,101 @@ export function isLayerCommonParameter<T extends QueryParameter>(
 }
 
 /** 種類別に対応するレイヤー */
-export type Layer<T extends LayerCategory> = T extends "1a"
-    ? Layer1a
+export type Layer<
+    T extends QueryParameter,
+    U extends LayerCategory,
+> = U extends "1a"
+    ? Layer1a<T>
     : T extends "1b"
-    ? Layer1b
+    ? Layer1b<T>
     : T extends "2"
-    ? Layer2
+    ? Layer2<T>
     : T extends "3"
-    ? Layer3
+    ? Layer3<T>
     : T extends "4"
-    ? Layer4
+    ? Layer4<T>
     : T extends "5"
-    ? Layer5
+    ? Layer5<T>
     : T extends "6"
-    ? Layer6
+    ? Layer6<T>
     : T extends "7a"
-    ? Layer7a
+    ? Layer7a<T>
     : T extends "7b"
-    ? Layer7b
+    ? Layer7b<T>
     : T extends "7c"
-    ? Layer7c
+    ? Layer7c<T>
     : T extends "7d"
-    ? Layer7d
+    ? Layer7d<T>
     : never;
-export function isLayer<T extends LayerCategory>(
+export function isLayer<T extends QueryParameter, U extends LayerCategory>(
     arg: unknown,
-    category: T,
-): arg is Layer<T> {
+    parameter: T,
+    category: U,
+): arg is Layer<T, U> {
     switch (category) {
         case "1a":
-            return isLayer1a(arg);
+            return isLayer1a(parameter, arg);
         case "1b":
-            return isLayer1b(arg);
+            return isLayer1b(parameter, arg);
         case "2":
-            return isLayer2(arg);
+            return isLayer2(parameter, arg);
         case "3":
-            return isLayer3(arg);
+            return isLayer3(parameter, arg);
         case "4":
-            return isLayer4(arg);
+            return isLayer4(parameter, arg);
         case "5":
-            return isLayer5(arg);
+            return isLayer5(parameter, arg);
         case "6":
-            return isLayer6(arg);
+            return isLayer6(parameter, arg);
         case "7a":
-            return isLayer7a(arg);
+            return isLayer7a(parameter, arg);
         case "7b":
-            return isLayer7b(arg);
+            return isLayer7b(parameter, arg);
         case "7c":
-            return isLayer7c(arg);
+            return isLayer7c(parameter, arg);
         case "7d":
-            return isLayer7d(arg);
+            return isLayer7d(parameter, arg);
         default:
             throw new TypeError(category);
     }
 }
 
 /** 任意のレイヤー */
-export type AnyLayer =
-    | Layer1a
-    | Layer1b
-    | Layer2
-    | Layer3
-    | Layer4
-    | Layer5
-    | Layer6
-    | Layer7a
-    | Layer7b
-    | Layer7c
-    | Layer7d;
-export function isAnyLayer(arg: unknown): arg is AnyLayer {
+export type AnyLayer<T extends QueryParameter> =
+    | Layer1a<T>
+    | Layer1b<T>
+    | Layer2<T>
+    | Layer3<T>
+    | Layer4<T>
+    | Layer5<T>
+    | Layer6<T>
+    | Layer7a<T>
+    | Layer7b<T>
+    | Layer7c<T>
+    | Layer7d<T>;
+export function isAnyLayer<T extends QueryParameter>(
+    arg: unknown,
+    parameter: T,
+): arg is AnyLayer<T> {
     return (
-        isLayer1a(arg) ||
-        isLayer1b(arg) ||
-        isLayer2(arg) ||
-        isLayer3(arg) ||
-        isLayer4(arg) ||
-        isLayer5(arg) ||
-        isLayer6(arg) ||
-        isLayer7a(arg) ||
-        isLayer7b(arg) ||
-        isLayer7c(arg) ||
-        isLayer7d(arg)
+        isLayer1a(parameter, arg) ||
+        isLayer1b(parameter, arg) ||
+        isLayer2(parameter, arg) ||
+        isLayer3(parameter, arg) ||
+        isLayer4(parameter, arg) ||
+        isLayer5(parameter, arg) ||
+        isLayer6(parameter, arg) ||
+        isLayer7a(parameter, arg) ||
+        isLayer7b(parameter, arg) ||
+        isLayer7c(parameter, arg) ||
+        isLayer7d(parameter, arg)
     );
 }
 
 // =================================================================
 // MARK: レイヤーの適用
-function _applyLayer(
-    layer: AnyLayer,
+function _applyLayer<T extends QueryParameter>(
+    layer: AnyLayer<T>,
     game: Game,
     // 現在の特性
     characteristics: {
@@ -191,8 +198,8 @@ function _applyLayer(
 }
 
 /** Gameの最新の状態に対してレイヤーを適用し、各オブジェクトの特性を得る。このときGameは変更しない。 */
-export function applyLayers(
-    layers: AnyLayer[],
+export function applyLayers<T extends QueryParameter>(
+    layers: AnyLayer<T>[],
     game: Game,
 ): {
     object: GameObject;
@@ -207,17 +214,23 @@ export function applyLayers(
 
 // =================================================================
 // MARK: レイヤーの解決
-export function applyLayerEffect(params: type) {
+export function applyLayerEffect() {
     // FIXME:
 }
 
-type EffectAndLayer<T extends LayerCategory = LayerCategory> = {
+type EffectAndLayer<
+    T extends QueryParameter,
+    U extends LayerCategory = LayerCategory,
+> = {
     effect: CharacteristicsAlteringEffect;
-    layer: Layer<T>;
+    layer: Layer<T, U>;
 };
 
 /** レイヤーの適用順を決定する。 */ // TODO: 実装
-export function sortLayers(args: EffectAndLayer[], game: Game): typeof args {
+export function sortLayers<T extends QueryParameter>(
+    args: EffectAndLayer<T>[],
+    game: Game,
+): typeof args {
     // - すべての継続的効果をすべての順序で適用してみて、依存をチェックする
     //   - 適用順を決めるに当たってはそれ以前のレイヤーの影響がある
     // - 依存があってループしているならタイムスタンプ順で適用、ループしていないなら依存順で適用する。依存がないものはタイムスタンプ順で適用する
@@ -230,8 +243,8 @@ export function sortLayers(args: EffectAndLayer[], game: Game): typeof args {
     //   - Aを適用
     //   - Cは(アーティファクトがある場合のみ)Bに依存する
 
-    const stack: EffectAndLayer[] = []; // 適用順
-    let latestStacked: EffectAndLayer[] = [];
+    const stack: EffectAndLayer<T>[] = []; // 適用順
+    let latestStacked: EffectAndLayer<T>[] = [];
     while (stack.length < args.length) {
         // まだ適用順の決定していないもの
         const unstacked = args.filter((_a) => !stack.includes(_a));
@@ -244,11 +257,14 @@ export function sortLayers(args: EffectAndLayer[], game: Game): typeof args {
 
         // 1. 依存性のループを取得し、ループしている場合はそれらをタイムスタンプ順で適用する。
         // ある効果が複数のループに関与している場合は、それらのループすべてに含まれるすべての効果をタイムスタンプ順で適用する
-        const loops: EffectAndLayer[][] = _getDependencyLoops(unstacked, game); // FIXME: gameにstack内のレイヤーを仮適用した状態での依存関係を見る
+        const loops: EffectAndLayer<T>[][] = _getDependencyLoops(
+            unstacked,
+            game,
+        ); // FIXME: gameにstack内のレイヤーを仮適用した状態での依存関係を見る
         if (loops.length > 0) {
-            const loop1 = loops.at(0) as EffectAndLayer[];
+            const loop1 = loops.at(0) as EffectAndLayer<T>[];
             // そのループ自身およびそのループと同じ要素を持つすべてのループからすべての要素を取り出し、重複を削除する
-            const effects: EffectAndLayer[] = new Set<EffectAndLayer>([
+            const effects: EffectAndLayer<T>[] = new Set<EffectAndLayer<T>>([
                 ...loop1,
                 ...loops
                     .slice(1)
@@ -292,20 +308,20 @@ function _includesSameObject<T>(array1: T[], array2: T[]) {
     return array1.some((t1) => array2.some((t2) => t1 === t2));
 }
 
-function _getDependencyLoops(
-    args: EffectAndLayer[],
+function _getDependencyLoops<T extends QueryParameter>(
+    args: EffectAndLayer<T>[],
     game: Game,
-): EffectAndLayer[][] {
+): EffectAndLayer<T>[][] {
     // FIXME: getDependencies を使って書き直す
     // 再帰的に探索する
     function _step(
-        arg: EffectAndLayer, // 探索起点
-        args: EffectAndLayer[], // 探索範囲
-        _stack: EffectAndLayer[],
-    ): EffectAndLayer[][] {
+        arg: EffectAndLayer<T>, // 探索起点
+        args: EffectAndLayer<T>[], // 探索範囲
+        _stack: EffectAndLayer<T>[],
+    ): EffectAndLayer<T>[][] {
         return args
             .filter((_a) => isDependingOn(arg, _a, game))
-            .map((_a): EffectAndLayer[][] => {
+            .map((_a): EffectAndLayer<T>[][] => {
                 if (_stack.filter((_a2) => _a2 === _a).length > 0) {
                     return [[_a]];
                 } else {
@@ -322,9 +338,12 @@ function _getDependencyLoops(
         .filter((_array) => _array.at(0) === _array.at(-1));
 }
 
-export function isDependingOn<T extends LayerCategory>(
-    layer1: { effect: CharacteristicsAlteringEffect; layer: Layer<T> },
-    layer2: { effect: CharacteristicsAlteringEffect; layer: Layer<T> },
+export function isDependingOn<
+    T extends QueryParameter,
+    U extends LayerCategory,
+>(
+    layer1: { effect: CharacteristicsAlteringEffect; layer: Layer<T, U> },
+    layer2: { effect: CharacteristicsAlteringEffect; layer: Layer<T, U> },
     game: Game,
 ): boolean {
     if (layer1 === layer2) {
@@ -336,10 +355,10 @@ export function isDependingOn<T extends LayerCategory>(
     }
 }
 
-function _getDependencies(
-    layers: EffectAndLayer[],
+function _getDependencies<T extends QueryParameter>(
+    layers: EffectAndLayer<T>[],
     game: Game,
-): { depending: EffectAndLayer; depended: EffectAndLayer }[] {
+): { depending: EffectAndLayer<T>; depended: EffectAndLayer<T> }[] {
     return layers.flatMap((_a1) =>
         layers
             .filter((_a2) => isDependingOn(_a1, _a2, game))
