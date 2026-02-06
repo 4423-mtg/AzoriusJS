@@ -15,7 +15,7 @@ import {
 } from "../GameObject/GameObject.js";
 import { isPlayer, type Player } from "../GameObject/Player.js";
 import type { PlayerInfo } from "../GameState/Match.js";
-import type { Zone, ZoneType } from "../GameState/Zone.js";
+import type { ZoneId, ZoneType } from "../GameState/Zone.js";
 
 // 種類別（レイヤー）に関してはこれでOK。
 // 手続き変更効果・処理禁止効果・置換効果・追加ターン効果についてはどう？
@@ -200,6 +200,7 @@ export function isTextQuery<T extends QueryParameter>(
 // =========================================================
 // MARK: 4種(タイプ)
 export type CardTypeQuery<T extends QueryParameter = {}> =
+    | CardType
     | CardType[]
     | {
           object: GameObjectQuery<T>;
@@ -214,6 +215,7 @@ export function isCardTypeQuery<T extends QueryParameter>(
     return false;
 }
 export type SubtypeQuery<T extends QueryParameter = {}> =
+    | Subtype
     | Subtype[]
     | {
           object: GameObjectQuery<T>;
@@ -228,6 +230,7 @@ export function isSubtypeQuery<T extends QueryParameter>(
     return false;
 }
 export type SupertypeQuery<T extends QueryParameter = {}> =
+    | Supertype
     | Supertype[]
     | {
           object: GameObjectQuery<T>;
@@ -315,12 +318,24 @@ export function isNumberQuery<T extends QueryParameter>(
 }
 
 // =========================================================
+type CharacteristicsBooleanOperation =
+    | Partial<Characteristics>
+    | { operation: "not"; operand: CharacteristicsBooleanOperation }
+    | { operation: "and" | "or"; operand: CharacteristicsBooleanOperation[] };
+type ZoneBooleanOperation =
+    | ZoneId
+    | Partial<{ type: ZoneType; owner: Player }>
+    | { operation: "not"; operand: ZoneBooleanOperation }
+    | { operation: "and" | "or"; operand: ZoneBooleanOperation[] };
+
 // MARK: オブジェクト
 export type GameObjectQuery<T extends QueryParameter = {}> =
     | { argumentName: SpecificTypeParameterName<T, "gameObject"> }
     | {
-          zone?: Zone | ZoneType;
-          characteristics?: Partial<Characteristics>;
+          zone?: ZoneBooleanOperation;
+          characteristics?: CharacteristicsBooleanOperation;
+          // controller TODO:
+          // owner TODO:
       }
     | {
           action: "union" | "intersection";

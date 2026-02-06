@@ -8,7 +8,7 @@ import {
     type SubtypeQuery,
     type SupertypeQuery,
 } from "../../Query/Query.js";
-import { landTypes, type Subtype } from "../Subtype.js";
+import { landTypes } from "../Subtype.js";
 import { isLayerCommonProperty, type LayerCommonProperty } from "./Layer.js";
 
 /** タイプ変更 */
@@ -16,7 +16,11 @@ export type Layer4<T extends QueryParameter = {}> = LayerCommonProperty<T> & {
     type: "4";
     types: {
         action: "set" | "append" | "remove";
-        typeQuery: CardTypeQuery<T> | SubtypeQuery<T> | SupertypeQuery<T>;
+        typeQuery:
+            | CardTypeQuery<T>
+            | SubtypeQuery<T>
+            | SupertypeQuery<T>
+            | (CardTypeQuery<T> | SubtypeQuery<T> | SupertypeQuery<T>)[];
     }[];
 };
 export function isLayer4<T extends QueryParameter>(
@@ -47,32 +51,54 @@ function isRecord(arg: unknown): arg is Record<string, unknown> {
     return typeof arg === "object" && arg !== null;
 }
 
-// Sample
-const urborg: Layer4 = {
-    type: "4",
-    affected: {
-        zone: "Battlefield",
-        characteristics: { card_types: ["Land"] },
-    },
-    types: [{ action: "append", typeQuery: ["Swamp"] }],
-};
-const bloodMoon: Layer4 = {
-    type: "4",
-    affected: {
-        action: "difference",
-        left: {
-            zone: "Battlefield",
+const sample: Record<string, Layer4> = {
+    // アーボーグ
+    "Urborg, Tomb of Yawgmoth": {
+        type: "4",
+        affected: {
+            zone: { type: "Battlefield" },
             characteristics: { card_types: ["Land"] },
         },
-        right: {
-            zone: "Battlefield",
-            characteristics: { supertypes: ["Basic"] },
-        },
+        types: [{ action: "append", typeQuery: ["Swamp"] }],
     },
-    types: [
-        { action: "remove", typeQuery: [...landTypes] }, // FIXME: readonlyのせいでリマップが必要になっている
-        { action: "set", typeQuery: ["Mountain"] },
-    ],
+    // 血染めの月
+    "Blood Moon": {
+        type: "4",
+        affected: {
+            zone: { type: "Battlefield" },
+            characteristics: {
+                operation: "and",
+                operand: [
+                    { operation: "not", operand: { supertypes: ["Basic"] } },
+                    { card_types: ["Land"] },
+                ],
+            },
+        },
+        types: [
+            { action: "remove", typeQuery: [...landTypes] }, // FIXME: readonlyのせいでリマップが必要になっている
+            { action: "set", typeQuery: ["Mountain"] },
+        ],
+    },
+    // 生命と枝
+    "Life and Limb": {
+        type: "4",
+        affected: {
+            zone: { type: "Battlefield" },
+            characteristics: {
+                operation: "or",
+                operand: [
+                    { subtypes: ["Forest"] }, // テキストではサブタイプとは書いてないので外したほうがいいかも
+                    { subtypes: ["Saproling"] },
+                ],
+            },
+        },
+        types: [
+            {
+                action: "append",
+                typeQuery: ["Saproling", "Creature", "Forest", "Land"],
+            },
+        ],
+    },
 };
 
 // Sample2
