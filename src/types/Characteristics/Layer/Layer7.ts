@@ -70,3 +70,48 @@ export function isLayer7d<T extends QueryParameter>(
 ): arg is Layer7d<T> {
     return isLayerCommonProperty(parameters, arg) && arg.type === "7d";
 }
+
+// =======================================================
+const sample: Record<
+    string,
+    | Layer7a<{ target: { type: "gameObject" }; this: { type: "gameObject" } }>
+    | Layer7b<{ target: { type: "gameObject" }; this: { type: "gameObject" } }>
+    | Layer7c<{ target: { type: "gameObject" }; this: { type: "gameObject" } }>
+    | Layer7d<{ target: { type: "gameObject" }; this: { type: "gameObject" } }>
+> = {
+    // タルモゴイフ
+    Tarmogoyf: {
+        type: "7a",
+        affected: { argumentName: "this" },
+        PT: {
+            power: {
+                type: "numberOfCardTypes",
+                objects: { zone: { type: "Graveyard" } },
+            },
+            toughness: {
+                type: "total",
+                values: [
+                    {
+                        type: "numberOfCardTypes",
+                        objects: { zone: { type: "Graveyard" } },
+                    },
+                    1,
+                ],
+            },
+        },
+    },
+    // 憤激解放/Unleash Fury
+    // 対象のクリーチャーのパワーを2倍にする
+    "Unleash Fury": {
+        type: "7c",
+        affected: { argumentName: "target" },
+        PT: {
+            power: {
+                type: "characteristics",
+                kind: "power",
+                object: { argumentName: "target" },
+            },
+            toughness: 0,
+        },
+    },
+};

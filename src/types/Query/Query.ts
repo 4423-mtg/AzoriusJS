@@ -272,9 +272,10 @@ export function isAbilityQuery<T extends QueryParameter>(
 
 // =========================================================
 // MARK: 7種(PT)
+// FIXME: 不要なのでは？
 export type PTQuery<T extends QueryParameter = {}> = {
-    power: number | NumberQuery<T>;
-    toughness: number | NumberQuery<T>;
+    power: NumberQuery<T>;
+    toughness: NumberQuery<T>;
 };
 
 export function isPTQuery<T extends QueryParameter>(
@@ -287,6 +288,7 @@ export function isPTQuery<T extends QueryParameter>(
 // =========================================================
 // MARK: 数値
 export type NumberQuery<T extends QueryParameter = {}> =
+    | number
     // オブジェクトの数値
     | {
           type: "characteristics";
@@ -300,6 +302,8 @@ export type NumberQuery<T extends QueryParameter = {}> =
       }
     // オブジェクトの個数
     | { type: "number"; objects: GameObjectQuery<T> }
+    // カードタイプの数
+    | { type: "numberOfCardTypes"; objects: GameObjectQuery<T> }
     // 何かの合計値
     | {
           type: "total"; // 減算や乗算はあるのだろうか
