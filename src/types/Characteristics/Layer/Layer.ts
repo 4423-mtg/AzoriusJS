@@ -80,35 +80,35 @@ export function isLayerCommonProperty<T extends QueryParameter>(
 
 /** 種類別に対応するレイヤー */
 export type Layer<
-    T extends QueryParameter,
-    U extends LayerCategory,
-> = U extends "1a"
-    ? Layer1a<T>
-    : T extends "1b"
-    ? Layer1b<T>
-    : T extends "2"
-    ? Layer2<T>
-    : T extends "3"
-    ? Layer3<T>
-    : T extends "4"
-    ? Layer4<T>
-    : T extends "5"
-    ? Layer5<T>
-    : T extends "6"
-    ? Layer6<T>
-    : T extends "7a"
-    ? Layer7a<T>
-    : T extends "7b"
-    ? Layer7b<T>
-    : T extends "7c"
-    ? Layer7c<T>
-    : T extends "7d"
-    ? Layer7d<T>
+    T extends LayerCategory,
+    U extends QueryParameter,
+> = T extends "1a"
+    ? Layer1a<U>
+    : U extends "1b"
+    ? Layer1b<U>
+    : U extends "2"
+    ? Layer2<U>
+    : U extends "3"
+    ? Layer3<U>
+    : U extends "4"
+    ? Layer4<U>
+    : U extends "5"
+    ? Layer5<U>
+    : U extends "6"
+    ? Layer6<U>
+    : U extends "7a"
+    ? Layer7a<U>
+    : U extends "7b"
+    ? Layer7b<U>
+    : U extends "7c"
+    ? Layer7c<U>
+    : U extends "7d"
+    ? Layer7d<U>
     : never;
-export function isLayer<T extends QueryParameter, U extends LayerCategory>(
+export function isLayer<T extends LayerCategory, U extends QueryParameter>(
     arg: unknown,
-    parameter: T,
-    category: U,
+    category: T,
+    parameter: U,
 ): arg is Layer<T, U> {
     switch (category) {
         case "1a":
@@ -139,7 +139,7 @@ export function isLayer<T extends QueryParameter, U extends LayerCategory>(
 }
 
 /** 任意のレイヤー */
-export type AnyLayer<T extends QueryParameter = {}> =
+export type AnyLayer<T extends QueryParameter> =
     | Layer1a<T>
     | Layer1b<T>
     | Layer2<T>
@@ -218,17 +218,14 @@ export function applyLayerEffect() {
     // FIXME:
 }
 
-type EffectAndLayer<
-    T extends QueryParameter,
-    U extends LayerCategory = LayerCategory,
-> = {
-    effect: CharacteristicsAlteringEffect;
+type EffectAndLayer<T extends LayerCategory, U extends QueryParameter> = {
+    effect: CharacteristicsAlteringEffect<U>;
     layer: Layer<T, U>;
 };
 
 /** レイヤーの適用順を決定する。 */ // TODO: 実装
-export function sortLayers<T extends QueryParameter>(
-    args: EffectAndLayer<T>[],
+export function sortLayers<U extends QueryParameter>(
+    args: EffectAndLayer<LayerCategory, U>[],
     game: Game,
 ): typeof args {
     // - すべての継続的効果をすべての順序で適用してみて、依存をチェックする
@@ -243,8 +240,8 @@ export function sortLayers<T extends QueryParameter>(
     //   - Aを適用
     //   - Cは(アーティファクトがある場合のみ)Bに依存する
 
-    const stack: EffectAndLayer<T>[] = []; // 適用順
-    let latestStacked: EffectAndLayer<T>[] = [];
+    const stack: EffectAndLayer<U>[] = []; // 適用順
+    let latestStacked: EffectAndLayer<U>[] = [];
     while (stack.length < args.length) {
         // まだ適用順の決定していないもの
         const unstacked = args.filter((_a) => !stack.includes(_a));
@@ -257,14 +254,14 @@ export function sortLayers<T extends QueryParameter>(
 
         // 1. 依存性のループを取得し、ループしている場合はそれらをタイムスタンプ順で適用する。
         // ある効果が複数のループに関与している場合は、それらのループすべてに含まれるすべての効果をタイムスタンプ順で適用する
-        const loops: EffectAndLayer<T>[][] = _getDependencyLoops(
+        const loops: EffectAndLayer<U>[][] = _getDependencyLoops(
             unstacked,
             game,
         ); // FIXME: gameにstack内のレイヤーを仮適用した状態での依存関係を見る
         if (loops.length > 0) {
-            const loop1 = loops.at(0) as EffectAndLayer<T>[];
+            const loop1 = loops.at(0) as EffectAndLayer<U>[];
             // そのループ自身およびそのループと同じ要素を持つすべてのループからすべての要素を取り出し、重複を削除する
-            const effects: EffectAndLayer<T>[] = new Set<EffectAndLayer<T>>([
+            const effects: EffectAndLayer<U>[] = new Set<EffectAndLayer<U>>([
                 ...loop1,
                 ...loops
                     .slice(1)

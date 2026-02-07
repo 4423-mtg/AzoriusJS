@@ -34,7 +34,7 @@ import type {
     QueryParameter,
 } from "../../Query/Query.js";
 
-// FIXME: 型ガードは別に移す
+// FIXME: 型ガードは1箇所にまとめる
 
 // ====================================================================================================
 /** 継続的効果。単一の常在型能力からの継続的効果か、または、単一の呪文や能力の解決によって生成された継続的効果 */
@@ -97,41 +97,43 @@ export type CharacteristicsAlteringEffectProperty<
 };
 
 /** 型ガード */
-export function isCharacteristicsAlteringEffect(
+export function isCharacteristicsAlteringEffect<T extends QueryParameter>(
     arg: unknown,
-): arg is CharacteristicsAlteringEffect {
+    parameter: T,
+): arg is CharacteristicsAlteringEffect<T> {
     return (
-        isContinuousEffect(arg) && isCharacteristicsAlteringEffectProperty(arg)
+        isContinuousEffect(arg) &&
+        isCharacteristicsAlteringEffectProperty(arg, parameter)
     );
 }
-export function isCharacteristicsAlteringEffectProperty(
-    arg: unknown,
-): arg is CharacteristicsAlteringEffectProperty {
+export function isCharacteristicsAlteringEffectProperty<
+    T extends QueryParameter,
+>(arg: unknown, parameter: T): arg is CharacteristicsAlteringEffectProperty {
     return (
         typeof arg === "object" &&
         arg !== null &&
         "layer1a" in arg &&
-        isLayer(arg.layer1a, "1a") &&
+        isLayer(arg.layer1a, "1a", parameter) &&
         "layer1b" in arg &&
-        isLayer(arg.layer1b, "1b") &&
+        isLayer(arg.layer1b, "1b", parameter) &&
         "layer2" in arg &&
-        isLayer(arg.layer2, "2") &&
+        isLayer(arg.layer2, "2", parameter) &&
         "layer3" in arg &&
-        isLayer(arg.layer3, "3") &&
+        isLayer(arg.layer3, "3", parameter) &&
         "layer4" in arg &&
-        isLayer(arg.layer4, "4") &&
+        isLayer(arg.layer4, "4", parameter) &&
         "layer5" in arg &&
-        isLayer(arg.layer5, "5") &&
+        isLayer(arg.layer5, "5", parameter) &&
         "layer6" in arg &&
-        isLayer(arg.layer6, "6") &&
+        isLayer(arg.layer6, "6", parameter) &&
         "layer7a" in arg &&
-        isLayer(arg.layer7a, "7a") &&
+        isLayer(arg.layer7a, "7a", parameter) &&
         "layer7b" in arg &&
-        isLayer(arg.layer7b, "7b") &&
+        isLayer(arg.layer7b, "7b", parameter) &&
         "layer7c" in arg &&
-        isLayer(arg.layer7c, "7c") &&
+        isLayer(arg.layer7c, "7c", parameter) &&
         "layer7d" in arg &&
-        isLayer(arg.layer7d, "7d")
+        isLayer(arg.layer7d, "7d", parameter)
     );
 }
 
@@ -166,26 +168,27 @@ export type CharacteristicsAlteringEffectParameter<T extends QueryParameter> =
         Partial<Omit<CharacteristicsAlteringEffectProperty<T>, "affected">>;
 
 /** 指定した種類別のレイヤーを取得する */
-export function getLayer<T extends LayerCategory>(
-    effect: CharacteristicsAlteringEffect,
+export function getLayer<T extends LayerCategory, U extends QueryParameter>(
+    effect: CharacteristicsAlteringEffect<U>,
     category: T, // 型を絞り込むためジェネリクスを使う
-): Layer<T> | undefined {
-    return effect[`layer${category}`] as Layer<typeof category> | undefined; // FIXME: as
+): Layer<T, U> | undefined {
+    return effect[`layer${category}`] as Layer<typeof category, U> | undefined; // FIXME: as
 }
 
 /** 指定した種類別の効果を持っているかどうか (undefinedも不可) */
-export function hasLayer<T extends LayerCategory>(
+export function hasLayer<T extends LayerCategory, U extends QueryParameter>(
     effect: unknown,
     layerCategory: T,
-): effect is CharacteristicsAlteringEffect & Required<_layerProperty<T>> {
+    parameter: U,
+): effect is CharacteristicsAlteringEffect<U> & Required<_layerProperty<T, U>> {
     return (
-        isCharacteristicsAlteringEffect(effect) &&
+        isCharacteristicsAlteringEffect(effect, parameter) &&
         getLayer(effect, layerCategory) !== undefined
     );
 }
 
-type _layerProperty<T extends LayerCategory> = {
-    [K in `layer${T}`]: Layer<T> | undefined;
+type _layerProperty<T extends LayerCategory, U extends QueryParameter> = {
+    [K in `layer${T}`]: Layer<T, U> | undefined;
 };
 
 // ========================================================================
