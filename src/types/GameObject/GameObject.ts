@@ -14,8 +14,8 @@ export type GameObject = {
     objectId: GameObjectId;
     zone: Zone | undefined;
     counters: CounterOnObject[] | undefined;
-    stickers: Sticker[] | undefined;
     markers: Marker[] | undefined;
+    stickers: Sticker[] | undefined;
     characteristics: Characteristics;
 };
 export function isGameObject(arg: unknown): arg is GameObject {

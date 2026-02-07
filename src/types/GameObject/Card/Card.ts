@@ -8,6 +8,7 @@ export type Card = GameObject & {
     isToken: boolean;
     faces: Face[];
     status: Status;
+    // TODO: 第1面/第2面は？
 };
 // ダンジョンはCardではないことにする
 

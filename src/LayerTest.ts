@@ -34,3 +34,5 @@ const effects3: ContinuousEffect[] = [
     createCharacteristicsAltering({ source: "Sutured Ghoul" }),
     createCharacteristicsAltering({ source: "Maro" }),
 ];
+
+// 茨の吟遊詩人、ベロ
