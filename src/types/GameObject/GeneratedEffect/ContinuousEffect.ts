@@ -28,6 +28,13 @@ import type {
     Layer7c,
     Layer7d,
 } from "../../Characteristics/Layer/Layer7.js";
+import type {
+    GameObjectQuery,
+    PlayerQuery,
+    QueryParameter,
+} from "../../Query/Query.js";
+
+// FIXME: 型ガードは別に移す
 
 // ====================================================================================================
 /** 継続的効果。単一の常在型能力からの継続的効果か、または、単一の呪文や能力の解決によって生成された継続的効果 */
@@ -69,21 +76,24 @@ export function createContinuousEffect(): ContinuousEffect {
 
 // ========================================================================
 /** 値や特性を変更する継続的効果 */
-export type CharacteristicsAlteringEffect = ContinuousEffect &
-    CharacteristicsAlteringEffectProperty;
+export type CharacteristicsAlteringEffect<T extends QueryParameter> =
+    ContinuousEffect & CharacteristicsAlteringEffectProperty<T>;
 // プロパティ
-export type CharacteristicsAlteringEffectProperty = {
-    layer1a: Layer1a | undefined;
-    layer1b: Layer1b | undefined;
-    layer2: Layer2 | undefined;
-    layer3: Layer3 | undefined;
-    layer4: Layer4 | undefined;
-    layer5: Layer5 | undefined;
-    layer6: Layer6 | undefined;
-    layer7a: Layer7a | undefined;
-    layer7b: Layer7b | undefined;
-    layer7c: Layer7c | undefined;
-    layer7d: Layer7d | undefined;
+export type CharacteristicsAlteringEffectProperty<
+    T extends QueryParameter = {},
+> = {
+    affected: GameObjectQuery<T> | PlayerQuery<T>;
+    layer1a: Layer1a<T> | undefined;
+    layer1b: Layer1b<T> | undefined;
+    layer2: Layer2<T> | undefined;
+    layer3: Layer3<T> | undefined;
+    layer4: Layer4<T> | undefined;
+    layer5: Layer5<T> | undefined;
+    layer6: Layer6<T> | undefined;
+    layer7a: Layer7a<T> | undefined;
+    layer7b: Layer7b<T> | undefined;
+    layer7c: Layer7c<T> | undefined;
+    layer7d: Layer7d<T> | undefined;
 };
 
 /** 型ガード */
@@ -126,15 +136,16 @@ export function isCharacteristicsAlteringEffectProperty(
 }
 
 /** 値や特性を変更する継続的効果を作成する */
-export function createCharacteristicsAltering(
+export function createCharacteristicsAlteringEffect<T extends QueryParameter>(
     parameters: GameObjectParameters &
-        Partial<ContinuousEffectProperty> &
-        CharacteristicsAlteringEffectParameter,
-): CharacteristicsAlteringEffect {
+        ContinuousEffectProperty &
+        CharacteristicsAlteringEffectParameter<T>,
+): CharacteristicsAlteringEffect<T> {
     const obj = createGameObject(parameters);
     return {
         ...obj,
         source: parameters?.source,
+        affected: parameters.affected,
         timestamp: parameters?.timestamp,
         layer1a: parameters.layer1a,
         layer1b: parameters.layer1b,
@@ -150,8 +161,9 @@ export function createCharacteristicsAltering(
     };
 }
 // 作成時の引数
-export type CharacteristicsAlteringEffectParameter =
-    Partial<CharacteristicsAlteringEffectProperty>;
+export type CharacteristicsAlteringEffectParameter<T extends QueryParameter> =
+    Required<Pick<CharacteristicsAlteringEffectProperty<T>, "affected">> &
+        Partial<Omit<CharacteristicsAlteringEffectProperty<T>, "affected">>;
 
 /** 指定した種類別のレイヤーを取得する */
 export function getLayer<T extends LayerCategory>(

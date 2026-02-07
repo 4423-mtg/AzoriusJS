@@ -1,7 +1,10 @@
+import type { AnyLayer } from "./types/Characteristics/Layer/Layer.js";
+import type { Layer4 } from "./types/Characteristics/Layer/Layer4.js";
 import {
     type ContinuousEffect,
-    createCharacteristicsAltering,
+    createCharacteristicsAlteringEffect,
 } from "./types/GameObject/GeneratedEffect/ContinuousEffect.js";
+import { createTimestamp } from "./types/GameState/Timestamp.js";
 
 // 特性を変更する継続的効果の適用順は
 // - オブジェクト単位では決まらず、存在するすべてのオブジェクト（戦場以外も含む）を俯瞰したうえで決まる。
@@ -26,13 +29,68 @@ import {
 //   - 6種 : 逃亡した多相の戦士（対戦相手のクリーチャーが飛行を持つなら飛行を持つ）
 //   - 7種 : 縫合グール（追放したクリーチャーのP/Tを持つ）
 
-const effects2: ContinuousEffect[] = [
-    createCharacteristicsAltering({ source: "Rusted Relic" }),
-    createCharacteristicsAltering({ source: "One with the Stars" }),
-];
-const effects3: ContinuousEffect[] = [
-    createCharacteristicsAltering({ source: "Sutured Ghoul" }),
-    createCharacteristicsAltering({ source: "Maro" }),
-];
+// const effects2: ContinuousEffect[] = [
+//     createCharacteristicsAlteringEffect({ source: "Rusted Relic" }),
+//     createCharacteristicsAlteringEffect({ source: "One with the Stars" }),
+// ];
+// const effects3: ContinuousEffect[] = [
+//     createCharacteristicsAlteringEffect({ source: "Sutured Ghoul" }),
+//     createCharacteristicsAlteringEffect({ source: "Maro" }),
+// ];
 
-// 茨の吟遊詩人、ベロ
+// 茨の吟遊詩人、ベロ/Bello, Bard of the Brambles
+// あなたのターンの間、あなたがコントロールしていてマナ総量が４以上であり
+// 装備品でない各アーティファクトやあなたがコントロールしていて
+// マナ総量が４以上でありオーラでない各エンチャントはそれぞれ、
+// 他のタイプに加えて4/4のエレメンタル・クリーチャーであり、
+// 破壊不能と速攻と「このクリーチャーがプレイヤー１人に戦闘ダメージを与えるたび、
+// あなたはカード１枚を引く。」を持つ。
+const bello = createCharacteristicsAlteringEffect<{
+    this: { type: "gameObject" };
+}>({
+    source: "Bello",
+    timestamp: createTimestamp(),
+    affected: {
+        zone: { type: "Battlefield" },
+        manaValue: { type: "greaterEqual", value: 4 },
+        controller: {
+            type: "controller",
+            object: { argument: "this" },
+        },
+        characteristics: {
+            operation: "or",
+            operand: [
+                {
+                    operation: "and",
+                    operand: [
+                        {
+                            operation: "not",
+                            operand: { subtype: "Equipment" },
+                        },
+                        { cardType: "Artifact" },
+                    ],
+                },
+                {
+                    operation: "and",
+                    operand: [
+                        {
+                            operation: "not",
+                            operand: { subtype: "Aura" },
+                        },
+                        { cardType: "Enchantment" },
+                    ],
+                },
+            ],
+        },
+    },
+    layer4: {
+        type: "4",
+        types: [{ action: "append", typeQuery: ["Elemental", "Creature"] }],
+    },
+    layer6: { type: "6", ability: [] }, // FIXME:
+    layer7b: {
+        type: "7b",
+        power: 4,
+        toughness: 4,
+    },
+});

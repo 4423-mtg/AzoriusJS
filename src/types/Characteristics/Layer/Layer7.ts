@@ -87,7 +87,7 @@ const sample: Record<
     // タルモゴイフ
     Tarmogoyf: {
         type: "7a",
-        affected: { argumentName: "this" },
+        affected: { argument: "this" },
         power: {
             type: "numberOfCardTypes",
             objects: { zone: { type: "Graveyard" } },
@@ -107,11 +107,11 @@ const sample: Record<
     // 対象のクリーチャーのパワーを2倍にする
     "Unleash Fury": {
         type: "7c",
-        affected: { argumentName: "target" },
+        affected: { argument: "target" },
         power: {
             type: "characteristics",
             kind: "power",
-            object: { argumentName: "target" },
+            object: { argument: "target" },
         },
         toughness: 0,
     },

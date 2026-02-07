@@ -210,7 +210,9 @@ export type PlayerQuery<T extends QueryParameter = {}> =
     | {
           type: "opponent" | "teammate";
           player: PlayerQuery<T>;
-      };
+      }
+    | { argument: SpecificTypeParameterName<T, "player"> };
+
 export function isPlayerQuery<T extends QueryParameter>(
     parameters: T,
     arg: unknown,
@@ -372,7 +374,7 @@ type CharacteristicsBooleanOperation<T extends QueryParameter> =
 
 // MARK: オブジェクト
 export type GameObjectQuery<T extends QueryParameter = {}> =
-    | { argumentName: SpecificTypeParameterName<T, "gameObject"> }
+    | { argument: SpecificTypeParameterName<T, "gameObject"> }
     | {
           zone?: ZoneBooleanOperation<T>;
           counter?: CounterBooleanOperation<T>;
@@ -380,9 +382,18 @@ export type GameObjectQuery<T extends QueryParameter = {}> =
           sticker?: StickerBooleanOperation<T>;
           characteristics?: CharacteristicsBooleanOperation<T>;
           //   owner?: PlayerBooleanOperation<T>; // TODO: CardQuery
-          //   controller?: PlayerBooleanOperation<T>;
+          controller?: PlayerBooleanOperation<T>;
           //   isToken?: boolean;
           //   status?: Status;
+          manaValue?: {
+              type:
+                  | "greater"
+                  | "lesser"
+                  | "equal"
+                  | "greaterEqual"
+                  | "lesserEqual"; // FIXME:
+              value: NumberQuery<T>;
+          };
       }
     | {
           action: "union" | "intersection";

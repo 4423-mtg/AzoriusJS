@@ -60,7 +60,7 @@ export function isLayerCategory(arg: unknown): arg is LayerCategory {
 // ---------------------------------------------------------------
 export type LayerCommonProperty<T extends QueryParameter> = {
     type: LayerCategory;
-    affected: GameObjectQuery<T> | PlayerQuery<T>;
+    // affected: GameObjectQuery<T> | PlayerQuery<T>;
     // FIXME: affectedは各レイヤーごとに必要なのか？
 };
 export function isLayerCommonProperty<T extends QueryParameter>(
@@ -139,7 +139,7 @@ export function isLayer<T extends QueryParameter, U extends LayerCategory>(
 }
 
 /** 任意のレイヤー */
-export type AnyLayer<T extends QueryParameter> =
+export type AnyLayer<T extends QueryParameter = {}> =
     | Layer1a<T>
     | Layer1b<T>
     | Layer2<T>

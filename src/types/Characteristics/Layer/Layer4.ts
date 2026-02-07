@@ -58,7 +58,7 @@ const sample: Record<string, Layer4> = {
         type: "4",
         affected: {
             zone: { type: "Battlefield" },
-            characteristics: { card_types: ["Land"] },
+            characteristics: { cardType: ["Land"] },
         },
         types: [{ action: "append", typeQuery: ["Swamp"] }],
     },
@@ -70,8 +70,8 @@ const sample: Record<string, Layer4> = {
             characteristics: {
                 operation: "and",
                 operand: [
-                    { operation: "not", operand: { supertypes: ["Basic"] } },
-                    { card_types: ["Land"] },
+                    { operation: "not", operand: { supertype: ["Basic"] } },
+                    { cardType: ["Land"] },
                 ],
             },
         },
@@ -88,8 +88,8 @@ const sample: Record<string, Layer4> = {
             characteristics: {
                 operation: "or",
                 operand: [
-                    { subtypes: ["Forest"] }, // テキストではサブタイプとは書いてないので外したほうがいいかも
-                    { subtypes: ["Saproling"] },
+                    { subtype: ["Forest"] }, // テキストではサブタイプとは書いてないので外したほうがいいかも
+                    { subtype: ["Saproling"] },
                 ],
             },
         },
@@ -105,6 +105,6 @@ const sample: Record<string, Layer4> = {
 // Sample2
 const rustedRelic: Layer4<{ this: { type: "gameObject" } }> = {
     type: "4",
-    affected: { argumentName: "this" },
+    affected: { argument: "this" },
     types: [{ action: "append", typeQuery: ["Artifact", "Creature"] }],
 };
