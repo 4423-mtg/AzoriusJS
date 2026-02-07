@@ -1,7 +1,7 @@
 // MARK: 型定義: 7a
 import {
-    isPTQuery,
-    type PTQuery,
+    isNumberQuery,
+    type NumberQuery,
     type QueryParameter,
 } from "../../Query/Query.js";
 import { isLayerCommonProperty, type LayerCommonProperty } from "./Layer.js";
@@ -9,7 +9,8 @@ import { isLayerCommonProperty, type LayerCommonProperty } from "./Layer.js";
 /** パワー・タフネスを定義する特性定義能力 */
 export type Layer7a<T extends QueryParameter = {}> = LayerCommonProperty<T> & {
     type: "7a";
-    PT: PTQuery<T>;
+    power?: NumberQuery<T>;
+    toughness?: NumberQuery<T>;
 };
 export function isLayer7a<T extends QueryParameter>(
     parameters: T,
@@ -18,8 +19,8 @@ export function isLayer7a<T extends QueryParameter>(
     return (
         isLayerCommonProperty(parameters, arg) &&
         arg.type === "7a" &&
-        "PT" in arg &&
-        isPTQuery(parameters, arg.PT)
+        (!("power" in arg) || isNumberQuery(parameters, arg.power)) &&
+        (!("toughness" in arg) || isNumberQuery(parameters, arg.toughness))
     );
 }
 
@@ -27,7 +28,8 @@ export function isLayer7a<T extends QueryParameter>(
 /** 基本のパワー・タフネスの変更 */
 export type Layer7b<T extends QueryParameter = {}> = LayerCommonProperty<T> & {
     type: "7b";
-    PT: PTQuery<T>;
+    power?: NumberQuery<T>;
+    toughness?: NumberQuery<T>;
 };
 export function isLayer7b<T extends QueryParameter>(
     parameters: T,
@@ -36,8 +38,8 @@ export function isLayer7b<T extends QueryParameter>(
     return (
         isLayerCommonProperty(parameters, arg) &&
         arg.type === "7b" &&
-        "PT" in arg &&
-        isPTQuery(parameters, arg.PT)
+        (!("power" in arg) || isNumberQuery(parameters, arg.power)) &&
+        (!("toughness" in arg) || isNumberQuery(parameters, arg.toughness))
     );
 }
 
@@ -45,7 +47,8 @@ export function isLayer7b<T extends QueryParameter>(
 /** パワー・タフネスの修整 */
 export type Layer7c<T extends QueryParameter = {}> = LayerCommonProperty<T> & {
     type: "7c";
-    PT: PTQuery<T>;
+    power: NumberQuery<T>;
+    toughness: NumberQuery<T>;
 };
 export function isLayer7c<T extends QueryParameter>(
     parameters: T,
@@ -54,8 +57,10 @@ export function isLayer7c<T extends QueryParameter>(
     return (
         isLayerCommonProperty(parameters, arg) &&
         arg.type === "7c" &&
-        "PT" in arg &&
-        isPTQuery(parameters, arg.PT)
+        "power" in arg &&
+        isNumberQuery(parameters, arg.power) &&
+        "toughness" in arg &&
+        isNumberQuery(parameters, arg.toughness)
     );
 }
 
@@ -83,21 +88,19 @@ const sample: Record<
     Tarmogoyf: {
         type: "7a",
         affected: { argumentName: "this" },
-        PT: {
-            power: {
-                type: "numberOfCardTypes",
-                objects: { zone: { type: "Graveyard" } },
-            },
-            toughness: {
-                type: "total",
-                values: [
-                    {
-                        type: "numberOfCardTypes",
-                        objects: { zone: { type: "Graveyard" } },
-                    },
-                    1,
-                ],
-            },
+        power: {
+            type: "numberOfCardTypes",
+            objects: { zone: { type: "Graveyard" } },
+        },
+        toughness: {
+            type: "total",
+            values: [
+                {
+                    type: "numberOfCardTypes",
+                    objects: { zone: { type: "Graveyard" } },
+                },
+                1,
+            ],
         },
     },
     // 憤激解放/Unleash Fury
@@ -105,13 +108,11 @@ const sample: Record<
     "Unleash Fury": {
         type: "7c",
         affected: { argumentName: "target" },
-        PT: {
-            power: {
-                type: "characteristics",
-                kind: "power",
-                object: { argumentName: "target" },
-            },
-            toughness: 0,
+        power: {
+            type: "characteristics",
+            kind: "power",
+            object: { argumentName: "target" },
         },
+        toughness: 0,
     },
 };

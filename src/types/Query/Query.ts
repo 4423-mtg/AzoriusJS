@@ -4,7 +4,6 @@ import type {
     CopiableValue,
 } from "../Characteristics/Characteristic.js";
 import type { Color } from "../Characteristics/Color.js";
-import type { Layer7a } from "../Characteristics/Layer/Layer7.js";
 import type { Subtype } from "../Characteristics/Subtype.js";
 import type { Supertype } from "../Characteristics/Supertype.js";
 import type { Ability } from "../GameObject/Ability.js";
@@ -128,20 +127,6 @@ function isSpecificTypeParameterName<
     }
 }
 
-// すべてのクリーチャーは、X/1になる。Xは指定されたオブジェクトのパワーである
-const l7a: Layer7a<{ obj1: { type: "gameObject" } }> = {
-    type: "7a",
-    affected: { characteristics: { card_types: ["Creature"] } },
-    PT: {
-        power: {
-            type: "characteristics",
-            kind: "power",
-            object: { argumentName: "obj1" },
-        },
-        toughness: 1,
-    },
-};
-
 // =========================================================
 // MARK: 1種(コピー)
 export type CopiableValueQuery<T extends QueryParameter = {}> =
@@ -247,7 +232,7 @@ export function isSupertypeQuery<T extends QueryParameter>(
 
 // =========================================================
 // MARK: 5種(色)
-export type ColorQuery<T extends QueryParameter = {}> = Color | Color[];
+export type ColorQuery<T extends QueryParameter = {}> = Color | Color[]; // TODO:
 export function isColorQuery<T extends QueryParameter>(
     parameter: T,
     arg: unknown,
@@ -272,21 +257,6 @@ export function isAbilityQuery<T extends QueryParameter>(
 
 // =========================================================
 // MARK: 7種(PT)
-// FIXME: 不要なのでは？
-export type PTQuery<T extends QueryParameter = {}> = {
-    power: NumberQuery<T>;
-    toughness: NumberQuery<T>;
-};
-
-export function isPTQuery<T extends QueryParameter>(
-    parameter: T,
-    arg: unknown,
-): arg is PTQuery<T> {
-    return typeof arg === "object" && arg !== null; // TODO:
-}
-
-// =========================================================
-// MARK: 数値
 export type NumberQuery<T extends QueryParameter = {}> =
     | number
     // オブジェクトの数値

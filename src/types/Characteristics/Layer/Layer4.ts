@@ -51,6 +51,7 @@ function isRecord(arg: unknown): arg is Record<string, unknown> {
     return typeof arg === "object" && arg !== null;
 }
 
+// ================================================================
 const sample: Record<string, Layer4> = {
     // アーボーグ
     "Urborg, Tomb of Yawgmoth": {
