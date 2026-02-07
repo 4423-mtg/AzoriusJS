@@ -6,6 +6,7 @@ import type {
 import type { Color } from "../Characteristics/Color.js";
 import type { Subtype } from "../Characteristics/Subtype.js";
 import type { Supertype } from "../Characteristics/Supertype.js";
+import type { ManaSymbol } from "../Characteristics/Symbol.js";
 import type { Ability } from "../GameObject/Ability.js";
 import {
     isGameObject,
@@ -132,11 +133,24 @@ function isSpecificTypeParameterName<
 export type CopiableValueQuery<T extends QueryParameter = {}> =
     // 固定値
     | CopiableValue
+    // 参照 FIXME:
+    | {
+          name: NameQuery<T>;
+          manaCost: ManaCostQuery<T>;
+          colorIdentity: ColorQuery<T>;
+          cardTypes: CardTypeQuery<T>;
+          subtypes: SubtypeQuery<T>;
+          supertypes: SupertypeQuery<T>;
+          text: TextQuery<T>;
+          power: NumberQuery<T>;
+          toughness: NumberQuery<T>;
+          loyalty: NumberQuery<T>;
+      }
     // 他のオブジェクト
     | {
           original: GameObjectQuery<T>;
-          overwrite?: Partial<CopiableValue>;
-          add?: Partial<CopiableValue>;
+          overwrite?: Partial<CopiableValueQuery<T>>;
+          add?: Partial<CopiableValueQuery<T>>;
       };
 // TODO: argument
 export function isCopiableValueQuery<T extends QueryParameter>(
@@ -262,7 +276,7 @@ export type NumberQuery<T extends QueryParameter = {}> =
     // オブジェクトの数値
     | {
           type: "characteristics";
-          kind: "manaValue" | "power" | "toughenss"; // ほかにタイプの数、色の数など
+          kind: "manaValue" | "power" | "toughness"; // ほかにタイプの数、色の数など
           object: GameObject | GameObjectId | GameObjectQuery<T>;
       }
     | {
@@ -339,3 +353,6 @@ export function isGameObjectQuery<T extends QueryParameter>(
     // TODO: 続き
     return false;
 }
+
+type NameQuery<T extends QueryParameter> = string;
+type ManaCostQuery<T extends QueryParameter> = ManaSymbol[];

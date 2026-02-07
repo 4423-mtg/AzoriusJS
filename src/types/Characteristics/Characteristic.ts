@@ -74,16 +74,17 @@ export type Characteristics = {
  * そのオブジェクトを裏向きにする能力による影響を加味したものである。
  */
 export type CopiableValue = {
-    name?: ObjectName | ObjectName[];
-    mana_cost?: ManaSymbol[];
-    color_identity?: Color[];
-    card_types?: CardType[];
-    subtypes?: Subtype[];
-    supertypes?: Supertype[];
-    text?: RuleText;
-    power?: Power;
-    toughness?: Toughness;
-    loyalty?: Loyalty;
+    name: ObjectName | ObjectName[];
+    manaCost: ManaSymbol[];
+    colorIdentity: Color[];
+    cardTypes: CardType[];
+    subtypes: Subtype[];
+    supertypes: Supertype[];
+    text: RuleText;
+    power: Power;
+    toughness: Toughness;
+    loyalty: Loyalty;
+    // TODO: 守備値
 };
 
 /** カードタイプ・サブタイプ・特殊タイプの組。`undefined`のこともある。 */

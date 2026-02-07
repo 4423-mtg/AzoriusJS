@@ -50,3 +50,46 @@ export function isLayer1b<T extends QueryParameter>(
         isCopiableValueQuery(parameter, arg.copiableValue)
     );
 }
+
+// =============================================================
+const sample: Record<
+    string,
+    | Layer1a<{ this: { type: "gameObject" }; chosen: { type: "gameObject" } }>
+    | Layer1b<{ this: { type: "gameObject" }; chosen: { type: "gameObject" } }>
+> = {
+    // 水銀のガルガンチュアン
+    // TODO: PT特性定義能力はコピーされない
+    "Quicksilver Gargantuan": {
+        type: "1a",
+        affected: { argumentName: "this" },
+        copiableValue: {
+            original: { argumentName: "chosen" },
+            overwrite: { power: 7, toughness: 7 },
+        },
+        // コピー効果が能力を追加する場合、それは
+        // テキストとして追加される？能力として追加される？
+    },
+    // 巨体変異
+    "Hulking Metamorph": {
+        type: "1a",
+        affected: { argumentName: "this" },
+        copiableValue: {
+            original: { argumentName: "chosen" },
+            overwrite: {
+                power: {
+                    type: "characteristics",
+                    kind: "power",
+                    object: { argumentName: "this" },
+                },
+                toughness: {
+                    type: "characteristics",
+                    kind: "toughness",
+                    object: { argumentName: "this" },
+                },
+            },
+            add: {
+                cardTypes: ["Artifact", "Creature"],
+            },
+        },
+    },
+};
