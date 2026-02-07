@@ -12,7 +12,7 @@ import { landTypes } from "../Subtype.js";
 import { isLayerCommonProperty, type LayerCommonProperty } from "./Layer.js";
 
 /** タイプ変更 */
-export type Layer4<T extends QueryParameter = {}> = LayerCommonProperty<T> & {
+export type Layer4<T extends QueryParameter = {}> = LayerCommonProperty & {
     type: "4";
     types: {
         action: "set" | "append" | "remove";

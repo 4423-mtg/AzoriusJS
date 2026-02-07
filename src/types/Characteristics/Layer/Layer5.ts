@@ -7,7 +7,7 @@ import {
 import { isLayerCommonProperty, type LayerCommonProperty } from "./Layer.js";
 
 /** 色変更 */
-export type Layer5<T extends QueryParameter = {}> = LayerCommonProperty<T> & {
+export type Layer5<T extends QueryParameter = {}> = LayerCommonProperty & {
     type: "5";
     color: ColorQuery<T>;
 };

@@ -7,7 +7,7 @@ import {
 import { isLayerCommonProperty, type LayerCommonProperty } from "./Layer.js";
 
 /** 文章変更 */
-export type Layer3<T extends QueryParameter = {}> = LayerCommonProperty<T> & {
+export type Layer3<T extends QueryParameter = {}> = LayerCommonProperty & {
     type: "3";
     text: TextQuery<T>; // FIXME: 文章の型
 };

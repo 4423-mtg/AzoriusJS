@@ -10,7 +10,7 @@ import type { Characteristics } from "../Characteristic.js";
 import { isLayerCommonProperty, type LayerCommonProperty } from "./Layer.js";
 
 /** コピー可能な効果の適用 */
-export type Layer1a<T extends QueryParameter = {}> = LayerCommonProperty<T> & {
+export type Layer1a<T extends QueryParameter = {}> = LayerCommonProperty & {
     type: "1a";
     copiableValue: CopiableValueQuery<T>;
 };
@@ -35,7 +35,7 @@ function applyLayer1a<T extends QueryParameter>(
 
 // MARK: 型定義: 1b
 /** 裏向きによる特性変更 */
-export type Layer1b<T extends QueryParameter = {}> = LayerCommonProperty<T> & {
+export type Layer1b<T extends QueryParameter = {}> = LayerCommonProperty & {
     type: "1b";
     copiableValue: CopiableValueQuery<T>;
 };

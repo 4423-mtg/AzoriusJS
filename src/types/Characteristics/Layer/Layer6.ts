@@ -7,7 +7,7 @@ import {
 import { isLayerCommonProperty, type LayerCommonProperty } from "./Layer.js";
 
 /** 能力変更 */
-export type Layer6<T extends QueryParameter = {}> = LayerCommonProperty<T> & {
+export type Layer6<T extends QueryParameter = {}> = LayerCommonProperty & {
     type: "6";
     ability: AbilityQuery<T>;
 };
