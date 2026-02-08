@@ -1,5 +1,9 @@
 import type { CardType } from "../Characteristics/CardType.js";
-import type { CopiableValue } from "../Characteristics/Characteristic.js";
+import type {
+    CardName,
+    Characteristics,
+    CopiableValue,
+} from "../Characteristics/Characteristic.js";
 import type { Color } from "../Characteristics/Color.js";
 import type { Subtype } from "../Characteristics/Subtype.js";
 import type { Supertype } from "../Characteristics/Supertype.js";
@@ -7,11 +11,7 @@ import type { ManaSymbol } from "../Characteristics/Symbol.js";
 import type { Ability } from "../GameObject/Ability.js";
 import type { Card } from "../GameObject/Card/Card.js";
 import type { CounterOnObject } from "../GameObject/Counter.js";
-import {
-    isGameObject,
-    type GameObject,
-    type GameObjectId,
-} from "../GameObject/GameObject.js";
+import { isGameObject, type GameObject } from "../GameObject/GameObject.js";
 import type { Marker } from "../GameObject/Marker.js";
 import { isPlayer, type Player } from "../GameObject/Player.js";
 import type { Sticker } from "../GameObject/Sticker.js";
@@ -40,14 +40,14 @@ export type QueryParameter = Record<
     | { type: "player"; value?: Player }
     | { type: "number"; value?: number }
     | { type: "string"; value?: string }
+    | { type: "cardType"; value?: CardType }
+    | { type: "subtype"; value?: Subtype }
+    | { type: "color"; value?: Color }
+    | { type: "name"; value?: CardName }
+    // | { type: "zone"; value?: Zone }
 >;
+export type TypeOfQueryParameter = QueryParameter[string]["type"];
 
-export type TypeOfQueryParameter =
-    | "gameObject"
-    | "card"
-    | "player"
-    | "number"
-    | "string";
 // - なんらかのオブジェクト
 // - 発生源
 // - 選択した値
@@ -56,7 +56,7 @@ export type TypeOfQueryParameter =
 //       - 後から付与された能力も対象になりうる（コピーなど）
 //       - つまり、 Ability.id を指定する
 
-export type SpecificTypeParameterName<
+export type QueryParameterNameOfSpecificType<
     T extends QueryParameter,
     U extends TypeOfQueryParameter,
 > = keyof {
@@ -78,114 +78,142 @@ export type SpecificTypeParameterName<
 
 // =========================================================
 // MARK: 1種(コピー)
-export type CopiableValueQuery<T extends QueryParameter = {}> =
+export type CopiableValueCondition<T extends QueryParameter> =
+    BooleanOperation<{
+        name?: CardNameCondition<T>;
+        manaCost?: ManaCostCondition<T>;
+        colorIdentity?: ColorCondition<T>;
+        cardTypes?: CardTypeCondition<T>;
+        subtypes?: SubtypeCondition<T>;
+        supertypes?: SupertypeCondition<T>;
+        text?: TextQuery<T>; // FIXME:
+        power?: NumberCondition<T>;
+        toughness?: NumberCondition<T>;
+        loyalty?: NumberCondition<T>;
+    }>;
+export type CopiableValueQuery<T extends QueryParameter> =
     // 固定値
     | CopiableValue
-    // 参照 FIXME:
+    // 参照
+    | { object: GameObjectQuery<T> }
+    // 修整
     | {
-          name: NameQuery<T>;
-          manaCost: ManaCostQuery<T>;
-          colorIdentity: ColorQuery<T>;
-          cardTypes: CardTypeQuery<T>;
-          subtypes: SubtypeQuery<T>;
-          supertypes: SupertypeQuery<T>;
-          text: TextQuery<T>;
-          power: NumberQuery<T>;
-          toughness: NumberQuery<T>;
-          loyalty: NumberQuery<T>;
-      }
-    // 他のオブジェクト
-    | {
-          original: GameObjectQuery<T>;
+          original: CopiableValueQuery<T>;
           overwrite?: Partial<CopiableValueQuery<T>>;
           add?: Partial<CopiableValueQuery<T>>;
       };
+
+// FIXME:
+type CharacteristicsCondition<T extends QueryParameter> = BooleanOperation<{
+    name?: CardNameCondition<T>;
+    manaCost?: ManaCostCondition<T>;
+    color?: ColorCondition<T>;
+    cardType?: CardTypeCondition<T>;
+    subtype?: SubtypeCondition<T>;
+    supertype?: SupertypeCondition<T>;
+    text?: TextQuery<T>; // FIXME:
+    ability?: AbilityQuery<T>; // FIXME:
+    power?: NumberCondition<T>;
+    toughness?: NumberCondition<T>;
+    loyalty?: NumberCondition<T>;
+    defense?: NumberCondition<T>;
+    handModifier?: NumberCondition<T>;
+    lifeModifier?: NumberCondition<T>;
+}>;
 type CharacteristicsQuery<T extends QueryParameter> =
-    | {
-          name?: NameQuery<T>;
-          manaCost?: ManaCostQuery<T>;
-          color?: ColorQuery<T>;
-          cardType?: CardTypeQuery<T>;
-          subtype?: SubtypeQuery<T>;
-          supertype?: SupertypeQuery<T>;
-          text?: TextQuery<T>;
-          ability?: AbilityQuery<T>;
-          power?: NumberQuery<T>;
-          toughness?: NumberQuery<T>;
-          loyalty?: NumberQuery<T>;
-          defense?: NumberQuery<T>;
-          handModifier?: NumberQuery<T>;
-          lifeModifier?: NumberQuery<T>;
-      }
-    | { operation: "not"; operand: CharacteristicsQuery<T> }
-    | {
-          operation: "and" | "or";
-          operand: CharacteristicsQuery<T>[];
-      };
+    | Characteristics
+    | { card: CardQuery<T> }; // FIXME: oneOf? merge?
 
 // =========================================================
 // MARK: 2種(コントローラー)
-export type PlayerQuery<T extends QueryParameter = {}> =
-    // 固定
+type PlayerReference<T extends QueryParameter> =
     | Player
-    | {
-          info: PlayerInfo;
-      }
-    // オブジェクトの参照
+    | Player[]
+    | { info: PlayerInfo }
     | {
           type: "owner" | "controller";
           object: GameObjectQuery<T>;
       }
-    // プレイヤーの参照
     | {
           type: "opponent" | "teammate";
           player: PlayerQuery<T>;
+      };
+export type PlayerCondition<T extends QueryParameter> = BooleanOperation<
+    | Player
+    | { type: "oneOf"; player: PlayerQuery<T> }
+    | {
+          type: "owner" | "controller";
+          object: GameObjectQuery<T>;
       }
-    | { argument: SpecificTypeParameterName<T, "player"> };
-
-type PlayerBooleanOperation<T extends QueryParameter> =
-    | PlayerQuery<T>
-    | { operation: "not"; operand: PlayerQuery<T> }
-    | { operation: "or"; operand: PlayerQuery<T>[] };
+    | {
+          type: "opponent" | "teamMate";
+          player: PlayerQuery<T>;
+      }
+    | { type: "isMonarch" | "startingPlayer" }
+>;
+export type PlayerQuery<T extends QueryParameter> = SetOperation<
+    | PlayerReference<T>
+    | { argument: QueryParameterNameOfSpecificType<T, "player"> }
+>;
 
 // =========================================================
-// MARK: 3種(文章)
+// MARK: 3種(文章) TODO:
 export type TextQuery<T extends QueryParameter> = {};
-// TODO:
 
 // =========================================================
 // MARK: 4種(タイプ)
-export type CardTypeQuery<T extends QueryParameter = {}> =
+export type CardTypeCondition<T extends QueryParameter> = BooleanOperation<
+    | CardTypeQuery<T>
+    | {
+          type: "oneOf";
+          cardType: CardTypeQuery<T>;
+      }
+>;
+export type CardTypeQuery<T extends QueryParameter> = SetOperation<
     | CardType
     | CardType[]
-    | {
-          object: GameObjectQuery<T>;
-          append?: CardTypeQuery<T>;
-          omit?: CardTypeQuery<T>;
-      };
-export type SubtypeQuery<T extends QueryParameter = {}> =
+    | { card: CardQuery<T> }
+    | { argument: QueryParameterNameOfSpecificType<T, "cardType"> }
+>;
+
+// サブタイプ
+export type SubtypeCondition<T extends QueryParameter> = BooleanOperation<
+    SubtypeQuery<T> | { type: "oneOf"; subtype: SubtypeQuery<T> }
+>;
+export type SubtypeQuery<T extends QueryParameter> = SetOperation<
     | Subtype
     | Subtype[]
-    | {
-          object: GameObjectQuery<T>;
-          append?: SubtypeQuery<T>;
-          omit?: SubtypeQuery<T>;
-      };
-export type SupertypeQuery<T extends QueryParameter = {}> =
-    | Supertype
-    | Supertype[]
-    | {
-          object: GameObjectQuery<T>;
-          append?: SupertypeQuery<T>;
-          omit?: SupertypeQuery<T>;
-      };
+    | { card: CardQuery<T> }
+    | { argument: QueryParameterNameOfSpecificType<T, "subtype"> }
+>;
+
+// 特殊タイプ
+export type SupertypeCondition<T extends QueryParameter> = BooleanOperation<
+    SupertypeQuery<T> | { type: "oneOf"; supertype: SupertypeQuery<T> }
+>;
+export type SupertypeQuery<T extends QueryParameter> = SetOperation<
+    Supertype | Supertype[] | { card: CardQuery<T> }
+    // | { argument: QueryParameterNameOfSpecificType<T, "supertype"> }
+>;
 
 // =========================================================
 // MARK: 5種(色)
-export type ColorQuery<T extends QueryParameter = {}> = Color | Color[]; // TODO:
+export type ColorCondition<T extends QueryParameter> = BooleanOperation<
+    | ColorQuery<T>
+    | {
+          type: "oneOf";
+          color: ColorQuery<T>;
+      }
+>;
+export type ColorQuery<T extends QueryParameter> = SetOperation<
+    | Color
+    | Color[]
+    | { card: CardQuery<T> }
+    | { argument: QueryParameterNameOfSpecificType<T, "color"> }
+>;
 
 // =========================================================
-// MARK: 6種(能力)
+// MARK: 6種(能力) TODO:
 export type AbilityQuery<T extends QueryParameter = {}> =
     | Ability[]
     | {
@@ -195,110 +223,171 @@ export type AbilityQuery<T extends QueryParameter = {}> =
 
 // =========================================================
 // MARK: 7種(PT)
-export type NumberQuery<T extends QueryParameter = {}> =
-    | number
-    // オブジェクトの数値
+export type NumberCondition<T extends QueryParameter> = BooleanOperation<
+    | NumberQuery<T>
     | {
-          type: "characteristics";
-          kind: "manaValue" | "power" | "toughness"; // ほかにタイプの数、色の数など
-          object: GameObject | GameObjectId | GameObjectQuery<T>;
+          type: "greater" | "less" | "greaterEqual" | "lessEqual";
+          number: NumberQuery<T>;
+      }
+>;
+
+export type NumberReference<T extends QueryParameter> =
+    // TODO: GameObject (Spellなど) 対象の数など
+    | number
+    | {
+          valueType:
+              | "manaValue" // マナシンボルの数とかも要るのだろうか
+              | "numberOfColors"
+              | "numberOfCardTypes"
+              | "numberOfSubypes"
+              | "numberOfSupertypes"
+              | "numberOfAbilities"
+              | "power"
+              | "toughness"
+              | "loyalty"
+              | "defense"
+              | "handModifier"
+              | "lifeModifier";
+          card: CardQuery<T>;
       }
     | {
-          type: "devotion";
-          object: GameObject | GameObjectId | GameObjectQuery<T>;
-          colors: (Color | ColorQuery<T>)[];
+          valueType: "devotion";
+          card: CardQuery<T>;
+          colors: ColorQuery<T>;
       }
     // オブジェクトの個数
-    | { type: "number"; objects: GameObjectQuery<T> }
-    // カードタイプの数
-    | { type: "numberOfCardTypes"; objects: GameObjectQuery<T> }
-    // 何かの合計値
+    | { valueType: "numberOfObject"; objects: GameObjectQuery<T> }
+    // カウンターの数
     | {
-          type: "total"; // 減算や乗算はあるのだろうか
-          values: NumberQuery<T>[];
+          valueType: "numberOfCounter";
+          objects: CardQuery<T>;
+          kindOfCounter?: CounterCondition<T>;
       }
     // 履歴 このターンに〇〇した数など TODO:
-    | { type: "stormCount" }
+    | { valueType: "stormCount" };
+export type NumberQuery<T extends QueryParameter> =
+    | NumberReference<T>
     // 引数
-    | { argument: SpecificTypeParameterName<T, "number"> };
+    | { argument: QueryParameterNameOfSpecificType<T, "number"> }
+    // 何かの合計値
+    | {
+          valueType: "total";
+          values: NumberQuery<T>[];
+      }
+    | {
+          valueType: "difference";
+          value1: NumberQuery<T>;
+          value2: NumberQuery<T>;
+      };
 
 // =========================================================
-// これがなくてもGameObjectの集合演算で表現はできるが、現実的でない
-type ZoneBooleanOperation<T extends QueryParameter> =
-    | ZoneId
-    | Partial<{ type: ZoneType; owner: PlayerQuery<T> }>
-    | { operation: "not"; operand: ZoneBooleanOperation<T> }
-    | { operation: "and" | "or"; operand: ZoneBooleanOperation<T>[] };
-type CounterBooleanOperation<T extends QueryParameter> =
-    | CounterOnObject[]
-    | { operation: "not"; operand: CounterBooleanOperation<T> }
-    | { operation: "and" | "or"; operand: CounterBooleanOperation<T>[] };
-type MarkerBooleanOperation<T extends QueryParameter> =
-    | Marker[]
-    | { operation: "not"; operand: MarkerBooleanOperation<T> }
-    | { operation: "and" | "or"; operand: MarkerBooleanOperation<T>[] };
-type StickerBooleanOperation<T extends QueryParameter> =
-    | Sticker[]
-    | { operation: "not"; operand: StickerBooleanOperation<T> }
-    | { operation: "and" | "or"; operand: StickerBooleanOperation<T>[] };
+// MARK: Zone
+type ZoneQuery<T extends QueryParameter> = SetOperation<
+    | {
+          zoneId?: ZoneId;
+      }
+    | { type?: ZoneType; owner?: PlayerQuery<T> }
+>;
 
+type ZoneCondition<T extends QueryParameter> = BooleanOperation<ZoneQuery<T>>;
+
+// MARK: Counter
+type CounterCondition<T extends QueryParameter> = CounterOnObject[];
+type CounterQuery<T extends QueryParameter> = BooleanOperation<
+    CounterCondition<T>
+>;
+
+// MARK: Marker
+type MarkerQuery<T extends QueryParameter> = BooleanOperation<Marker[]>;
+type StickerQuery<T extends QueryParameter> = BooleanOperation<Sticker[]>;
+
+//
 // =================================================================
 // MARK: GameObjectQuery
 export type GameObjectCondition<T extends QueryParameter> = {
-    zone?: ZoneBooleanOperation<T>;
+    zone?: ZoneCondition<T>;
 };
-export type GameObjectQuery<T extends QueryParameter> =
-    | { argument: SpecificTypeParameterName<T, "gameObject" | "card"> }
+export type GameObjectQuery<T extends QueryParameter> = SetOperation<
     | GameObjectCondition<T>
     | {
-          operation: "union" | "intersection";
-          operand: GameObjectQuery<T>[];
+          argument: QueryParameterNameOfSpecificType<T, "gameObject" | "card">;
       }
-    | {
-          operation: "difference";
-          leftOperand: GameObjectQuery<T>;
-          rightOperand: GameObjectQuery<T>;
-      };
+>;
 // 履歴 TODO:
 
 // =================================================================
 // MARK: CardQuery
 export type CardCondition<T extends QueryParameter> = {
     face?: FaceQuery<T>;
-    owner?: PlayerBooleanOperation<T>;
-    controller?: PlayerBooleanOperation<T>;
-    characteristics?: CharacteristicsQuery<T>;
-    status?: StatusBooleanOperation<T>;
+    owner?: PlayerQuery<T>;
+    controller?: PlayerQuery<T>;
+    characteristics?: CharacteristicsCondition<T>;
+    status?: StatusQuery<T>;
     isToken?: boolean; // FIXME: booleanQuery
     isDoubleFaced?: boolean; // ?
     currentFace?: number; // FIXME: "front" | "back"
-    counters?: CounterBooleanOperation<T>;
-    markers?: MarkerBooleanOperation<T>;
-    stickers?: StickerBooleanOperation<T>;
-    // FIXME:
-    manaValue?:
-        | NumberQuery<T>
-        | {
-              type: "greater" | "lesser" | "greaterEqual" | "lesserEqual";
-              value: NumberQuery<T>;
-          };
+    counters?: CounterQuery<T>;
+    markers?: MarkerQuery<T>;
+    stickers?: StickerQuery<T>;
+    manaValue?: NumberCondition<T>;
 };
-export type CardQuery<T extends QueryParameter> =
-    | {
-          argument: SpecificTypeParameterName<T, "card">;
-      }
+export type CardQuery<T extends QueryParameter> = SetOperation<
     | (GameObjectCondition<T> & CardCondition<T>)
-    // | SetOperation<CardQuery<T>>
     | {
-          operation: "union" | "intersection";
-          operand: CardQuery<T>[];
+          argument: QueryParameterNameOfSpecificType<T, "card">;
       }
-    | {
-          operation: "difference";
-          leftOperand: CardQuery<T>;
-          rightOperand: CardQuery<T>;
-      };
+>;
 
+// =================================================================
+// MARK: FaceQuery
+export type FaceQuery<T extends QueryParameter> = BooleanOperation<{
+    front?: {
+        printed?: CharacteristicsCondition<T>;
+        charcteristics?: CharacteristicsCondition<T>;
+    };
+    back?: {
+        printed?: CharacteristicsCondition<T>;
+        charcteristics?: CharacteristicsCondition<T>;
+    };
+}>;
+
+// =================================================================
+// MARK: StatusQuery
+export type StatusCondition<T extends QueryParameter> = {
+    tapped?: boolean;
+    flipped?: boolean;
+    isFaceDown?: boolean;
+    isPhasedOut?: boolean;
+};
+export type StatusQuery<T extends QueryParameter> = BooleanOperation<
+    StatusCondition<T>
+>;
+
+// =================================================================
+// MARK: NameQuery
+export type CardNameCondition<T extends QueryParameter> = BooleanOperation<{
+    type?: "oneOf" | "allOf"; // undefinedの場合は "allOf" とする
+    name: CardNameQuery<T>;
+}>;
+export type CardNameQuery<T extends QueryParameter> = SetOperation<
+    | CardName
+    | CardName[]
+    | {
+          card: CardQuery<T>;
+      }
+    | { argument: QueryParameterNameOfSpecificType<T, "name"> }
+>;
+
+// =================================================================
+// MARK: ManaCostQuery
+export type ManaCostCondition<T extends QueryParameter> = ManaCostQuery<T>;
+type ManaCostQuery<T extends QueryParameter> =
+    | ManaSymbol[]
+    | { card: CardQuery<T> };
+//
+
+// =================================================================
+// MARK: 演算型
 export type SetOperation<T> =
     | T
     | {
@@ -320,46 +409,6 @@ export type BooleanOperation<T> =
           operation: "and" | "or";
           operand: BooleanOperation<T>[];
       };
-
-// =================================================================
-// MARK: FaceQuery
-export type FaceQuery<T extends QueryParameter> =
-    | {
-          front?: {
-              printed?: CharacteristicsQuery<T>;
-              charcteristics?: CharacteristicsQuery<T>;
-          };
-          back?: {
-              printed?: CharacteristicsQuery<T>;
-              charcteristics?: CharacteristicsQuery<T>;
-          };
-      }
-    | { operation: "not"; operand: FaceQuery<T> }
-    | { operation: "and" | "or"; operand: FaceQuery<T>[] };
-
-// =================================================================
-// MARK: StatusQuery
-export type StatusQuery<T extends QueryParameter> = {
-    tapped?: boolean;
-    flipped?: boolean;
-    isFaceDown?: boolean;
-    isPhasedOut?: boolean;
-};
-export type StatusBooleanOperation<T extends QueryParameter> = StatusQuery<T>;
-
-// =================================================================
-// MARK: NameQuery
-type NameQuery<T extends QueryParameter> = string; // FIXME:
-//
-//
-//
-
-// =================================================================
-// MARK: ManaCostQuery
-type ManaCostQuery<T extends QueryParameter> = ManaSymbol[]; // FIXME:
-//
-//
-//
 
 // ==================================================================
 // MARK: 型ガード
@@ -425,7 +474,7 @@ function isSpecificTypeParameterName<
     parameters: T,
     type: U,
     arg: unknown,
-): arg is SpecificTypeParameterName<T, U> {
+): arg is QueryParameterNameOfSpecificType<T, U> {
     if (typeof arg === "string" && parameters[arg] !== undefined) {
         return parameters[arg]["type"] === type;
     } else {

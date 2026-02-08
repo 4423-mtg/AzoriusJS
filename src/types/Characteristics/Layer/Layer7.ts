@@ -111,7 +111,7 @@ const sample: Record<
         power: {
             type: "characteristics",
             kind: "power",
-            object: { argument: "target" },
+            card: { argument: "target" },
         },
         toughness: 0,
     },

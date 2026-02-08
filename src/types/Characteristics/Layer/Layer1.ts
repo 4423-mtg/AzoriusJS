@@ -61,9 +61,8 @@ const sample: Record<
     // TODO: PT特性定義能力はコピーされない
     "Quicksilver Gargantuan": {
         type: "1a",
-        affected: { argument: "this" },
         copiableValue: {
-            original: { argument: "chosen" },
+            original: { object: { argument: "chosen" } },
             overwrite: { power: 7, toughness: 7 },
         },
         // コピー効果が能力を追加する場合、それは
@@ -72,19 +71,16 @@ const sample: Record<
     // 巨体変異
     "Hulking Metamorph": {
         type: "1a",
-        affected: { argument: "this" },
         copiableValue: {
-            original: { argument: "chosen" },
+            original: { object: { argument: "chosen" } },
             overwrite: {
                 power: {
-                    type: "characteristics",
-                    kind: "power",
-                    object: { argument: "this" },
+                    valueType: "power",
+                    card: { argument: "this" },
                 },
                 toughness: {
-                    type: "characteristics",
-                    kind: "toughness",
-                    object: { argument: "this" },
+                    valueType: "toughness",
+                    card: { argument: "this" },
                 },
             },
             add: {

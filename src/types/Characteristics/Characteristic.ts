@@ -14,7 +14,7 @@ import type { MultiSpec } from "../Query/QueryFunction.js";
 type NumericalValue = number | "*";
 
 /** 名前 */
-export type ObjectName = string;
+export type CardName = string;
 /** マナ・コスト */
 export type ManaCost = ManaSymbol[];
 /** ルール・テキスト */
@@ -33,7 +33,7 @@ export type HandModifier = NumericalValue;
 export type LifeModifier = NumericalValue;
 
 export type Printed = {
-    name?: ObjectName;
+    name?: CardName;
     manaCost?: ManaSymbol[];
     colorIdentity?: Color[];
     cardType?: CardType[];
@@ -50,7 +50,7 @@ export type Printed = {
 
 /** 特性 */
 export type Characteristics = {
-    name: ObjectName | ObjectName[] | undefined;
+    name: CardName | CardName[] | undefined;
     mana_cost: ManaSymbol[] | undefined;
     colors: Color[] | undefined;
     card_types: CardType[] | undefined;
@@ -74,7 +74,7 @@ export type Characteristics = {
  * そのオブジェクトを裏向きにする能力による影響を加味したものである。
  */
 export type CopiableValue = {
-    name: ObjectName | ObjectName[];
+    name: CardName | CardName[];
     manaCost: ManaSymbol[];
     colorIdentity: Color[];
     cardTypes: CardType[];
