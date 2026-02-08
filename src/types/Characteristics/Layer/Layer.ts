@@ -336,11 +336,11 @@ function _getDependencyLoops<T extends LayerCategory, U extends QueryParameter>(
 }
 
 export function isDependingOn<
-    T extends QueryParameter,
-    U extends LayerCategory,
+    T extends LayerCategory,
+    U extends QueryParameter,
 >(
-    layer1: { effect: CharacteristicsAlteringEffect; layer: Layer<T, U> },
-    layer2: { effect: CharacteristicsAlteringEffect; layer: Layer<T, U> },
+    layer1: { effect: CharacteristicsAlteringEffect<U>; layer: Layer<T, U> },
+    layer2: { effect: CharacteristicsAlteringEffect<U>; layer: Layer<T, U> },
     game: Game,
 ): boolean {
     if (layer1 === layer2) {
@@ -352,10 +352,10 @@ export function isDependingOn<
     }
 }
 
-function _getDependencies<T extends QueryParameter>(
-    layers: EffectAndLayer<T>[],
+function _getDependencies<T extends LayerCategory, U extends QueryParameter>(
+    layers: EffectAndLayer<T, U>[],
     game: Game,
-): { depending: EffectAndLayer<T>; depended: EffectAndLayer<T> }[] {
+): { depending: EffectAndLayer<T, U>; depended: EffectAndLayer<T, U> }[] {
     return layers.flatMap((_a1) =>
         layers
             .filter((_a2) => isDependingOn(_a1, _a2, game))

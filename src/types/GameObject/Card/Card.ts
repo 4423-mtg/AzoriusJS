@@ -1,19 +1,28 @@
-import type { Printed } from "../../Characteristics/Characteristic.js";
+import type {
+    Characteristics,
+    Printed,
+} from "../../Characteristics/Characteristic.js";
+import type { CounterOnObject } from "../Counter.js";
 import type { GameObject } from "../GameObject.js";
+import type { Marker } from "../Marker.js";
 import type { Player } from "../Player.js";
+import type { Sticker } from "../Sticker.js";
 
 export type Card = GameObject & {
+    faces: Face[];
     owner: Player;
     controller: Player;
-    isToken: boolean;
-    faces: Face[];
+    characteristics: Characteristics;
     status: Status;
-    // TODO: 第1面/第2面は？
+    isToken: boolean;
+    currentFace: number;
+    counters: CounterOnObject[] | undefined;
+    markers: Marker[] | undefined;
+    stickers: Sticker[] | undefined;
 };
 // ダンジョンはCardではないことにする
 
-/** 位相。カードの置き方で表現できる状態。
- * - フェイズアウトは置き方で表現できないがこれはルール通り。 */
+/** 位相。 */
 export type Status = {
     tapped: boolean;
     flipped: boolean;

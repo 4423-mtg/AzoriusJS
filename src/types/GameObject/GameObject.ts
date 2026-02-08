@@ -1,4 +1,3 @@
-import type { Characteristics } from "../Characteristics/Characteristic.js";
 import { isZone, type Zone } from "../GameState/Zone.js";
 import { isUUID } from "../Other.js";
 import type { Card } from "./Card/Card.js";
@@ -13,10 +12,6 @@ const { randomUUID } = await import("node:crypto");
 export type GameObject = {
     objectId: GameObjectId;
     zone: Zone | undefined;
-    counters: CounterOnObject[] | undefined;
-    markers: Marker[] | undefined;
-    stickers: Sticker[] | undefined;
-    characteristics: Characteristics;
 };
 export function isGameObject(arg: unknown): arg is GameObject {
     if (typeof arg === "object" && arg !== null) {
