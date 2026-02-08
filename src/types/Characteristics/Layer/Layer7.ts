@@ -1,9 +1,6 @@
 // MARK: 型定義: 7a
-import {
-    isNumberQuery,
-    type NumberQuery,
-    type QueryParameter,
-} from "../../Query/Query.js";
+import type { NumberQuery } from "../../Query/NumberQuery.js";
+import { isNumberQuery, type QueryParameter } from "../../Query/Query.js";
 import { isLayerCommonProperty, type LayerCommonProperty } from "./Layer.js";
 
 /** パワー・タフネスを定義する特性定義能力 */
@@ -77,27 +74,26 @@ export function isLayer7d<T extends QueryParameter>(
 }
 
 // =======================================================
+type param = { target: { type: "card" }; this: { type: "card" } };
+
 const sample: Record<
     string,
-    | Layer7a<{ target: { type: "gameObject" }; this: { type: "gameObject" } }>
-    | Layer7b<{ target: { type: "gameObject" }; this: { type: "gameObject" } }>
-    | Layer7c<{ target: { type: "gameObject" }; this: { type: "gameObject" } }>
-    | Layer7d<{ target: { type: "gameObject" }; this: { type: "gameObject" } }>
+    Layer7a<param> | Layer7b<param> | Layer7c<param> | Layer7d<param>
 > = {
     // タルモゴイフ
     Tarmogoyf: {
         type: "7a",
         affected: { argument: "this" },
         power: {
-            type: "numberOfCardTypes",
-            objects: { zone: { type: "Graveyard" } },
+            valueType: "numberOfCardTypes",
+            card: { zone: { type: "Graveyard" } },
         },
         toughness: {
-            type: "total",
+            valueType: "total",
             values: [
                 {
-                    type: "numberOfCardTypes",
-                    objects: { zone: { type: "Graveyard" } },
+                    valueType: "numberOfCardTypes",
+                    card: { zone: { type: "Graveyard" } },
                 },
                 1,
             ],
@@ -109,8 +105,7 @@ const sample: Record<
         type: "7c",
         affected: { argument: "target" },
         power: {
-            type: "characteristics",
-            kind: "power",
+            valueType: "power",
             card: { argument: "target" },
         },
         toughness: 0,

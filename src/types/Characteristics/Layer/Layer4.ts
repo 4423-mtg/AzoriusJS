@@ -1,12 +1,14 @@
 // MARK: 型定義: 4
+import type {
+    CardTypeQuery,
+    SubtypeQuery,
+    SupertypeQuery,
+} from "../../Query/ArrayQuery.js";
 import {
     isCardTypeQuery,
     isSubtypeQuery,
     isSupertypeQuery,
-    type CardTypeQuery,
     type QueryParameter,
-    type SubtypeQuery,
-    type SupertypeQuery,
 } from "../../Query/Query.js";
 import { landTypes } from "../Subtype.js";
 import { isLayerCommonProperty, type LayerCommonProperty } from "./Layer.js";
