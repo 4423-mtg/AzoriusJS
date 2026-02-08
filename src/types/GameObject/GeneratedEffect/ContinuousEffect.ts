@@ -28,11 +28,12 @@ import type {
     Layer7c,
     Layer7d,
 } from "../../Characteristics/Layer/Layer7.js";
+import type { QueryParameter } from "../../Query/Query.js";
 import type {
+    CardQuery,
     GameObjectQuery,
     PlayerQuery,
-    QueryParameter,
-} from "../../Query/Query.js";
+} from "../../Query/ArrayQuery.js";
 
 // FIXME: 型ガードは1箇所にまとめる
 
@@ -82,7 +83,7 @@ export type CharacteristicsAlteringEffect<T extends QueryParameter> =
 export type CharacteristicsAlteringEffectProperty<
     T extends QueryParameter = {},
 > = {
-    affected: GameObjectQuery<T> | PlayerQuery<T>;
+    affected: (GameObjectQuery<T> & CardQuery<T>) | PlayerQuery<T>;
     layer1a: Layer1a<T> | undefined;
     layer1b: Layer1b<T> | undefined;
     layer2: Layer2<T> | undefined;

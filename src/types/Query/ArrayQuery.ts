@@ -6,7 +6,7 @@ import type { Supertype } from "../Characteristics/Supertype.js";
 import type { Ability } from "../GameObject/Ability.js";
 import type { Player } from "../GameObject/Player.js";
 import type { PlayerInfo } from "../GameState/Match.js";
-import type { ZoneId, ZoneType } from "../GameState/Zone.js";
+import type { Zone, ZoneId, ZoneType } from "../GameState/Zone.js";
 import type { NumberCondition } from "./NumberQuery.js";
 import type {
     CharacteristicsCondition,
@@ -26,7 +26,7 @@ import type {
 // =================================================================
 // MARK: GameObject
 export type GameObjectCondition<T extends QueryParameter> = {
-    zone?: ZoneCondition<T>;
+    zone: ZoneQuery<T>;
 };
 export type GameObjectQuery<T extends QueryParameter> = SetOperation<
     | GameObjectCondition<T>
@@ -36,6 +36,8 @@ export type GameObjectQuery<T extends QueryParameter> = SetOperation<
 >;
 // =================================================================
 // MARK: Card
+// FIXME: 継続的効果は一般に GameObject 全般に効果を及ぼすが、
+// 特性を変更する効果は Card にのみ影響するので、 CardQuery を指定したい場合が有る
 export type CardCondition<T extends QueryParameter> = {
     face?: FaceQuery<T>;
     owner?: PlayerQuery<T>;
@@ -48,7 +50,7 @@ export type CardCondition<T extends QueryParameter> = {
     counters?: CounterQuery<T>;
     markers?: MarkerQuery<T>;
     stickers?: StickerQuery<T>;
-    manaValue?: NumberCondition<T>;
+    manaValue?: NumberCondition<T>; // ここでいいのか？
 };
 export type CardQuery<T extends QueryParameter> = SetOperation<
     | (GameObjectCondition<T> & CardCondition<T>)
@@ -161,13 +163,17 @@ export type ColorQuery<T extends QueryParameter> = SetOperation<
 // =================================================================
 // MARK: Zone
 export type ZoneCondition<T extends QueryParameter> = BooleanOperation<
-    ZoneQuery<T>
+    | {
+          type: ZoneType;
+          owner?: PlayerQuery<T>;
+      }
+    | {
+          type?: ZoneType;
+          owner: PlayerQuery<T>;
+      }
 >;
 export type ZoneQuery<T extends QueryParameter> = SetOperation<
-    | {
-          zoneId: ZoneId;
-      }
-    | { type?: ZoneType; owner?: PlayerQuery<T> }
+    Zone | ZoneCondition<T>
 >;
 
 // =========================================================

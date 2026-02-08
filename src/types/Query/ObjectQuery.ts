@@ -8,19 +8,30 @@ import type { Sticker } from "../GameObject/Sticker.js";
 import type {
     AbilityQuery,
     CardNameCondition,
+    CardNameQuery,
     CardQuery,
     CardTypeCondition,
+    CardTypeQuery,
     ColorCondition,
+    ColorQuery,
     GameObjectQuery,
     SubtypeCondition,
+    SubtypeQuery,
     SupertypeCondition,
+    SupertypeQuery,
     TextQuery,
 } from "./ArrayQuery.js";
-import type { ManaCostCondition, NumberCondition } from "./NumberQuery.js";
+import type {
+    ManaCostCondition,
+    ManaCostQuery,
+    NumberCondition,
+    NumberQuery,
+} from "./NumberQuery.js";
 import type { BooleanOperation, QueryParameter } from "./Query.js";
 
 // =================================================================
 // MARK: CopiableValue
+// TODO: 呪文の場合
 export type CopiableValueCondition<T extends QueryParameter> =
     BooleanOperation<{
         name?: CardNameCondition<T>;
@@ -37,6 +48,18 @@ export type CopiableValueCondition<T extends QueryParameter> =
 export type CopiableValueQuery<T extends QueryParameter> =
     // 固定値
     | CopiableValue
+    | {
+          name: CardNameQuery<T>;
+          manaCost: ManaCostQuery<T>;
+          colorIdentity: ColorQuery<T>;
+          cardTypes: CardTypeQuery<T>;
+          subtypes: SubtypeQuery<T>;
+          supertypes: SupertypeQuery<T>;
+          text: TextQuery<T>; // FIXME:
+          power: NumberQuery<T>;
+          toughness: NumberQuery<T>;
+          loyalty: NumberQuery<T>;
+      }
     // 参照
     | { object: GameObjectQuery<T> }
     // 修整

@@ -1,9 +1,9 @@
 // MARK: 型定義: 1a
 import type { GameObject } from "../../GameObject/GameObject.js";
 import type { Game } from "../../GameState/Game.js";
+import type { CopiableValueQuery } from "../../Query/ObjectQuery.js";
 import {
     isCopiableValueQuery,
-    type CopiableValueQuery,
     type QueryParameter,
 } from "../../Query/Query.js";
 import type { Characteristics } from "../Characteristic.js";
@@ -52,11 +52,8 @@ export function isLayer1b<T extends QueryParameter>(
 }
 
 // =============================================================
-const sample: Record<
-    string,
-    | Layer1a<{ this: { type: "gameObject" }; chosen: { type: "gameObject" } }>
-    | Layer1b<{ this: { type: "gameObject" }; chosen: { type: "gameObject" } }>
-> = {
+type param = { this: { type: "card" }; chosen: { type: "card" } };
+const sample: Record<string, Layer1a<param> | Layer1b<param>> = {
     // 水銀のガルガンチュアン
     // TODO: PT特性定義能力はコピーされない
     "Quicksilver Gargantuan": {
@@ -76,7 +73,9 @@ const sample: Record<
             overwrite: {
                 power: {
                     valueType: "power",
-                    card: { argument: "this" },
+                    card: {
+                        argument: "this" as const,
+                    },
                 },
                 toughness: {
                     valueType: "toughness",

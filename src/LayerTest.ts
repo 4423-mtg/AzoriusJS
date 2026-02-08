@@ -1,10 +1,6 @@
-import type { AnyLayer } from "./types/Characteristics/Layer/Layer.js";
-import type { Layer4 } from "./types/Characteristics/Layer/Layer4.js";
-import {
-    type ContinuousEffect,
-    createCharacteristicsAlteringEffect,
-} from "./types/GameObject/GeneratedEffect/ContinuousEffect.js";
+import { createCharacteristicsAlteringEffect } from "./types/GameObject/GeneratedEffect/ContinuousEffect.js";
 import { createTimestamp } from "./types/GameState/Timestamp.js";
+import type { CardQuery, GameObjectQuery } from "./types/Query/ArrayQuery.js";
 
 // 特性を変更する継続的効果の適用順は
 // - オブジェクト単位では決まらず、存在するすべてのオブジェクト（戦場以外も含む）を俯瞰したうえで決まる。
@@ -45,14 +41,17 @@ import { createTimestamp } from "./types/GameState/Timestamp.js";
 // 他のタイプに加えて4/4のエレメンタル・クリーチャーであり、
 // 破壊不能と速攻と「このクリーチャーがプレイヤー１人に戦闘ダメージを与えるたび、
 // あなたはカード１枚を引く。」を持つ。
-const bello = createCharacteristicsAlteringEffect<{
-    this: { type: "gameObject" };
-}>({
+type param = {
+    this: { type: "card" };
+};
+const bello = createCharacteristicsAlteringEffect<param>({
     source: "Bello",
     timestamp: createTimestamp(),
     affected: {
-        zone: { type: "Battlefield" },
-        manaValue: { type: "greaterEqual", value: 4 },
+        zone: {
+            type: "Battlefield",
+        },
+        manaValue: { type: "greaterEqual", number: 4 },
         controller: {
             type: "controller",
             object: { argument: "this" },
@@ -82,7 +81,7 @@ const bello = createCharacteristicsAlteringEffect<{
                 },
             ],
         },
-    },
+    } satisfies GameObjectQuery<param> & CardQuery<param>,
     layer4: {
         type: "4",
         types: [{ action: "append", typeQuery: ["Elemental", "Creature"] }],

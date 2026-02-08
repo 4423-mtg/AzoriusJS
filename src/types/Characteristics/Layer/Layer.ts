@@ -24,8 +24,6 @@ import {
 import {
     isGameObjectQuery,
     isPlayerQuery,
-    type GameObjectQuery,
-    type PlayerQuery,
     type QueryParameter,
 } from "../../Query/Query.js";
 

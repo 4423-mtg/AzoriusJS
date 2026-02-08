@@ -11,7 +11,7 @@ import type { MultiSpec } from "../Query/QueryFunction.js";
 // カード・タイプ、特殊タイプ、サブタイプ、ルール・テキスト、能力、
 // パワー、タフネス、忠誠度、守備値、手札補正子、ライフ補正子のことである。
 
-type NumericalValue = number | "*";
+export type NumericalValue = number | "*";
 
 /** 名前 */
 export type CardName = string;

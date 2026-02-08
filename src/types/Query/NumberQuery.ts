@@ -1,3 +1,4 @@
+import type { NumericalValue } from "../Characteristics/Characteristic.js";
 import type { ManaSymbol } from "../Characteristics/Symbol.js";
 import type { CardQuery, ColorQuery, GameObjectQuery } from "./ArrayQuery.js";
 import type { CounterCondition } from "./ObjectQuery.js";
@@ -19,7 +20,7 @@ export type NumberCondition<T extends QueryParameter> = BooleanOperation<
 
 export type NumberReference<T extends QueryParameter> =
     // TODO: GameObject (Spellなど) 対象の数など
-    | number
+    | NumericalValue
     | {
           valueType:
               | "manaValue" // マナシンボルの数とかも要るのだろうか
@@ -69,7 +70,7 @@ export type NumberQuery<T extends QueryParameter> =
 // =================================================================
 // MARK: ManaCostQuery
 export type ManaCostCondition<T extends QueryParameter> = ManaCostQuery<T>;
-type ManaCostQuery<T extends QueryParameter> =
+export type ManaCostQuery<T extends QueryParameter> =
     | ManaSymbol[]
     | { card: CardQuery<T> };
 //
