@@ -21,11 +21,7 @@ import {
     type Layer7c,
     type Layer7d,
 } from "./Layer7.js";
-import {
-    isGameObjectQuery,
-    isPlayerQuery,
-    type QueryParameter,
-} from "../../Query/Query.js";
+import { type QueryParameter } from "../../Query/Query.js";
 
 // 単一の常在型能力からの継続的効果または呪文や能力の解決によって生成された単一の継続的効果の中に含まれる、各種類別の効果
 
@@ -108,27 +104,27 @@ export function isLayer<T extends LayerCategory, U extends QueryParameter>(
 ): arg is Layer<T, U> {
     switch (category) {
         case "1a":
-            return isLayer1a(parameter, arg);
+            return isLayer1a(arg, parameter);
         case "1b":
-            return isLayer1b(parameter, arg);
+            return isLayer1b(arg, parameter);
         case "2":
-            return isLayer2(parameter, arg);
+            return isLayer2(arg, parameter);
         case "3":
-            return isLayer3(parameter, arg);
+            return isLayer3(arg, parameter);
         case "4":
-            return isLayer4(parameter, arg);
+            return isLayer4(arg, parameter);
         case "5":
-            return isLayer5(parameter, arg);
+            return isLayer5(arg, parameter);
         case "6":
-            return isLayer6(parameter, arg);
+            return isLayer6(arg, parameter);
         case "7a":
-            return isLayer7a(parameter, arg);
+            return isLayer7a(arg, parameter);
         case "7b":
-            return isLayer7b(parameter, arg);
+            return isLayer7b(arg, parameter);
         case "7c":
-            return isLayer7c(parameter, arg);
+            return isLayer7c(arg, parameter);
         case "7d":
-            return isLayer7d(parameter, arg);
+            return isLayer7d(arg, parameter);
         default:
             throw new TypeError(category);
     }
@@ -152,17 +148,17 @@ export function isAnyLayer<T extends QueryParameter>(
     parameter: T,
 ): arg is AnyLayer<T> {
     return (
-        isLayer1a(parameter, arg) ||
-        isLayer1b(parameter, arg) ||
-        isLayer2(parameter, arg) ||
-        isLayer3(parameter, arg) ||
-        isLayer4(parameter, arg) ||
-        isLayer5(parameter, arg) ||
-        isLayer6(parameter, arg) ||
-        isLayer7a(parameter, arg) ||
-        isLayer7b(parameter, arg) ||
-        isLayer7c(parameter, arg) ||
-        isLayer7d(parameter, arg)
+        isLayer1a(arg, parameter) ||
+        isLayer1b(arg, parameter) ||
+        isLayer2(arg, parameter) ||
+        isLayer3(arg, parameter) ||
+        isLayer4(arg, parameter) ||
+        isLayer5(arg, parameter) ||
+        isLayer6(arg, parameter) ||
+        isLayer7a(arg, parameter) ||
+        isLayer7b(arg, parameter) ||
+        isLayer7c(arg, parameter) ||
+        isLayer7d(arg, parameter)
     );
 }
 

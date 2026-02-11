@@ -10,8 +10,8 @@ export type Layer7a<T extends QueryParameter = {}> = LayerCommonProperty & {
     toughness?: NumberQuery<T>;
 };
 export function isLayer7a<T extends QueryParameter>(
-    parameters: T,
     arg: unknown,
+    parameters: T,
 ): arg is Layer7a<T> {
     return (
         isLayerCommonProperty(parameters, arg) &&
@@ -29,8 +29,8 @@ export type Layer7b<T extends QueryParameter = {}> = LayerCommonProperty & {
     toughness?: NumberQuery<T>;
 };
 export function isLayer7b<T extends QueryParameter>(
-    parameters: T,
     arg: unknown,
+    parameters: T,
 ): arg is Layer7b<T> {
     return (
         isLayerCommonProperty(parameters, arg) &&
@@ -48,8 +48,8 @@ export type Layer7c<T extends QueryParameter = {}> = LayerCommonProperty & {
     toughness: NumberQuery<T>;
 };
 export function isLayer7c<T extends QueryParameter>(
-    parameters: T,
     arg: unknown,
+    parameters: T,
 ): arg is Layer7c<T> {
     return (
         isLayerCommonProperty(parameters, arg) &&
@@ -67,8 +67,8 @@ export type Layer7d<T extends QueryParameter = {}> = LayerCommonProperty & {
     type: "7d";
 };
 export function isLayer7d<T extends QueryParameter>(
-    parameters: T,
     arg: unknown,
+    parameters: T,
 ): arg is Layer7d<T> {
     return isLayerCommonProperty(parameters, arg) && arg.type === "7d";
 }

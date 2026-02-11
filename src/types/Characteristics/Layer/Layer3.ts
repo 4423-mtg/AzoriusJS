@@ -9,8 +9,8 @@ export type Layer3<T extends QueryParameter = {}> = LayerCommonProperty & {
     text: TextQuery<T>; // FIXME: 文章の型
 };
 export function isLayer3<T extends QueryParameter>(
-    parameter: T,
     arg: unknown,
+    parameter: T,
 ): arg is Layer3<T> {
     return (
         isLayerCommonProperty(parameter, arg) &&

@@ -9,8 +9,8 @@ export type Layer2<T extends QueryParameter = {}> = LayerCommonProperty & {
     controller: PlayerQuery<T>;
 };
 export function isLayer2<T extends QueryParameter>(
-    parameter: T,
     arg: unknown,
+    parameter: T,
 ): arg is Layer2<T> {
     return (
         isLayerCommonProperty(parameter, arg) &&

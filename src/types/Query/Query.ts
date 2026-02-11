@@ -147,7 +147,7 @@ function isTypeOfQueryParameter(arg: unknown): arg is TypeOfQueryParameter {
         arg === "string"
     );
 }
-function isSpecificTypeParameterName<
+function isQueryParameterNameOfSpecificType<
     T extends QueryParameter,
     U extends TypeOfQueryParameter,
 >(
@@ -161,77 +161,13 @@ function isSpecificTypeParameterName<
         return false;
     }
 }
-export function isCopiableValueQuery<T extends QueryParameter>(
-    parameter: T,
-    arg: unknown,
-) {
-    return typeof arg === "object" && arg !== null; // TODO:
-}
-export function isPlayerQuery<T extends QueryParameter>(
-    parameters: T,
-    arg: unknown,
-): arg is PlayerQuery<T> {
-    return typeof arg === "object" && arg !== null; // TODO:
-}
-export function isTextQuery<T extends QueryParameter>(
-    parameter: T,
-    arg: unknown,
-) {
-    return typeof arg === "object" && arg !== null; // TODO:
-}
-export function isCardTypeQuery<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is CardTypeQuery<T> {
+export function isSetOperation<T>(arg: unknown): arg is SetOperation<T> {
     // TODO:
     return false;
 }
-export function isSubtypeQuery<T extends QueryParameter>(
+export function isBooleanOperation<T>(
     arg: unknown,
-    parameter: T,
-): arg is SubtypeQuery<T> {
+): arg is BooleanOperation<T> {
     // TODO:
-    return false;
-}
-export function isSupertypeQuery<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is SupertypeQuery<T> {
-    // TODO:
-    return false;
-}
-export function isColorQuery<T extends QueryParameter>(
-    parameter: T,
-    arg: unknown,
-) {
-    return typeof arg === "object" && arg !== null; // TODO:
-}
-export function isAbilityQuery<T extends QueryParameter>(
-    parameter: T,
-    arg: unknown,
-) {
-    return typeof arg === "object" && arg !== null; // TODO:
-}
-export function isNumberQuery<T extends QueryParameter>(
-    parameter: T,
-    arg: unknown,
-): arg is NumberQuery<T> {
-    return typeof arg === "object" && arg !== null; // TODO:
-}
-export function isGameObjectQuery<T extends QueryParameter>(
-    parameters: T,
-    arg: unknown,
-): arg is GameObjectQuery<T> {
-    if (!isRecord(arg)) {
-        return false;
-    }
-    const argumentName = arg["argumentName"];
-    if (
-        argumentName !== undefined &&
-        isSpecificTypeParameterName(parameters, "gameObject", argumentName)
-    ) {
-        return true;
-    }
-    // TODO: 続き
     return false;
 }

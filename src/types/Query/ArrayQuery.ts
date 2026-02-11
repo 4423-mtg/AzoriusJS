@@ -187,3 +187,50 @@ export type AbilityQuery<T extends QueryParameter = {}> =
 // =========================================================
 // MARK: 3種(文章) TODO:
 export type TextQuery<T extends QueryParameter> = {};
+
+// =========================================================
+// MARK: 型ガード
+export function isGameObjectCondition<T extends QueryParameter>(
+    arg: unknown,
+    parameter: T,
+): arg is GameObjectCondition<T> {
+    // TODO:
+    return false;
+}
+export function isGameObjectQuery<T extends QueryParameter>(
+    arg: unknown,
+    parameter: T,
+): arg is GameObjectQuery<T> {
+    // TODO:
+    return false;
+}
+
+export function isCardCondition<T extends QueryParameter>(
+    arg: unknown,
+    parameter: T,
+): arg is CardCondition<T> {
+    // TODO:
+    return false;
+}
+export function isCardQuery<T extends QueryParameter>(
+    arg: unknown,
+    parameter: T,
+): arg is CardQuery<T> {
+    // TODO:
+    return false;
+}
+
+export function isPlayerCondition<T extends QueryParameter>(
+    arg: unknown,
+    parameter: T,
+): arg is PlayerCondition<T> {
+    // TODO:
+    return false;
+}
+export function isPlayerQuery<T extends QueryParameter>(
+    arg: unknown,
+    parameter: T,
+): arg is PlayerQuery<T> {
+    // TODO:
+    return false;
+}

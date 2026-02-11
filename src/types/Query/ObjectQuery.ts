@@ -136,3 +136,32 @@ export type MarkerQuery<T extends QueryParameter> = BooleanOperation<Marker[]>;
 export type StickerQuery<T extends QueryParameter> = BooleanOperation<
     Sticker[]
 >;
+
+// =================================================================
+// MARK: 型ガード
+export function isCopiableValueCondition<T extends QueryParameter>(
+    arg: unknown,
+): arg is CopiableValueCondition<T> {
+    // TODO:
+    return false;
+}
+
+export function isCopiableValueQuery<T extends QueryParameter>(
+    arg: unknown,
+): arg is CopiableValueQuery<T> {
+    // TODO:
+    return false;
+}
+
+export function isCharacteristicsCondition<T extends QueryParameter>(
+    arg: unknown,
+): arg is CharacteristicsCondition<T> {
+    // TODO:
+    return false;
+}
+export function isCharacteristicsQuery<T extends QueryParameter>(
+    arg: unknown,
+): arg is CharacteristicsQuery<T> {
+    // TODO:
+    return false;
+}

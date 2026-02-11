@@ -9,8 +9,8 @@ export type Layer5<T extends QueryParameter = {}> = LayerCommonProperty & {
     color: ColorQuery<T>;
 };
 export function isLayer5<T extends QueryParameter>(
-    parameter: T,
     arg: unknown,
+    parameter: T,
 ): arg is Layer5<T> {
     return (
         isLayerCommonProperty(parameter, arg) &&

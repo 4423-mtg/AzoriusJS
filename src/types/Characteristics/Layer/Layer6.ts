@@ -9,8 +9,8 @@ export type Layer6<T extends QueryParameter = {}> = LayerCommonProperty & {
     ability: AbilityQuery<T>;
 };
 export function isLayer6<T extends QueryParameter>(
-    parameter: T,
     arg: unknown,
+    parameter: T,
 ): arg is Layer6<T> {
     return (
         isLayerCommonProperty(parameter, arg) &&
