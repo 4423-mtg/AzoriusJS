@@ -71,24 +71,60 @@ export type QueryParameterNameOfSpecificType<
 export type SetOperation<T> =
     | T
     | {
-          operation: "union" | "intersection";
-          operand: SetOperation<T>[];
+          operation: "intersection";
+          operand: T[];
       }
     | {
           operation: "difference";
-          leftOperand: SetOperation<T>;
-          rightOperand: SetOperation<T>;
-      };
-export type BooleanOperation<T> =
-    | T
-    | {
-          operation: "not";
-          operand: BooleanOperation<T>;
+          left:
+              | T
+              | {
+                    operation: "intersection";
+                    operand: T[];
+                };
+          right: T;
       }
-    | {
-          operation: "and" | "or";
-          operand: BooleanOperation<T>[];
-      };
+    | (
+          | T
+          | {
+                operation: "intersection";
+                operand: T[];
+            }
+          | {
+                operation: "difference";
+                left:
+                    | T
+                    | {
+                          operation: "intersection";
+                          operand: T[];
+                      };
+                right: T;
+            }
+      )[]; // unionとして解釈する
+// (A & B) - C = (A - C) & (B - C)
+
+// A - (B + C) = (A - B) & (A - C)
+// A - (B & C) = (A - B) + (A - C)
+// A - (B - C) = (A - B) + (A & C)
+
+export type BooleanOperation<T> =
+    | (T | { operation: "not"; operand: T })
+    | (T | { operation: "not"; operand: T })[] // andとして解釈する
+    | { operation: "or"; operand: (T | { operation: "not"; operand: T })[] };
+// not (A and B) = (not A) or (not B)
+// not (A or B) = (not A) and (not B)
+// A and (not B)
+// A and (B and C) = A and B and C
+// A and (B or C) = (A and B) or (A and C)
+// A or (not B)
+// A or (B and C) =
+// A or (B or C) = A or B or C
+
+// あなたがコントロールしていない基本でない土地
+// (not A) and (not B) and C
+// 対戦相手がコントロールする、クリーチャーと基本でない土地
+// A and (B or ((not C) and D))
+// = (A and B) or (A and (not C) and D)
 
 // ==================================================================
 // MARK: 型ガード
