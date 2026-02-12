@@ -13,9 +13,9 @@ import {
 } from "../../Characteristics/Layer/Layer.js";
 import type { Instruction } from "../../Instruction/Instruction.js";
 import { isTimestamp, type Timestamp } from "../../GameState/Timestamp.js";
-import type { StackedAbility } from "../StackedAbility.js";
+import { isStackedAbility, type StackedAbility } from "../StackedAbility.js";
 import { isAbility, type Ability } from "../Ability.js";
-import type { Spell } from "../Card/Spell.js";
+import { isSpell, type Spell } from "../Card/Spell.js";
 import type { Layer1a, Layer1b } from "../../Characteristics/Layer/Layer1.js";
 import type { Layer2 } from "../../Characteristics/Layer/Layer2.js";
 import type { Layer3 } from "../../Characteristics/Layer/Layer3.js";
@@ -35,8 +35,6 @@ import type {
     PlayerQuery,
 } from "../../Query/ArrayQuery.js";
 
-// FIXME: 型ガードは1箇所にまとめる
-
 // ====================================================================================================
 /** 継続的効果。単一の常在型能力からの継続的効果か、または、単一の呪文や能力の解決によって生成された継続的効果 */
 export type ContinuousEffect = GameObject & ContinuousEffectProperty;
@@ -45,38 +43,16 @@ export type ContinuousEffectProperty = {
     timestamp: Timestamp;
 };
 
-/** 型ガード */
-export function isContinuousEffect(obj: unknown): obj is ContinuousEffect {
-    return isGameObject(obj) && isContinuousEffectProperty(obj);
-}
-function isContinuousEffectProperty(
-    arg: unknown,
-): arg is ContinuousEffectProperty {
-    if (typeof arg === "object" && arg !== null) {
-        const source =
-            "source" in arg &&
-            (arg.source === undefined ||
-                typeof arg.source === "string" || // FIXME: 一時的にstringを追加
-                isSpell(arg.source) ||
-                isStackedAbility(arg.source) ||
-                isAbility(arg.source));
-        const timestamp =
-            "timestamp" in arg &&
-            (arg.timestamp === undefined || isTimestamp(arg.timestamp));
-        return source && timestamp;
-    } else {
-        return false;
-    }
-}
-
 /** ContinuousEffect を作成する */
 export function createContinuousEffect(): ContinuousEffect {
     // TODO: 実装
     //
+    return false;
 }
 
 // ========================================================================
-/** 値や特性を変更する継続的効果 */
+// MARK: 特性を変更する効果
+/** 特性を変更する継続的効果 */
 export type CharacteristicsAlteringEffect<T extends QueryParameter> =
     ContinuousEffect & CharacteristicsAlteringEffectProperty<T>;
 // プロパティ
@@ -96,47 +72,6 @@ export type CharacteristicsAlteringEffectProperty<
     layer7c: Layer7c<T> | undefined;
     layer7d: Layer7d<T> | undefined;
 };
-
-/** 型ガード */
-export function isCharacteristicsAlteringEffect<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is CharacteristicsAlteringEffect<T> {
-    return (
-        isContinuousEffect(arg) &&
-        isCharacteristicsAlteringEffectProperty(arg, parameter)
-    );
-}
-export function isCharacteristicsAlteringEffectProperty<
-    T extends QueryParameter,
->(arg: unknown, parameter: T): arg is CharacteristicsAlteringEffectProperty {
-    return (
-        typeof arg === "object" &&
-        arg !== null &&
-        "layer1a" in arg &&
-        isLayer(arg.layer1a, "1a", parameter) &&
-        "layer1b" in arg &&
-        isLayer(arg.layer1b, "1b", parameter) &&
-        "layer2" in arg &&
-        isLayer(arg.layer2, "2", parameter) &&
-        "layer3" in arg &&
-        isLayer(arg.layer3, "3", parameter) &&
-        "layer4" in arg &&
-        isLayer(arg.layer4, "4", parameter) &&
-        "layer5" in arg &&
-        isLayer(arg.layer5, "5", parameter) &&
-        "layer6" in arg &&
-        isLayer(arg.layer6, "6", parameter) &&
-        "layer7a" in arg &&
-        isLayer(arg.layer7a, "7a", parameter) &&
-        "layer7b" in arg &&
-        isLayer(arg.layer7b, "7b", parameter) &&
-        "layer7c" in arg &&
-        isLayer(arg.layer7c, "7c", parameter) &&
-        "layer7d" in arg &&
-        isLayer(arg.layer7d, "7d", parameter)
-    );
-}
 
 /** 値や特性を変更する継続的効果を作成する */
 export function createCharacteristicsAlteringEffect<T extends QueryParameter>(
@@ -193,6 +128,7 @@ type _layerProperty<T extends LayerCategory, U extends QueryParameter> = {
 };
 
 // ========================================================================
+// MARK: 手続きを変更する効果
 /** 手続きを変更する継続的効果 */
 export type ModifyProcedureEffect = ContinuousEffect &
     ModifyProcedureEffectParameter;
@@ -212,13 +148,14 @@ export function createModifyingProcedureEffect(
     return {
         ...obj,
         source: parameters?.source,
-        timestamp: parameters?.timestamp,
+        // timestamp: parameters?.timestamp,
         check: parameters?.check,
         replace: parameters?.replace,
     };
 }
 
 // ========================================================================
+// MARK: 処理を禁止する効果
 /** 処理を禁止する継続的効果 */
 export type ForbidActionEffect = ContinuousEffect &
     ForbidActionEffectParameters;
@@ -235,7 +172,7 @@ export function createForbidActionEffect(
     return {
         ...obj,
         source: parameters?.source,
-        timestamp: parameters?.timestamp,
+        // timestamp: parameters?.timestamp,
         check: parameters?.check,
     };
 }
@@ -251,3 +188,69 @@ type InstructionChecker = (args: {
 
 /** Instructionを別の1つ以上のInstructionに置き換える関数を表す型 */
 type InstructionReplacer = (instruction: Instruction) => Instruction[];
+
+// =================================================================
+// MARK: 型ガード
+/** 型ガード */
+export function isContinuousEffect(obj: unknown): obj is ContinuousEffect {
+    return isGameObject(obj) && isContinuousEffectProperty(obj);
+}
+function isContinuousEffectProperty(
+    arg: unknown,
+): arg is ContinuousEffectProperty {
+    if (typeof arg === "object" && arg !== null) {
+        const source =
+            "source" in arg &&
+            (arg.source === undefined ||
+                typeof arg.source === "string" || // FIXME: 一時的にstringを追加
+                isSpell(arg.source) ||
+                isStackedAbility(arg.source) ||
+                isAbility(arg.source));
+        const timestamp =
+            "timestamp" in arg &&
+            (arg.timestamp === undefined || isTimestamp(arg.timestamp));
+        return source && timestamp;
+    } else {
+        return false;
+    }
+}
+/** 型ガード */
+export function isCharacteristicsAlteringEffect<T extends QueryParameter>(
+    arg: unknown,
+    parameter: T,
+): arg is CharacteristicsAlteringEffect<T> {
+    return (
+        isContinuousEffect(arg) &&
+        isCharacteristicsAlteringEffectProperty(arg, parameter)
+    );
+}
+export function isCharacteristicsAlteringEffectProperty<
+    T extends QueryParameter,
+>(arg: unknown, parameter: T): arg is CharacteristicsAlteringEffectProperty {
+    return (
+        typeof arg === "object" &&
+        arg !== null &&
+        "layer1a" in arg &&
+        isLayer(arg.layer1a, "1a", parameter) &&
+        "layer1b" in arg &&
+        isLayer(arg.layer1b, "1b", parameter) &&
+        "layer2" in arg &&
+        isLayer(arg.layer2, "2", parameter) &&
+        "layer3" in arg &&
+        isLayer(arg.layer3, "3", parameter) &&
+        "layer4" in arg &&
+        isLayer(arg.layer4, "4", parameter) &&
+        "layer5" in arg &&
+        isLayer(arg.layer5, "5", parameter) &&
+        "layer6" in arg &&
+        isLayer(arg.layer6, "6", parameter) &&
+        "layer7a" in arg &&
+        isLayer(arg.layer7a, "7a", parameter) &&
+        "layer7b" in arg &&
+        isLayer(arg.layer7b, "7b", parameter) &&
+        "layer7c" in arg &&
+        isLayer(arg.layer7c, "7c", parameter) &&
+        "layer7d" in arg &&
+        isLayer(arg.layer7d, "7d", parameter)
+    );
+}

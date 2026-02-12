@@ -92,6 +92,9 @@ export type BooleanOperation<T> =
 
 // ==================================================================
 // MARK: 型ガード
+function isRecord(arg: unknown): arg is Record<string, unknown> {
+    return typeof arg === "object" && arg !== null;
+}
 export function isQueryParameter(arg: unknown): arg is QueryParameter {
     if (!isRecord(arg)) {
         return false;
@@ -136,9 +139,6 @@ export function isQueryParameter(arg: unknown): arg is QueryParameter {
     return true;
 }
 
-function isRecord(arg: unknown): arg is Record<string, unknown> {
-    return typeof arg === "object" && arg !== null;
-}
 function isTypeOfQueryParameter(arg: unknown): arg is TypeOfQueryParameter {
     return (
         arg === "gameObject" ||

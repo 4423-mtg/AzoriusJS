@@ -1,7 +1,10 @@
 // MARK: 型定義: 1a
 import type { GameObject } from "../../GameObject/GameObject.js";
 import type { Game } from "../../GameState/Game.js";
-import type { CopiableValueQuery } from "../../Query/ObjectQuery.js";
+import {
+    isCopiableValueQuery,
+    type CopiableValueQuery,
+} from "../../Query/ObjectQuery.js";
 import { type QueryParameter } from "../../Query/Query.js";
 import type { Characteristics } from "../Characteristic.js";
 import { isLayerCommonProperty, type LayerCommonProperty } from "./Layer.js";
@@ -16,10 +19,10 @@ export function isLayer1a<T extends QueryParameter>(
     parameter: T,
 ): arg is Layer1a<T> {
     return (
-        isLayerCommonProperty(parameter, arg) &&
+        isLayerCommonProperty(arg) &&
         arg.type === "1a" &&
         "copiableValue" in arg &&
-        isCopiableValueQuery(parameter, arg.copiableValue)
+        isCopiableValueQuery(arg.copiableValue, parameter)
     );
 }
 function applyLayer1a<T extends QueryParameter>(
@@ -41,10 +44,10 @@ export function isLayer1b<T extends QueryParameter>(
     parameter: T,
 ): arg is Layer1b<T> {
     return (
-        isLayerCommonProperty(parameter, arg) &&
+        isLayerCommonProperty(arg) &&
         arg.type === "1b" &&
         "copiableValue" in arg &&
-        isCopiableValueQuery(parameter, arg.copiableValue)
+        isCopiableValueQuery(arg.copiableValue, parameter)
     );
 }
 

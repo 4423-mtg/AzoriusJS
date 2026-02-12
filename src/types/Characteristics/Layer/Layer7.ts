@@ -1,6 +1,6 @@
 // MARK: 型定義: 7a
-import type { NumberQuery } from "../../Query/NumberQuery.js";
-import { isNumberQuery, type QueryParameter } from "../../Query/Query.js";
+import { isNumberQuery, type NumberQuery } from "../../Query/NumberQuery.js";
+import { type QueryParameter } from "../../Query/Query.js";
 import { isLayerCommonProperty, type LayerCommonProperty } from "./Layer.js";
 
 /** パワー・タフネスを定義する特性定義能力 */
@@ -14,10 +14,10 @@ export function isLayer7a<T extends QueryParameter>(
     parameters: T,
 ): arg is Layer7a<T> {
     return (
-        isLayerCommonProperty(parameters, arg) &&
+        isLayerCommonProperty(arg) &&
         arg.type === "7a" &&
-        (!("power" in arg) || isNumberQuery(parameters, arg.power)) &&
-        (!("toughness" in arg) || isNumberQuery(parameters, arg.toughness))
+        (!("power" in arg) || isNumberQuery(arg.power, parameters)) &&
+        (!("toughness" in arg) || isNumberQuery(arg.toughness, parameters))
     );
 }
 
@@ -33,10 +33,10 @@ export function isLayer7b<T extends QueryParameter>(
     parameters: T,
 ): arg is Layer7b<T> {
     return (
-        isLayerCommonProperty(parameters, arg) &&
+        isLayerCommonProperty(arg) &&
         arg.type === "7b" &&
-        (!("power" in arg) || isNumberQuery(parameters, arg.power)) &&
-        (!("toughness" in arg) || isNumberQuery(parameters, arg.toughness))
+        (!("power" in arg) || isNumberQuery(arg.power, parameters)) &&
+        (!("toughness" in arg) || isNumberQuery(arg.toughness, parameters))
     );
 }
 
@@ -52,12 +52,12 @@ export function isLayer7c<T extends QueryParameter>(
     parameters: T,
 ): arg is Layer7c<T> {
     return (
-        isLayerCommonProperty(parameters, arg) &&
+        isLayerCommonProperty(arg) &&
         arg.type === "7c" &&
         "power" in arg &&
-        isNumberQuery(parameters, arg.power) &&
+        isNumberQuery(arg.power, parameters) &&
         "toughness" in arg &&
-        isNumberQuery(parameters, arg.toughness)
+        isNumberQuery(arg.toughness, parameters)
     );
 }
 
@@ -70,7 +70,7 @@ export function isLayer7d<T extends QueryParameter>(
     arg: unknown,
     parameters: T,
 ): arg is Layer7d<T> {
-    return isLayerCommonProperty(parameters, arg) && arg.type === "7d";
+    return isLayerCommonProperty(arg) && arg.type === "7d";
 }
 
 // =======================================================
@@ -83,7 +83,7 @@ const sample: Record<
     // タルモゴイフ
     Tarmogoyf: {
         type: "7a",
-        affected: { argument: "this" },
+        // affected: { argument: "this" },
         power: {
             valueType: "numberOfCardTypes",
             card: { zone: { type: "Graveyard" } },
@@ -103,7 +103,7 @@ const sample: Record<
     // 対象のクリーチャーのパワーを2倍にする
     "Unleash Fury": {
         type: "7c",
-        affected: { argument: "target" },
+        // affected: { argument: "target" },
         power: {
             valueType: "power",
             card: { argument: "target" },

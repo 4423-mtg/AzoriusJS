@@ -22,11 +22,11 @@ import {
 import {
     applyLayers,
     layerCategories,
-    sortLayers,
     type AnyLayer,
     type Layer,
     type LayerCategory,
 } from "../Characteristics/Layer/Layer.js";
+import { sortLayers } from "../Characteristics/Layer/resolveLayer.js";
 
 // ==========================================================================
 // MARK: Game
@@ -41,7 +41,7 @@ export type HistoryEntry = {
     instructions: Instruction[];
 };
 
-/** Gameを1つ進める。 */
+/** Gameを次のGameStateに進める。 */
 export function incrementGameState(game: Game): void {
     const current = game.history.at(-1);
     if (current === undefined) {
@@ -120,13 +120,14 @@ export function applyInstruction(
 // ============================================================================
 /** 最新の GameState でのすべてのオブジェクトの特性を計算してセットする。 */
 export function setAllCharacteristics(game: Game): void {
-    const current = game.history.at(-1);
-    if (current === undefined) {
+    const currentEntry = game.history.at(-1);
+    if (currentEntry === undefined) {
         throw new Error();
     }
+    const currentState = currentEntry.state;
 
     // すべての特性変更効果
-    const effects = current.state.objects.filter((o) =>
+    const effects = currentState.objects.filter((o) =>
         isCharacteristicsAlteringEffect(o),
     );
 
@@ -159,7 +160,7 @@ export function setAllCharacteristics(game: Game): void {
     const ret = applyLayers(layerQueue, game);
 
     // 特性を Game にセットする
-    current.state.objects.forEach((_obj1) => {
+    currentEntry.state.objects.forEach((_obj1) => {
         _obj1.characteristics =
             ret.find(({ object: _obj2 }) => _obj2.objectId === _obj1.objectId)
                 ?.characteristics ?? _obj1.printed; // FIXME: GameObject.printed

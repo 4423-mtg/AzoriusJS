@@ -1,6 +1,6 @@
 // MARK: 型定義: 6
-import type { AbilityQuery } from "../../Query/ArrayQuery.js";
-import { isAbilityQuery, type QueryParameter } from "../../Query/Query.js";
+import { isAbilityQuery, type AbilityQuery } from "../../Query/ArrayQuery.js";
+import { type QueryParameter } from "../../Query/Query.js";
 import { isLayerCommonProperty, type LayerCommonProperty } from "./Layer.js";
 
 /** 能力変更 */
@@ -13,9 +13,9 @@ export function isLayer6<T extends QueryParameter>(
     parameter: T,
 ): arg is Layer6<T> {
     return (
-        isLayerCommonProperty(parameter, arg) &&
+        isLayerCommonProperty(arg) &&
         arg.type === "6" &&
         "ability" in arg &&
-        isAbilityQuery(parameter, arg.ability)
+        isAbilityQuery(arg.ability, parameter)
     );
 }

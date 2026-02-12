@@ -1,6 +1,6 @@
 // MARK: 型定義: 3
-import type { TextQuery } from "../../Query/ArrayQuery.js";
-import { isTextQuery, type QueryParameter } from "../../Query/Query.js";
+import { isTextQuery, type TextQuery } from "../../Query/ArrayQuery.js";
+import { type QueryParameter } from "../../Query/Query.js";
 import { isLayerCommonProperty, type LayerCommonProperty } from "./Layer.js";
 
 /** 文章変更 */
@@ -13,9 +13,9 @@ export function isLayer3<T extends QueryParameter>(
     parameter: T,
 ): arg is Layer3<T> {
     return (
-        isLayerCommonProperty(parameter, arg) &&
+        isLayerCommonProperty(arg) &&
         arg.type === "3" &&
         "text" in arg &&
-        isTextQuery(parameter, arg.text)
+        isTextQuery(arg.text, parameter)
     );
 }

@@ -1,35 +1,29 @@
-import type { Zone } from "../GameState/Game.js";
+import type { Zone } from "../GameState/Zone.js";
 import type { Ability } from "./Ability.js";
-import { GameObject } from "./GameObject.js";
+import type { GameObject } from "./GameObject.js";
 
 /** スタック上の能力 */
-export class StackedAbility extends GameObject {
+export type StackedAbility = GameObject & {
     /** 領域 */
     zone?: Zone;
     /** 発生源となった能力 */
     ability: Ability;
     /** 能力の発生源オブジェクト */
     source?: GameObject;
-
     /** 能力の種類。起動型、誘発型 */
-    get ability_type() {
-        return this.ability.type;
-    }
+    kind: string;
 
-    //
     is_modal: boolean;
-    modes;
-    chosen_mode;
+    // modes;
+    // chosen_mode;
     // TODO: いろいろ
     target: GameObject[];
     distribution: Map<GameObject, number>;
-    paid_cost;
-    resolve: Resolve;
+    // paid_cost;
 
-    constructor(ability: Ability, controller: Player, source?: GameObject) {
-        super();
-        this.ability = ability;
-        this.controller = controller;
-        this.source = source;
-    }
+    // resolve
+};
+
+export function isStackedAbility(arg: unknown): arg is StackedAbility {
+    return false;
 }

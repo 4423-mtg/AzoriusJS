@@ -1,9 +1,9 @@
 import { isZone, type Zone } from "../GameState/Zone.js";
 import { isUUID } from "../Other.js";
 import type { Card } from "./Card/Card.js";
-import { isCounterOnObject, type CounterOnObject } from "./Counter.js";
-import { isMarker, type Marker } from "./Marker.js";
-import { isSticker, type Sticker } from "./Sticker.js";
+import { isCounterOnObject } from "./Counter.js";
+import { isMarker } from "./Marker.js";
+import { isSticker } from "./Sticker.js";
 const { randomUUID } = await import("node:crypto");
 
 /** ゲーム内のオブジェクト。
@@ -50,9 +50,6 @@ export function createGameObject(params?: GameObjectParameters): GameObject {
     return {
         objectId: createGameObjectId(),
         zone: params?.zone,
-        counters: params?.counters,
-        stickers: params?.stickers,
-        markers: params?.markers,
     };
 }
 

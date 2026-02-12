@@ -178,6 +178,7 @@ export type ZoneQuery<T extends QueryParameter> = SetOperation<
 
 // =========================================================
 // MARK: 6種(能力) TODO:
+export type AbilityCondition<T extends QueryParameter> = BooleanOperation<{}>;
 export type AbilityQuery<T extends QueryParameter = {}> =
     | Ability[]
     | {
@@ -186,6 +187,7 @@ export type AbilityQuery<T extends QueryParameter = {}> =
       };
 // =========================================================
 // MARK: 3種(文章) TODO:
+export type TextCondition<T extends QueryParameter> = BooleanOperation<{}>;
 export type TextQuery<T extends QueryParameter> = {};
 
 // =========================================================
@@ -227,10 +229,137 @@ export function isPlayerCondition<T extends QueryParameter>(
     // TODO:
     return false;
 }
+export function isPlayerReference<T extends QueryParameter>(
+    arg: unknown,
+    parameter: T,
+): arg is PlayerReference<T> {
+    // TODO:
+    return false;
+}
 export function isPlayerQuery<T extends QueryParameter>(
     arg: unknown,
     parameter: T,
 ): arg is PlayerQuery<T> {
+    // TODO:
+    return false;
+}
+
+export function isCardNameCondition<T extends QueryParameter>(
+    arg: unknown,
+    parameter: T,
+): arg is CardNameCondition<T> {
+    // TODO:
+    return false;
+}
+export function isCardNameQuery<T extends QueryParameter>(
+    arg: unknown,
+    parameter: T,
+): arg is CardNameQuery<T> {
+    // TODO:
+    return false;
+}
+
+export function isCardTypeCondition<T extends QueryParameter>(
+    arg: unknown,
+    parameter: T,
+): arg is CardTypeCondition<T> {
+    // TODO:
+    return false;
+}
+export function isCardTypeQuery<T extends QueryParameter>(
+    arg: unknown,
+    parameter: T,
+): arg is CardTypeQuery<T> {
+    // TODO:
+    return false;
+}
+
+export function isSubtypeCondition<T extends QueryParameter>(
+    arg: unknown,
+    parameter: T,
+): arg is SubtypeCondition<T> {
+    // TODO:
+    return false;
+}
+export function isSubtypeQuery<T extends QueryParameter>(
+    arg: unknown,
+    parameter: T,
+): arg is SubtypeQuery<T> {
+    // TODO:
+    return false;
+}
+
+export function isSupertypeCondition<T extends QueryParameter>(
+    arg: unknown,
+    parameter: T,
+): arg is SupertypeCondition<T> {
+    // TODO:
+    return false;
+}
+export function isSupertypeQuery<T extends QueryParameter>(
+    arg: unknown,
+    parameter: T,
+): arg is SupertypeQuery<T> {
+    // TODO:
+    return false;
+}
+
+export function isColorCondition<T extends QueryParameter>(
+    arg: unknown,
+    parameter: T,
+): arg is ColorCondition<T> {
+    // TODO:
+    return false;
+}
+export function isColorQuery<T extends QueryParameter>(
+    arg: unknown,
+    parameter: T,
+): arg is ColorQuery<T> {
+    // TODO:
+    return false;
+}
+
+export function isZoneCondition<T extends QueryParameter>(
+    arg: unknown,
+    parameter: T,
+): arg is ZoneCondition<T> {
+    // TODO:
+    return false;
+}
+export function isZoneQuery<T extends QueryParameter>(
+    arg: unknown,
+    parameter: T,
+): arg is ZoneQuery<T> {
+    // TODO:
+    return false;
+}
+
+export function isAbilityCondition<T extends QueryParameter>(
+    arg: unknown,
+    parameter: T,
+): arg is AbilityCondition<T> {
+    // TODO:
+    return false;
+}
+export function isAbilityQuery<T extends QueryParameter>(
+    arg: unknown,
+    parameter: T,
+): arg is AbilityQuery<T> {
+    // TODO:
+    return false;
+}
+
+export function isTextCondition<T extends QueryParameter>(
+    arg: unknown,
+    parameter: T,
+): arg is TextCondition<T> {
+    // TODO:
+    return false;
+}
+export function isTextQuery<T extends QueryParameter>(
+    arg: unknown,
+    parameter: T,
+): arg is TextQuery<T> {
     // TODO:
     return false;
 }

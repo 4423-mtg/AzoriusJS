@@ -74,3 +74,40 @@ export type ManaCostQuery<T extends QueryParameter> =
     | ManaSymbol[]
     | { card: CardQuery<T> };
 //
+
+export function isNumberCondition<T extends QueryParameter>(
+    arg: unknown,
+    parameter: T,
+): arg is NumberCondition<T> {
+    // TODO:
+    return false;
+}
+export function isNumberReference<T extends QueryParameter>(
+    arg: unknown,
+    parameter: T,
+): arg is NumberReference<T> {
+    // TODO:
+    return false;
+}
+export function isNumberQuery<T extends QueryParameter>(
+    arg: unknown,
+    parameter: T,
+): arg is NumberQuery<T> {
+    // TODO:
+    return false;
+}
+
+export function isManaCostCondition<T extends QueryParameter>(
+    arg: unknown,
+    parameter: T,
+): arg is ManaCostCondition<T> {
+    // TODO:
+    return false;
+}
+export function isManaCostQuery<T extends QueryParameter>(
+    arg: unknown,
+    parameter: T,
+): arg is ManaCostQuery<T> {
+    // TODO:
+    return false;
+}

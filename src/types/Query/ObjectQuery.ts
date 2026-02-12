@@ -95,6 +95,7 @@ export type CharacteristicsQuery<T extends QueryParameter> =
 
 // =================================================================
 // MARK: Face
+export type FaceCondition<T extends QueryParameter> = BooleanOperation<{}>;
 export type FaceQuery<T extends QueryParameter> = BooleanOperation<{
     front?: {
         printed?: CharacteristicsCondition<T>;
@@ -127,12 +128,14 @@ export type CounterQuery<T extends QueryParameter> = BooleanOperation<
 
 // =================================================================
 // MARK: Marker
+export type MarkerCondition<T extends QueryParameter> = BooleanOperation<{}>;
 export type MarkerQuery<T extends QueryParameter> = BooleanOperation<Marker[]>;
 //
 //
 
 // =================================================================
 // MARK: Sticker
+export type StickerCondition<T extends QueryParameter> = BooleanOperation<{}>;
 export type StickerQuery<T extends QueryParameter> = BooleanOperation<
     Sticker[]
 >;
@@ -141,6 +144,7 @@ export type StickerQuery<T extends QueryParameter> = BooleanOperation<
 // MARK: 型ガード
 export function isCopiableValueCondition<T extends QueryParameter>(
     arg: unknown,
+    parameter: T,
 ): arg is CopiableValueCondition<T> {
     // TODO:
     return false;
@@ -148,6 +152,7 @@ export function isCopiableValueCondition<T extends QueryParameter>(
 
 export function isCopiableValueQuery<T extends QueryParameter>(
     arg: unknown,
+    parameter: T,
 ): arg is CopiableValueQuery<T> {
     // TODO:
     return false;
@@ -155,13 +160,90 @@ export function isCopiableValueQuery<T extends QueryParameter>(
 
 export function isCharacteristicsCondition<T extends QueryParameter>(
     arg: unknown,
+    parameter: T,
 ): arg is CharacteristicsCondition<T> {
     // TODO:
     return false;
 }
 export function isCharacteristicsQuery<T extends QueryParameter>(
     arg: unknown,
+    parameter: T,
 ): arg is CharacteristicsQuery<T> {
+    // TODO:
+    return false;
+}
+
+export function isFaceCondition<T extends QueryParameter>(
+    arg: unknown,
+    parameter: T,
+): arg is FaceCondition<T> {
+    // TODO:
+    return false;
+}
+export function isFaceQuery<T extends QueryParameter>(
+    arg: unknown,
+    parameter: T,
+): arg is FaceQuery<T> {
+    // TODO:
+    return false;
+}
+
+export function isStatusCondition<T extends QueryParameter>(
+    arg: unknown,
+    parameter: T,
+): arg is StatusCondition<T> {
+    // TODO:
+    return false;
+}
+export function isStatusQuery<T extends QueryParameter>(
+    arg: unknown,
+    parameter: T,
+): arg is StatusQuery<T> {
+    // TODO:
+    return false;
+}
+
+export function isCounterCondition<T extends QueryParameter>(
+    arg: unknown,
+    parameter: T,
+): arg is CounterCondition<T> {
+    // TODO:
+    return false;
+}
+export function isCounterQuery<T extends QueryParameter>(
+    arg: unknown,
+    parameter: T,
+): arg is CounterQuery<T> {
+    // TODO:
+    return false;
+}
+
+export function isMarkerCondition<T extends QueryParameter>(
+    arg: unknown,
+    parameter: T,
+): arg is MarkerCondition<T> {
+    // TODO:
+    return false;
+}
+export function isMarkerQuery<T extends QueryParameter>(
+    arg: unknown,
+    parameter: T,
+): arg is MarkerQuery<T> {
+    // TODO:
+    return false;
+}
+
+export function isStickerCondition<T extends QueryParameter>(
+    arg: unknown,
+    parameter: T,
+): arg is StickerCondition<T> {
+    // TODO:
+    return false;
+}
+export function isStickerQuery<T extends QueryParameter>(
+    arg: unknown,
+    parameter: T,
+): arg is StickerQuery<T> {
     // TODO:
     return false;
 }

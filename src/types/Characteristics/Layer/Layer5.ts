@@ -1,6 +1,6 @@
 // MARK: 型定義: 5
-import type { ColorQuery } from "../../Query/ArrayQuery.js";
-import { isColorQuery, type QueryParameter } from "../../Query/Query.js";
+import { isColorQuery, type ColorQuery } from "../../Query/ArrayQuery.js";
+import { type QueryParameter } from "../../Query/Query.js";
 import { isLayerCommonProperty, type LayerCommonProperty } from "./Layer.js";
 
 /** 色変更 */
@@ -13,9 +13,9 @@ export function isLayer5<T extends QueryParameter>(
     parameter: T,
 ): arg is Layer5<T> {
     return (
-        isLayerCommonProperty(parameter, arg) &&
+        isLayerCommonProperty(arg) &&
         arg.type === "5" &&
         "color" in arg &&
-        isColorQuery(parameter, arg.color)
+        isColorQuery(arg.color, parameter)
     );
 }
