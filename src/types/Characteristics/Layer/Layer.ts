@@ -1,6 +1,3 @@
-import type { GameObject } from "../../GameObject/GameObject.js";
-import type { Characteristics } from "../Characteristic.js";
-import type { CharacteristicsAlteringEffectProperty } from "../../GameObject/GeneratedEffect/ContinuousEffect.js";
 import type { Game } from "../../GameState/Game.js";
 
 import { isLayer1a, isLayer1b, type Layer1a, type Layer1b } from "./Layer1.js";
@@ -92,17 +89,8 @@ export type AnyLayer<T extends QueryParameter = QueryParameter> =
 
 // =================================================================
 // MARK: レイヤーの適用
-function _isAffected(
-    affected: CharacteristicsAlteringEffectProperty["affected"],
-): boolean {
-    return false;
-}
-
-/** `Game`の最新の`GameState`にレイヤーを適用し、特性を変化させる。 */
-function _applyLayer<T extends QueryParameter>(
-    game: Game,
-    layer: AnyLayer<T>,
-): void {
+/** Gameの最新の状態に対してレイヤーを適用し、各オブジェクトの特性をセットする。 */
+function applyLayer(game: Game, layer: AnyLayer): void {
     const latestEntry = game.history.at(-1);
     if (latestEntry === undefined) {
         throw new Error();
@@ -112,21 +100,6 @@ function _applyLayer<T extends QueryParameter>(
     // latestState.objects.filter();
 
     // TODO:
-}
-
-/** Gameの最新の状態に対してレイヤーを適用し、各オブジェクトの特性を得る。このときGameは変更しない。 */
-export function applyLayers<T extends QueryParameter>(
-    layers: AnyLayer<T>[],
-    game: Game,
-): {
-    object: GameObject;
-    characteristics: Characteristics;
-}[] {
-    let ret: ReturnType<typeof applyLayers> = [];
-    for (const _layer of layers) {
-        ret = _applyLayer(_layer, game, ret);
-    }
-    return ret;
 }
 
 // =========================================================================

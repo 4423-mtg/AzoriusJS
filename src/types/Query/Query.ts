@@ -5,16 +5,7 @@ import type { Subtype } from "../Characteristics/Subtype.js";
 import type { Card } from "../GameObject/Card/Card.js";
 import { isGameObject, type GameObject } from "../GameObject/GameObject.js";
 import { isPlayer, type Player } from "../GameObject/Player.js";
-import type {
-    CardCondition,
-    CardNameCondition,
-    CardTypeCondition,
-    ColorCondition,
-    GameObjectCondition,
-    PlayerCondition,
-    SubtypeCondition,
-    SupertypeCondition,
-} from "./ArrayQuery.js";
+import type { SetQuery } from "./ArrayQuery.js";
 
 // 種類別（レイヤー）に関してはこれでOK。
 // 手続き変更効果・処理禁止効果・置換効果・追加ターン効果についてはどう？
@@ -28,17 +19,6 @@ import type {
 // => クラスにする必要はある？しなくてもいいが、型ガードはできない
 //   - 効果の定義を書くときに型ガードがないとチェックができない
 //     => タグ化しよう
-
-export type Condition<T extends QueryParameter> =
-    | GameObjectCondition<T>
-    | CardCondition<T>
-    | PlayerCondition<T>
-    | CardNameCondition<T>
-    | CardTypeCondition<T>
-    | SubtypeCondition<T>
-    | SupertypeCondition<T>
-    | ColorCondition<T>;
-// TODO:
 
 // Queryで参照値として使う
 // MARK: QueryParameter
@@ -99,7 +79,7 @@ export type _Difference<T, U> = {
     left: T;
     right: U;
 };
-export type SetOperation<T> =
+export type SetOperation<T extends SetQuery> =
     | T
     | _Intersection<T>
     | _Difference<T, T>
@@ -114,6 +94,12 @@ export type SetOperation<T> =
 // A - (B + C) = (A - B) & (A - C)
 // A - (B & C) = (A - B) + (A - C)
 // A - (B - C) = (A - B) + (A & C)
+
+export function getQueryParameterOfSetOperation<T extends SetQuery>(
+    query: SetOperation<T>,
+): QueryParameter {
+    return {}; // TODO:
+}
 
 type BooleanQuery = any; // FIXME: T に型制約を付ける
 type BooleanOperand<T extends BooleanQuery> =
@@ -136,6 +122,11 @@ export type BooleanOperation<T> =
 // 対戦相手がコントロールする、クリーチャーと基本でない土地
 // A and (B or ((not C) and D))
 // = (A and B) or (A and (not C) and D)
+export function getQueryParameterOfBooleanOperation<T>(
+    query: SetOperation<T>,
+): QueryParameter {
+    return {}; // TODO:
+}
 
 // ==================================================================
 // MARK: 型ガード

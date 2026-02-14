@@ -30,16 +30,6 @@ import type {
 import type { BooleanOperation, QueryParameter } from "./Query.js";
 
 // =================================================================
-export type ObjectQuery<T extends QueryParameter = QueryParameter> =
-    | CopiableValueQuery<T>
-    | CharacteristicsQuery<T>
-    | FaceQuery<T>
-    | StatusQuery<T>
-    | CounterQuery<T>
-    | MarkerQuery<T>
-    | StickerQuery<T>;
-
-// =================================================================
 // MARK: CopiableValue
 // TODO: 呪文の場合
 export type CopiableValueCondition<T extends QueryParameter = QueryParameter> =
@@ -78,6 +68,11 @@ export type CopiableValueQuery<T extends QueryParameter = QueryParameter> =
           overwrite?: Partial<CopiableValueQuery<T>>;
           add?: Partial<CopiableValueQuery<T>>;
       };
+export function getQueryParameterOfCopiableQuery(
+    query: CopiableValueQuery,
+): QueryParameter {
+    return {}; // TODO:
+}
 
 // =================================================================
 // MARK: Characteristics
@@ -104,6 +99,12 @@ export type CharacteristicsQuery<T extends QueryParameter = QueryParameter> =
     | Characteristics
     | { card: CardQuery<T> }; // FIXME: oneOf? merge?
 
+export function getQueryParameterOfCharacteristicsQuery(
+    query: CharacteristicsQuery,
+): QueryParameter {
+    return {}; // TODO:
+}
+
 // =================================================================
 // MARK: Face
 export type FaceCondition<T extends QueryParameter = QueryParameter> =
@@ -120,6 +121,10 @@ export type FaceQuery<T extends QueryParameter = QueryParameter> =
         };
     }>;
 
+export function getQueryParameterOfFaceQuery(query: FaceQuery): QueryParameter {
+    return {}; // TODO:
+}
+
 // =================================================================
 // MARK: Status
 export type StatusCondition<T extends QueryParameter = QueryParameter> = {
@@ -130,6 +135,11 @@ export type StatusCondition<T extends QueryParameter = QueryParameter> = {
 };
 export type StatusQuery<T extends QueryParameter = QueryParameter> =
     BooleanOperation<StatusCondition<T>>;
+export function getQueryParameterOfStatusQuery(
+    query: StatusQuery,
+): QueryParameter {
+    return {}; // TODO:
+}
 
 // =================================================================
 // MARK: Counter
@@ -137,6 +147,11 @@ export type CounterCondition<T extends QueryParameter = QueryParameter> =
     CounterOnObject[];
 export type CounterQuery<T extends QueryParameter = QueryParameter> =
     BooleanOperation<CounterCondition<T>>;
+export function getQueryParameterOfCounterQuery(
+    query: CounterQuery,
+): QueryParameter {
+    return {}; // TODO:
+}
 
 // =================================================================
 // MARK: Marker
@@ -144,6 +159,11 @@ export type MarkerCondition<T extends QueryParameter = QueryParameter> =
     BooleanOperation<{}>;
 export type MarkerQuery<T extends QueryParameter = QueryParameter> =
     BooleanOperation<Marker[]>;
+export function getQueryParameterOfMarkerQuery(
+    query: MarkerQuery,
+): QueryParameter {
+    return {}; // TODO:
+}
 //
 //
 
@@ -153,6 +173,11 @@ export type StickerCondition<T extends QueryParameter = QueryParameter> =
     BooleanOperation<{}>;
 export type StickerQuery<T extends QueryParameter = QueryParameter> =
     BooleanOperation<Sticker[]>;
+export function getQueryParameterOfStickerQuery(
+    query: StickerQuery,
+): QueryParameter {
+    return {}; // TODO:
+}
 
 // =================================================================
 // MARK: 型ガード

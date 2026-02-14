@@ -8,10 +8,6 @@ import type {
     QueryParameterNameOfSpecificType,
 } from "./Query.js";
 
-export type ScalarQuery<T extends QueryParameter = QueryParameter> =
-    | NumberQuery<T>
-    | ManaCostQuery<T>;
-
 // =================================================================
 // MARK: Number
 export type NumberCondition<T extends QueryParameter = QueryParameter> =
@@ -72,6 +68,12 @@ export type NumberQuery<T extends QueryParameter = QueryParameter> =
           value2: NumberQuery<T>;
       };
 
+export function getQueryParameterOfNumberQuery(
+    query: NumberQuery,
+): QueryParameter {
+    return {}; // TODO:
+}
+
 // =================================================================
 // MARK: ManaCostQuery
 export type ManaCostCondition<T extends QueryParameter = QueryParameter> =
@@ -80,6 +82,12 @@ export type ManaCostQuery<T extends QueryParameter = QueryParameter> =
     | ManaSymbol[]
     | { card: CardQuery<T> };
 //
+
+export function getQueryParameterOfManaCostQuery(
+    query: ManaCostQuery,
+): QueryParameter {
+    return {}; // TODO:
+}
 
 // =================================================================
 // MARK: 型ガード

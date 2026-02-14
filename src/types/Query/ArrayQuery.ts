@@ -25,8 +25,8 @@ import type {
     SetOperation,
 } from "./Query.js";
 
-// =================================================================
-export type ArrayQuery<T extends QueryParameter = QueryParameter> =
+/** 集合を指定するクエリ。 */
+export type SetQuery<T extends QueryParameter = QueryParameter> =
     | GameObjectQuery<T>
     | CardQuery<T>
     | PlayerQuery<T>
@@ -55,6 +55,11 @@ export type GameObjectQuery<T extends QueryParameter = QueryParameter> =
           }
     >;
 // GameObjectQuery -> SetOperation -> GameObjectCondition | {argument: string}
+export function getQueryParameterOfGameObjectQuery(
+    query: GameObjectQuery,
+): QueryParameter {
+    return {}; // TODO:
+}
 
 // =================================================================
 // MARK: Card
@@ -80,6 +85,9 @@ export type CardQuery<T extends QueryParameter = QueryParameter> = SetOperation<
           argument: QueryParameterNameOfSpecificType<T, "card">;
       }
 >;
+export function getQueryParameterOfCardQuery(query: CardQuery): QueryParameter {
+    return {}; // TODO:
+}
 
 // =========================================================
 // MARK: Player
@@ -114,6 +122,11 @@ export type PlayerQuery<T extends QueryParameter = QueryParameter> =
         | PlayerReference<T>
         | { argument: QueryParameterNameOfSpecificType<T, "player"> }
     >;
+export function getQueryParameterOfPlayerQuery(
+    query: PlayerQuery,
+): QueryParameter {
+    return {}; // TODO:
+}
 
 // =================================================================
 // MARK: Name
@@ -131,6 +144,11 @@ export type CardNameQuery<T extends QueryParameter = QueryParameter> =
           }
         | { argument: QueryParameterNameOfSpecificType<T, "name"> }
     >;
+export function getQueryParameterOfCardNameQuery(
+    query: CardNameQuery,
+): QueryParameter {
+    return {}; // TODO:
+}
 
 // =================================================================
 // MARK: 4種(タイプ)
@@ -149,6 +167,11 @@ export type CardTypeQuery<T extends QueryParameter = QueryParameter> =
         | { card: CardQuery<T> }
         | { argument: QueryParameterNameOfSpecificType<T, "cardType"> }
     >;
+export function getQueryParameterOfCardTypeQuery(
+    query: CardTypeQuery,
+): QueryParameter {
+    return {}; // TODO:
+}
 
 // =================================================================
 // サブタイプ
@@ -163,6 +186,11 @@ export type SubtypeQuery<T extends QueryParameter = QueryParameter> =
         | { card: CardQuery<T> }
         | { argument: QueryParameterNameOfSpecificType<T, "subtype"> }
     >;
+export function getQueryParameterOfSubtypeQuery(
+    query: SubtypeQuery,
+): QueryParameter {
+    return {}; // TODO:
+}
 
 // =================================================================
 // 特殊タイプ
@@ -175,6 +203,11 @@ export type SupertypeQuery<T extends QueryParameter = QueryParameter> =
         Supertype | Supertype[] | { card: CardQuery<T> }
         // | { argument: QueryParameterNameOfSpecificType<T, "supertype"> }
     >;
+export function getQueryParameterOfSupertypeQuery(
+    query: SupertypeQuery,
+): QueryParameter {
+    return {}; // TODO:
+}
 
 // =========================================================
 // MARK: 5種(色)
@@ -193,6 +226,11 @@ export type ColorQuery<T extends QueryParameter = QueryParameter> =
         | { card: CardQuery<T> }
         | { argument: QueryParameterNameOfSpecificType<T, "color"> }
     >;
+export function getQueryParameterOfColorQuery(
+    query: ColorQuery,
+): QueryParameter {
+    return {}; // TODO:
+}
 
 // =================================================================
 // MARK: Zone
@@ -210,6 +248,9 @@ export type ZoneCondition<T extends QueryParameter = QueryParameter> =
 export type ZoneQuery<T extends QueryParameter = QueryParameter> = SetOperation<
     Zone | ZoneCondition<T>
 >;
+export function getQueryParameterOfZoneQuery(query: ZoneQuery): QueryParameter {
+    return {}; // TODO:
+}
 
 // =========================================================
 // MARK: 6種(能力) TODO:
@@ -221,11 +262,20 @@ export type AbilityQuery<T extends QueryParameter = QueryParameter> =
           lose?: Ability[]; // TODO: 能力の同一性の検査
           add?: Ability[];
       };
+export function getQueryParameterOfAbilityQuery(
+    query: AbilityQuery,
+): QueryParameter {
+    return {}; // TODO:
+}
+
 // =========================================================
 // MARK: 3種(文章) TODO:
 export type TextCondition<T extends QueryParameter = QueryParameter> =
     BooleanOperation<{}>;
 export type TextQuery<T extends QueryParameter = QueryParameter> = {};
+export function getQueryParameterOfTextQuery(query: TextQuery): QueryParameter {
+    return {}; // TODO:
+}
 
 // =========================================================
 // MARK: 型ガード
