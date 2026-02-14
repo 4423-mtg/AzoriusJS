@@ -12,21 +12,19 @@ import { landTypes } from "../Subtype.js";
 import { isLayerCommonProperty, type LayerCommonProperty } from "./Layer.js";
 
 /** タイプ変更 */
-export type Layer4<T extends QueryParameter = {}> = LayerCommonProperty & {
-    type: "4";
-    types: {
-        action: "set" | "append" | "remove";
-        typeQuery:
-            | CardTypeQuery<T>
-            | SubtypeQuery<T>
-            | SupertypeQuery<T>
-            | (CardTypeQuery<T> | SubtypeQuery<T> | SupertypeQuery<T>)[];
-    }[];
-};
-export function isLayer4<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is Layer4<T> {
+export type Layer4<T extends QueryParameter = QueryParameter> =
+    LayerCommonProperty & {
+        type: "4";
+        types: {
+            action: "set" | "append" | "remove";
+            typeQuery:
+                | CardTypeQuery<T>
+                | SubtypeQuery<T>
+                | SupertypeQuery<T>
+                | (CardTypeQuery<T> | SubtypeQuery<T> | SupertypeQuery<T>)[];
+        }[];
+    };
+export function isLayer4(arg: unknown): arg is Layer4 {
     return (
         isLayerCommonProperty(arg) &&
         arg.type === "4" &&
@@ -40,9 +38,9 @@ export function isLayer4<T extends QueryParameter>(
                     e.type === "append" ||
                     e.type === "remove") &&
                 "query" in arg &&
-                (isCardTypeQuery(e.query, parameter) ||
-                    isSubtypeQuery(e.query, parameter) ||
-                    isSupertypeQuery(e.query, parameter)),
+                (isCardTypeQuery(e.query) ||
+                    isSubtypeQuery(e.query) ||
+                    isSupertypeQuery(e.query)),
         )
     );
 }

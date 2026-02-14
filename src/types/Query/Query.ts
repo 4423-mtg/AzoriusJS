@@ -5,6 +5,16 @@ import type { Subtype } from "../Characteristics/Subtype.js";
 import type { Card } from "../GameObject/Card/Card.js";
 import { isGameObject, type GameObject } from "../GameObject/GameObject.js";
 import { isPlayer, type Player } from "../GameObject/Player.js";
+import type {
+    CardCondition,
+    CardNameCondition,
+    CardTypeCondition,
+    ColorCondition,
+    GameObjectCondition,
+    PlayerCondition,
+    SubtypeCondition,
+    SupertypeCondition,
+} from "./ArrayQuery.js";
 
 // 種類別（レイヤー）に関してはこれでOK。
 // 手続き変更効果・処理禁止効果・置換効果・追加ターン効果についてはどう？
@@ -18,6 +28,17 @@ import { isPlayer, type Player } from "../GameObject/Player.js";
 // => クラスにする必要はある？しなくてもいいが、型ガードはできない
 //   - 効果の定義を書くときに型ガードがないとチェックができない
 //     => タグ化しよう
+
+export type Condition<T extends QueryParameter> =
+    | GameObjectCondition<T>
+    | CardCondition<T>
+    | PlayerCondition<T>
+    | CardNameCondition<T>
+    | CardTypeCondition<T>
+    | SubtypeCondition<T>
+    | SupertypeCondition<T>
+    | ColorCondition<T>;
+// TODO:
 
 // Queryで参照値として使う
 // MARK: QueryParameter
@@ -68,49 +89,40 @@ export type QueryParameterNameOfSpecificType<
 
 // =================================================================
 // MARK: 演算型
+export type _Intersection<T> = {
+    operation: "intersection";
+    operand: T[];
+};
+export type _Difference<T, U> = {
+    // FIXME: TとUの関係
+    operation: "difference";
+    left: T;
+    right: U;
+};
 export type SetOperation<T> =
     | T
-    | {
-          operation: "intersection";
-          operand: T[];
-      }
-    | {
-          operation: "difference";
-          left:
-              | T
-              | {
-                    operation: "intersection";
-                    operand: T[];
-                };
-          right: T;
-      }
+    | _Intersection<T>
+    | _Difference<T, T>
+    | _Difference<_Intersection<T>, T>
     | (
           | T
-          | {
-                operation: "intersection";
-                operand: T[];
-            }
-          | {
-                operation: "difference";
-                left:
-                    | T
-                    | {
-                          operation: "intersection";
-                          operand: T[];
-                      };
-                right: T;
-            }
+          | _Intersection<T>
+          | _Difference<T, T>
+          | _Difference<_Intersection<T>, T>
       )[]; // unionとして解釈する
 // (A & B) - C = (A - C) & (B - C)
-
 // A - (B + C) = (A - B) & (A - C)
 // A - (B & C) = (A - B) + (A - C)
 // A - (B - C) = (A - B) + (A & C)
 
+type BooleanQuery = any; // FIXME: T に型制約を付ける
+type BooleanOperand<T extends BooleanQuery> =
+    | T
+    | { operation: "not"; operand: T };
 export type BooleanOperation<T> =
-    | (T | { operation: "not"; operand: T })
-    | (T | { operation: "not"; operand: T })[] // andとして解釈する
-    | { operation: "or"; operand: (T | { operation: "not"; operand: T })[] };
+    | BooleanOperand<T>
+    | BooleanOperand<T>[] // andとして解釈する
+    | { operation: "or"; operand: BooleanOperand<T>[] };
 // not (A and B) = (not A) or (not B)
 // not (A or B) = (not A) and (not B)
 // A and (not B)
@@ -119,7 +131,6 @@ export type BooleanOperation<T> =
 // A or (not B)
 // A or (B and C) =
 // A or (B or C) = A or B or C
-
 // あなたがコントロールしていない基本でない土地
 // (not A) and (not B) and C
 // 対戦相手がコントロールする、クリーチャーと基本でない土地

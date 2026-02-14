@@ -12,7 +12,11 @@ import {
     type LayerCategory,
 } from "../../Characteristics/Layer/Layer.js";
 import type { Instruction } from "../../Instruction/Instruction.js";
-import { isTimestamp, type Timestamp } from "../../GameState/Timestamp.js";
+import {
+    createTimestamp,
+    isTimestamp,
+    type Timestamp,
+} from "../../GameState/Timestamp.js";
 import { isStackedAbility, type StackedAbility } from "../StackedAbility.js";
 import { isAbility, type Ability } from "../Ability.js";
 import { isSpell, type Spell } from "../Card/Spell.js";
@@ -39,25 +43,29 @@ import type {
 /** 継続的効果。単一の常在型能力からの継続的効果か、または、単一の呪文や能力の解決によって生成された継続的効果 */
 export type ContinuousEffect = GameObject & ContinuousEffectProperty;
 export type ContinuousEffectProperty = {
-    source: Spell | StackedAbility | Ability | undefined | string; // FIXME: 一時的にstringを追加
+    // FIXME: 一時的にstringを追加
+    // FIXME: generatedBy
+    source: Spell | StackedAbility | Ability | undefined | string;
     timestamp: Timestamp;
 };
 
 /** ContinuousEffect を作成する */
 export function createContinuousEffect(): ContinuousEffect {
-    // TODO: 実装
-    //
-    return false;
+    // FIXME:
+    const obj = createGameObject();
+    const cep = { source: undefined, timestamp: createTimestamp() };
+    return { ...obj, ...cep } satisfies ContinuousEffect;
 }
 
 // ========================================================================
 // MARK: 特性を変更する効果
 /** 特性を変更する継続的効果 */
-export type CharacteristicsAlteringEffect<T extends QueryParameter> =
-    ContinuousEffect & CharacteristicsAlteringEffectProperty<T>;
+export type CharacteristicsAlteringEffect<
+    T extends QueryParameter = QueryParameter,
+> = ContinuousEffect & CharacteristicsAlteringEffectProperty<T>;
 // プロパティ
 export type CharacteristicsAlteringEffectProperty<
-    T extends QueryParameter = {},
+    T extends QueryParameter = QueryParameter,
 > = {
     affected: (GameObjectQuery<T> & CardQuery<T>) | PlayerQuery<T>;
     layer1a: Layer1a<T> | undefined;
@@ -74,7 +82,9 @@ export type CharacteristicsAlteringEffectProperty<
 };
 
 /** 値や特性を変更する継続的効果を作成する */
-export function createCharacteristicsAlteringEffect<T extends QueryParameter>(
+export function createCharacteristicsAlteringEffect<
+    T extends QueryParameter = QueryParameter,
+>(
     parameters: GameObjectParameters &
         ContinuousEffectProperty &
         CharacteristicsAlteringEffectParameter<T>,
@@ -99,12 +109,16 @@ export function createCharacteristicsAlteringEffect<T extends QueryParameter>(
     };
 }
 // 作成時の引数
-export type CharacteristicsAlteringEffectParameter<T extends QueryParameter> =
-    Required<Pick<CharacteristicsAlteringEffectProperty<T>, "affected">> &
-        Partial<Omit<CharacteristicsAlteringEffectProperty<T>, "affected">>;
+export type CharacteristicsAlteringEffectParameter<
+    T extends QueryParameter = QueryParameter,
+> = Required<Pick<CharacteristicsAlteringEffectProperty<T>, "affected">> &
+    Partial<Omit<CharacteristicsAlteringEffectProperty<T>, "affected">>;
 
 /** 指定した種類別のレイヤーを取得する */
-export function getLayer<T extends LayerCategory, U extends QueryParameter>(
+export function getLayer<
+    T extends LayerCategory,
+    U extends QueryParameter = QueryParameter,
+>(
     effect: CharacteristicsAlteringEffect<U>,
     category: T, // 型を絞り込むためジェネリクスを使う
 ): Layer<T, U> | undefined {
@@ -112,18 +126,24 @@ export function getLayer<T extends LayerCategory, U extends QueryParameter>(
 }
 
 /** 指定した種類別の効果を持っているかどうか (undefinedも不可) */
-export function hasLayer<T extends LayerCategory, U extends QueryParameter>(
+export function hasLayer<
+    T extends LayerCategory,
+    U extends QueryParameter = QueryParameter,
+>(
     effect: unknown,
     layerCategory: T,
     parameter: U,
 ): effect is CharacteristicsAlteringEffect<U> & Required<_layerProperty<T, U>> {
     return (
-        isCharacteristicsAlteringEffect(effect, parameter) &&
+        isCharacteristicsAlteringEffect(effect) &&
         getLayer(effect, layerCategory) !== undefined
     );
 }
 
-type _layerProperty<T extends LayerCategory, U extends QueryParameter> = {
+type _layerProperty<
+    T extends LayerCategory,
+    U extends QueryParameter = QueryParameter,
+> = {
     [K in `layer${T}`]: Layer<T, U> | undefined;
 };
 
@@ -189,9 +209,10 @@ type InstructionChecker = (args: {
 /** Instructionを別の1つ以上のInstructionに置き換える関数を表す型 */
 type InstructionReplacer = (instruction: Instruction) => Instruction[];
 
-// =================================================================
+// ========================================================================================
+// ========================================================================================
+// ========================================================================================
 // MARK: 型ガード
-/** 型ガード */
 export function isContinuousEffect(obj: unknown): obj is ContinuousEffect {
     return isGameObject(obj) && isContinuousEffectProperty(obj);
 }
@@ -214,43 +235,41 @@ function isContinuousEffectProperty(
         return false;
     }
 }
-/** 型ガード */
-export function isCharacteristicsAlteringEffect<T extends QueryParameter>(
+
+export function isCharacteristicsAlteringEffect(
     arg: unknown,
-    parameter: T,
-): arg is CharacteristicsAlteringEffect<T> {
+): arg is CharacteristicsAlteringEffect {
     return (
-        isContinuousEffect(arg) &&
-        isCharacteristicsAlteringEffectProperty(arg, parameter)
+        isContinuousEffect(arg) && isCharacteristicsAlteringEffectProperty(arg)
     );
 }
-export function isCharacteristicsAlteringEffectProperty<
-    T extends QueryParameter,
->(arg: unknown, parameter: T): arg is CharacteristicsAlteringEffectProperty {
+export function isCharacteristicsAlteringEffectProperty(
+    arg: unknown,
+): arg is CharacteristicsAlteringEffectProperty {
     return (
         typeof arg === "object" &&
         arg !== null &&
         "layer1a" in arg &&
-        isLayer(arg.layer1a, "1a", parameter) &&
+        isLayer(arg.layer1a, "1a") &&
         "layer1b" in arg &&
-        isLayer(arg.layer1b, "1b", parameter) &&
+        isLayer(arg.layer1b, "1b") &&
         "layer2" in arg &&
-        isLayer(arg.layer2, "2", parameter) &&
+        isLayer(arg.layer2, "2") &&
         "layer3" in arg &&
-        isLayer(arg.layer3, "3", parameter) &&
+        isLayer(arg.layer3, "3") &&
         "layer4" in arg &&
-        isLayer(arg.layer4, "4", parameter) &&
+        isLayer(arg.layer4, "4") &&
         "layer5" in arg &&
-        isLayer(arg.layer5, "5", parameter) &&
+        isLayer(arg.layer5, "5") &&
         "layer6" in arg &&
-        isLayer(arg.layer6, "6", parameter) &&
+        isLayer(arg.layer6, "6") &&
         "layer7a" in arg &&
-        isLayer(arg.layer7a, "7a", parameter) &&
+        isLayer(arg.layer7a, "7a") &&
         "layer7b" in arg &&
-        isLayer(arg.layer7b, "7b", parameter) &&
+        isLayer(arg.layer7b, "7b") &&
         "layer7c" in arg &&
-        isLayer(arg.layer7c, "7c", parameter) &&
+        isLayer(arg.layer7c, "7c") &&
         "layer7d" in arg &&
-        isLayer(arg.layer7d, "7d", parameter)
+        isLayer(arg.layer7d, "7d")
     );
 }

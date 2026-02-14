@@ -10,19 +10,17 @@ import type { Characteristics } from "../Characteristic.js";
 import { isLayerCommonProperty, type LayerCommonProperty } from "./Layer.js";
 
 /** コピー可能な効果の適用 */
-export type Layer1a<T extends QueryParameter = {}> = LayerCommonProperty & {
-    type: "1a";
-    copiableValue: CopiableValueQuery<T>;
-};
-export function isLayer1a<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is Layer1a<T> {
+export type Layer1a<T extends QueryParameter = QueryParameter> =
+    LayerCommonProperty & {
+        type: "1a";
+        copiableValue: CopiableValueQuery<T>;
+    };
+export function isLayer1a(arg: unknown): arg is Layer1a {
     return (
         isLayerCommonProperty(arg) &&
         arg.type === "1a" &&
         "copiableValue" in arg &&
-        isCopiableValueQuery(arg.copiableValue, parameter)
+        isCopiableValueQuery(arg.copiableValue)
     );
 }
 function applyLayer1a<T extends QueryParameter>(
@@ -35,19 +33,17 @@ function applyLayer1a<T extends QueryParameter>(
 
 // MARK: 型定義: 1b
 /** 裏向きによる特性変更 */
-export type Layer1b<T extends QueryParameter = {}> = LayerCommonProperty & {
-    type: "1b";
-    copiableValue: CopiableValueQuery<T>;
-};
-export function isLayer1b<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is Layer1b<T> {
+export type Layer1b<T extends QueryParameter = QueryParameter> =
+    LayerCommonProperty & {
+        type: "1b";
+        copiableValue: CopiableValueQuery<T>;
+    };
+export function isLayer1b(arg: unknown): arg is Layer1b {
     return (
         isLayerCommonProperty(arg) &&
         arg.type === "1b" &&
         "copiableValue" in arg &&
-        isCopiableValueQuery(arg.copiableValue, parameter)
+        isCopiableValueQuery(arg.copiableValue)
     );
 }
 

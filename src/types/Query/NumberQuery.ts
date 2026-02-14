@@ -8,17 +8,22 @@ import type {
     QueryParameterNameOfSpecificType,
 } from "./Query.js";
 
+export type ScalarQuery<T extends QueryParameter = QueryParameter> =
+    | NumberQuery<T>
+    | ManaCostQuery<T>;
+
 // =================================================================
 // MARK: Number
-export type NumberCondition<T extends QueryParameter> = BooleanOperation<
-    | NumberQuery<T>
-    | {
-          type: "greater" | "less" | "greaterEqual" | "lessEqual";
-          number: NumberQuery<T>;
-      }
->;
+export type NumberCondition<T extends QueryParameter = QueryParameter> =
+    BooleanOperation<
+        | NumberQuery<T>
+        | {
+              type: "greater" | "less" | "greaterEqual" | "lessEqual";
+              number: NumberQuery<T>;
+          }
+    >;
 
-export type NumberReference<T extends QueryParameter> =
+export type NumberReference<T extends QueryParameter = QueryParameter> =
     // TODO: GameObject (Spellなど) 対象の数など
     | NumericalValue
     | {
@@ -52,7 +57,7 @@ export type NumberReference<T extends QueryParameter> =
       }
     // 履歴 このターンに〇〇した数など TODO:
     | { valueType: "stormCount" };
-export type NumberQuery<T extends QueryParameter> =
+export type NumberQuery<T extends QueryParameter = QueryParameter> =
     | NumberReference<T>
     // 引数
     | { argument: QueryParameterNameOfSpecificType<T, "number"> }
@@ -69,45 +74,33 @@ export type NumberQuery<T extends QueryParameter> =
 
 // =================================================================
 // MARK: ManaCostQuery
-export type ManaCostCondition<T extends QueryParameter> = ManaCostQuery<T>;
-export type ManaCostQuery<T extends QueryParameter> =
+export type ManaCostCondition<T extends QueryParameter = QueryParameter> =
+    ManaCostQuery<T>;
+export type ManaCostQuery<T extends QueryParameter = QueryParameter> =
     | ManaSymbol[]
     | { card: CardQuery<T> };
 //
 
-export function isNumberCondition<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is NumberCondition<T> {
+// =================================================================
+// MARK: 型ガード
+export function isNumberCondition(arg: unknown): arg is NumberCondition {
     // TODO:
     return false;
 }
-export function isNumberReference<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is NumberReference<T> {
+export function isNumberReference(arg: unknown): arg is NumberReference {
     // TODO:
     return false;
 }
-export function isNumberQuery<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is NumberQuery<T> {
+export function isNumberQuery(arg: unknown): arg is NumberQuery {
     // TODO:
     return false;
 }
 
-export function isManaCostCondition<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is ManaCostCondition<T> {
+export function isManaCostCondition(arg: unknown): arg is ManaCostCondition {
     // TODO:
     return false;
 }
-export function isManaCostQuery<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is ManaCostQuery<T> {
+export function isManaCostQuery(arg: unknown): arg is ManaCostQuery {
     // TODO:
     return false;
 }

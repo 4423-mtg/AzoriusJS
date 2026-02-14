@@ -42,32 +42,16 @@ export const layerCategories = [
 
 /** 種類別 */
 export type LayerCategory = (typeof layerCategories)[number];
-export function isLayerCategory(arg: unknown): arg is LayerCategory {
-    return (
-        typeof arg === "string" &&
-        (layerCategories as readonly string[]).includes(arg)
-    );
-}
 
 // ---------------------------------------------------------------
 export type LayerCommonProperty = {
     type: LayerCategory;
 };
-export function isLayerCommonProperty(
-    arg: unknown,
-): arg is LayerCommonProperty {
-    return (
-        typeof arg === "object" &&
-        arg !== null &&
-        "type" in arg &&
-        isLayerCategory(arg.type)
-    );
-}
 
 /** 種類別に対応するレイヤー */
 export type Layer<
     T extends LayerCategory,
-    U extends QueryParameter,
+    U extends QueryParameter = QueryParameter,
 > = T extends "1a"
     ? Layer1a<U>
     : U extends "1b"
@@ -91,41 +75,9 @@ export type Layer<
     : U extends "7d"
     ? Layer7d<U>
     : never;
-export function isLayer<T extends LayerCategory, U extends QueryParameter>(
-    arg: unknown,
-    category: T,
-    parameter: U,
-): arg is Layer<T, U> {
-    switch (category) {
-        case "1a":
-            return isLayer1a(arg, parameter);
-        case "1b":
-            return isLayer1b(arg, parameter);
-        case "2":
-            return isLayer2(arg, parameter);
-        case "3":
-            return isLayer3(arg, parameter);
-        case "4":
-            return isLayer4(arg, parameter);
-        case "5":
-            return isLayer5(arg, parameter);
-        case "6":
-            return isLayer6(arg, parameter);
-        case "7a":
-            return isLayer7a(arg, parameter);
-        case "7b":
-            return isLayer7b(arg, parameter);
-        case "7c":
-            return isLayer7c(arg, parameter);
-        case "7d":
-            return isLayer7d(arg, parameter);
-        default:
-            throw new TypeError(category);
-    }
-}
 
 /** 任意のレイヤー */
-export type AnyLayer<T extends QueryParameter> =
+export type AnyLayer<T extends QueryParameter = QueryParameter> =
     | Layer1a<T>
     | Layer1b<T>
     | Layer2<T>
@@ -137,24 +89,6 @@ export type AnyLayer<T extends QueryParameter> =
     | Layer7b<T>
     | Layer7c<T>
     | Layer7d<T>;
-export function isAnyLayer<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is AnyLayer<T> {
-    return (
-        isLayer1a(arg, parameter) ||
-        isLayer1b(arg, parameter) ||
-        isLayer2(arg, parameter) ||
-        isLayer3(arg, parameter) ||
-        isLayer4(arg, parameter) ||
-        isLayer5(arg, parameter) ||
-        isLayer6(arg, parameter) ||
-        isLayer7a(arg, parameter) ||
-        isLayer7b(arg, parameter) ||
-        isLayer7c(arg, parameter) ||
-        isLayer7d(arg, parameter)
-    );
-}
 
 // =================================================================
 // MARK: レイヤーの適用
@@ -193,4 +127,69 @@ export function applyLayers<T extends QueryParameter>(
         ret = _applyLayer(_layer, game, ret);
     }
     return ret;
+}
+
+// =========================================================================
+// MARK: 型ガード
+export function isLayerCategory(arg: unknown): arg is LayerCategory {
+    return (
+        typeof arg === "string" &&
+        (layerCategories as readonly string[]).includes(arg)
+    );
+}
+export function isLayerCommonProperty(
+    arg: unknown,
+): arg is LayerCommonProperty {
+    return (
+        typeof arg === "object" &&
+        arg !== null &&
+        "type" in arg &&
+        isLayerCategory(arg.type)
+    );
+}
+export function isLayer<T extends LayerCategory>(
+    arg: unknown,
+    category: T,
+): arg is Layer<T> {
+    switch (category) {
+        case "1a":
+            return isLayer1a(arg);
+        case "1b":
+            return isLayer1b(arg);
+        case "2":
+            return isLayer2(arg);
+        case "3":
+            return isLayer3(arg);
+        case "4":
+            return isLayer4(arg);
+        case "5":
+            return isLayer5(arg);
+        case "6":
+            return isLayer6(arg);
+        case "7a":
+            return isLayer7a(arg);
+        case "7b":
+            return isLayer7b(arg);
+        case "7c":
+            return isLayer7c(arg);
+        case "7d":
+            return isLayer7d(arg);
+        default:
+            throw new TypeError(category);
+    }
+}
+export function isAnyLayer(arg: unknown): arg is AnyLayer {
+    return (
+        isLayer1a(arg) ||
+        isLayer1b(arg) ||
+        isLayer2(arg) ||
+        isLayer3(arg) ||
+        isLayer4(arg) ||
+        isLayer5(arg) ||
+        isLayer6(arg) ||
+        isLayer7a(arg) ||
+        isLayer7b(arg) ||
+        isLayer7c(arg) ||
+        isLayer7d(arg)
+    );
 }

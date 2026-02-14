@@ -30,9 +30,19 @@ import type {
 import type { BooleanOperation, QueryParameter } from "./Query.js";
 
 // =================================================================
+export type ObjectQuery<T extends QueryParameter = QueryParameter> =
+    | CopiableValueQuery<T>
+    | CharacteristicsQuery<T>
+    | FaceQuery<T>
+    | StatusQuery<T>
+    | CounterQuery<T>
+    | MarkerQuery<T>
+    | StickerQuery<T>;
+
+// =================================================================
 // MARK: CopiableValue
 // TODO: 呪文の場合
-export type CopiableValueCondition<T extends QueryParameter> =
+export type CopiableValueCondition<T extends QueryParameter = QueryParameter> =
     BooleanOperation<{
         name?: CardNameCondition<T>;
         manaCost?: ManaCostCondition<T>;
@@ -45,7 +55,7 @@ export type CopiableValueCondition<T extends QueryParameter> =
         toughness?: NumberCondition<T>;
         loyalty?: NumberCondition<T>;
     }>;
-export type CopiableValueQuery<T extends QueryParameter> =
+export type CopiableValueQuery<T extends QueryParameter = QueryParameter> =
     // 固定値
     | CopiableValue
     | {
@@ -72,178 +82,146 @@ export type CopiableValueQuery<T extends QueryParameter> =
 // =================================================================
 // MARK: Characteristics
 // FIXME:
-export type CharacteristicsCondition<T extends QueryParameter> =
-    BooleanOperation<{
-        name?: CardNameCondition<T>;
-        manaCost?: ManaCostCondition<T>;
-        color?: ColorCondition<T>;
-        cardType?: CardTypeCondition<T>;
-        subtype?: SubtypeCondition<T>;
-        supertype?: SupertypeCondition<T>;
-        text?: TextQuery<T>; // FIXME:
-        ability?: AbilityQuery<T>; // FIXME:
-        power?: NumberCondition<T>;
-        toughness?: NumberCondition<T>;
-        loyalty?: NumberCondition<T>;
-        defense?: NumberCondition<T>;
-        handModifier?: NumberCondition<T>;
-        lifeModifier?: NumberCondition<T>;
-    }>;
-export type CharacteristicsQuery<T extends QueryParameter> =
+export type CharacteristicsCondition<
+    T extends QueryParameter = QueryParameter,
+> = BooleanOperation<{
+    name?: CardNameCondition<T>;
+    manaCost?: ManaCostCondition<T>;
+    color?: ColorCondition<T>;
+    cardType?: CardTypeCondition<T>;
+    subtype?: SubtypeCondition<T>;
+    supertype?: SupertypeCondition<T>;
+    text?: TextQuery<T>; // FIXME:
+    ability?: AbilityQuery<T>; // FIXME:
+    power?: NumberCondition<T>;
+    toughness?: NumberCondition<T>;
+    loyalty?: NumberCondition<T>;
+    defense?: NumberCondition<T>;
+    handModifier?: NumberCondition<T>;
+    lifeModifier?: NumberCondition<T>;
+}>;
+export type CharacteristicsQuery<T extends QueryParameter = QueryParameter> =
     | Characteristics
     | { card: CardQuery<T> }; // FIXME: oneOf? merge?
 
 // =================================================================
 // MARK: Face
-export type FaceCondition<T extends QueryParameter> = BooleanOperation<{}>;
-export type FaceQuery<T extends QueryParameter> = BooleanOperation<{
-    front?: {
-        printed?: CharacteristicsCondition<T>;
-        charcteristics?: CharacteristicsCondition<T>;
-    };
-    back?: {
-        printed?: CharacteristicsCondition<T>;
-        charcteristics?: CharacteristicsCondition<T>;
-    };
-}>;
+export type FaceCondition<T extends QueryParameter = QueryParameter> =
+    BooleanOperation<{}>;
+export type FaceQuery<T extends QueryParameter = QueryParameter> =
+    BooleanOperation<{
+        front?: {
+            printed?: CharacteristicsCondition<T>;
+            charcteristics?: CharacteristicsCondition<T>;
+        };
+        back?: {
+            printed?: CharacteristicsCondition<T>;
+            charcteristics?: CharacteristicsCondition<T>;
+        };
+    }>;
 
 // =================================================================
 // MARK: Status
-export type StatusCondition<T extends QueryParameter> = {
+export type StatusCondition<T extends QueryParameter = QueryParameter> = {
     tapped?: boolean;
     flipped?: boolean;
     isFaceDown?: boolean;
     isPhasedOut?: boolean;
 };
-export type StatusQuery<T extends QueryParameter> = BooleanOperation<
-    StatusCondition<T>
->;
+export type StatusQuery<T extends QueryParameter = QueryParameter> =
+    BooleanOperation<StatusCondition<T>>;
 
 // =================================================================
 // MARK: Counter
-export type CounterCondition<T extends QueryParameter> = CounterOnObject[];
-export type CounterQuery<T extends QueryParameter> = BooleanOperation<
-    CounterCondition<T>
->;
+export type CounterCondition<T extends QueryParameter = QueryParameter> =
+    CounterOnObject[];
+export type CounterQuery<T extends QueryParameter = QueryParameter> =
+    BooleanOperation<CounterCondition<T>>;
 
 // =================================================================
 // MARK: Marker
-export type MarkerCondition<T extends QueryParameter> = BooleanOperation<{}>;
-export type MarkerQuery<T extends QueryParameter> = BooleanOperation<Marker[]>;
+export type MarkerCondition<T extends QueryParameter = QueryParameter> =
+    BooleanOperation<{}>;
+export type MarkerQuery<T extends QueryParameter = QueryParameter> =
+    BooleanOperation<Marker[]>;
 //
 //
 
 // =================================================================
 // MARK: Sticker
-export type StickerCondition<T extends QueryParameter> = BooleanOperation<{}>;
-export type StickerQuery<T extends QueryParameter> = BooleanOperation<
-    Sticker[]
->;
+export type StickerCondition<T extends QueryParameter = QueryParameter> =
+    BooleanOperation<{}>;
+export type StickerQuery<T extends QueryParameter = QueryParameter> =
+    BooleanOperation<Sticker[]>;
 
 // =================================================================
 // MARK: 型ガード
-export function isCopiableValueCondition<T extends QueryParameter>(
+export function isCopiableValueCondition(
     arg: unknown,
-    parameter: T,
-): arg is CopiableValueCondition<T> {
+): arg is CopiableValueCondition {
     // TODO:
     return false;
 }
 
-export function isCopiableValueQuery<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is CopiableValueQuery<T> {
+export function isCopiableValueQuery(arg: unknown): arg is CopiableValueQuery {
     // TODO:
     return false;
 }
 
-export function isCharacteristicsCondition<T extends QueryParameter>(
+export function isCharacteristicsCondition(
     arg: unknown,
-    parameter: T,
-): arg is CharacteristicsCondition<T> {
+): arg is CharacteristicsCondition {
     // TODO:
     return false;
 }
-export function isCharacteristicsQuery<T extends QueryParameter>(
+export function isCharacteristicsQuery(
     arg: unknown,
-    parameter: T,
-): arg is CharacteristicsQuery<T> {
-    // TODO:
-    return false;
-}
-
-export function isFaceCondition<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is FaceCondition<T> {
-    // TODO:
-    return false;
-}
-export function isFaceQuery<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is FaceQuery<T> {
+): arg is CharacteristicsQuery {
     // TODO:
     return false;
 }
 
-export function isStatusCondition<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is StatusCondition<T> {
+export function isFaceCondition(arg: unknown): arg is FaceCondition {
     // TODO:
     return false;
 }
-export function isStatusQuery<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is StatusQuery<T> {
+export function isFaceQuery(arg: unknown): arg is FaceQuery {
     // TODO:
     return false;
 }
 
-export function isCounterCondition<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is CounterCondition<T> {
+export function isStatusCondition(arg: unknown): arg is StatusCondition {
     // TODO:
     return false;
 }
-export function isCounterQuery<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is CounterQuery<T> {
+export function isStatusQuery(arg: unknown): arg is StatusQuery {
     // TODO:
     return false;
 }
 
-export function isMarkerCondition<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is MarkerCondition<T> {
+export function isCounterCondition(arg: unknown): arg is CounterCondition {
     // TODO:
     return false;
 }
-export function isMarkerQuery<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is MarkerQuery<T> {
+export function isCounterQuery(arg: unknown): arg is CounterQuery {
     // TODO:
     return false;
 }
 
-export function isStickerCondition<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is StickerCondition<T> {
+export function isMarkerCondition(arg: unknown): arg is MarkerCondition {
     // TODO:
     return false;
 }
-export function isStickerQuery<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is StickerQuery<T> {
+export function isMarkerQuery(arg: unknown): arg is MarkerQuery {
+    // TODO:
+    return false;
+}
+
+export function isStickerCondition(arg: unknown): arg is StickerCondition {
+    // TODO:
+    return false;
+}
+export function isStickerQuery(arg: unknown): arg is StickerQuery {
     // TODO:
     return false;
 }

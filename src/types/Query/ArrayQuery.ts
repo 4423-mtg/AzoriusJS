@@ -6,7 +6,7 @@ import type { Supertype } from "../Characteristics/Supertype.js";
 import type { Ability } from "../GameObject/Ability.js";
 import type { Player } from "../GameObject/Player.js";
 import type { PlayerInfo } from "../GameState/Match.js";
-import type { Zone, ZoneId, ZoneType } from "../GameState/Zone.js";
+import type { Zone, ZoneType } from "../GameState/Zone.js";
 import type { NumberCondition } from "./NumberQuery.js";
 import type {
     CharacteristicsCondition,
@@ -17,6 +17,8 @@ import type {
     StickerQuery,
 } from "./ObjectQuery.js";
 import type {
+    _Difference,
+    _Intersection,
     BooleanOperation,
     QueryParameter,
     QueryParameterNameOfSpecificType,
@@ -24,21 +26,41 @@ import type {
 } from "./Query.js";
 
 // =================================================================
+export type ArrayQuery<T extends QueryParameter = QueryParameter> =
+    | GameObjectQuery<T>
+    | CardQuery<T>
+    | PlayerQuery<T>
+    | CardNameQuery<T>
+    | CardTypeQuery<T>
+    | SubtypeQuery<T>
+    | SupertypeQuery<T>
+    | ColorQuery<T>
+    | ZoneQuery<T>
+    | AbilityQuery<T>
+    | TextQuery<T>;
+
+// =================================================================
 // MARK: GameObject
-export type GameObjectCondition<T extends QueryParameter> = {
+export type GameObjectCondition<T extends QueryParameter = QueryParameter> = {
     zone: ZoneQuery<T>;
 };
-export type GameObjectQuery<T extends QueryParameter> = SetOperation<
-    | GameObjectCondition<T>
-    | {
-          argument: QueryParameterNameOfSpecificType<T, "gameObject" | "card">;
-      }
->;
+export type GameObjectQuery<T extends QueryParameter = QueryParameter> =
+    SetOperation<
+        | GameObjectCondition<T>
+        | {
+              argument: QueryParameterNameOfSpecificType<
+                  T,
+                  "gameObject" | "card"
+              >;
+          }
+    >;
+// GameObjectQuery -> SetOperation -> GameObjectCondition | {argument: string}
+
 // =================================================================
 // MARK: Card
 // FIXME: 継続的効果は一般に GameObject 全般に効果を及ぼすが、
 // 特性を変更する効果は Card にのみ影響するので、 CardQuery を指定したい場合が有る
-export type CardCondition<T extends QueryParameter> = {
+export type CardCondition<T extends QueryParameter = QueryParameter> = {
     face?: FaceQuery<T>;
     owner?: PlayerQuery<T>;
     controller?: PlayerQuery<T>;
@@ -52,7 +74,7 @@ export type CardCondition<T extends QueryParameter> = {
     stickers?: StickerQuery<T>;
     manaValue?: NumberCondition<T>; // ここでいいのか？
 };
-export type CardQuery<T extends QueryParameter> = SetOperation<
+export type CardQuery<T extends QueryParameter = QueryParameter> = SetOperation<
     | (GameObjectCondition<T> & CardCondition<T>)
     | {
           argument: QueryParameterNameOfSpecificType<T, "card">;
@@ -61,20 +83,21 @@ export type CardQuery<T extends QueryParameter> = SetOperation<
 
 // =========================================================
 // MARK: Player
-export type PlayerCondition<T extends QueryParameter> = BooleanOperation<
-    | Player
-    | { type: "oneOf"; player: PlayerQuery<T> }
-    | {
-          type: "owner" | "controller";
-          object: GameObjectQuery<T>;
-      }
-    | {
-          type: "opponent" | "teamMate";
-          player: PlayerQuery<T>;
-      }
-    | { type: "isMonarch" | "startingPlayer" }
->;
-type PlayerReference<T extends QueryParameter> =
+export type PlayerCondition<T extends QueryParameter = QueryParameter> =
+    BooleanOperation<
+        | Player
+        | { type: "oneOf"; player: PlayerQuery<T> }
+        | {
+              type: "owner" | "controller";
+              object: GameObjectQuery<T>;
+          }
+        | {
+              type: "opponent" | "teamMate";
+              player: PlayerQuery<T>;
+          }
+        | { type: "isMonarch" | "startingPlayer" }
+    >;
+type PlayerReference<T extends QueryParameter = QueryParameter> =
     | Player
     | Player[]
     | { info: PlayerInfo }
@@ -86,100 +109,113 @@ type PlayerReference<T extends QueryParameter> =
           type: "opponent" | "teammate";
           player: PlayerQuery<T>;
       };
-export type PlayerQuery<T extends QueryParameter> = SetOperation<
-    | PlayerReference<T>
-    | { argument: QueryParameterNameOfSpecificType<T, "player"> }
->;
+export type PlayerQuery<T extends QueryParameter = QueryParameter> =
+    SetOperation<
+        | PlayerReference<T>
+        | { argument: QueryParameterNameOfSpecificType<T, "player"> }
+    >;
 
 // =================================================================
 // MARK: Name
-export type CardNameCondition<T extends QueryParameter> = BooleanOperation<{
-    type: "oneOf" | "allOf";
-    name: CardNameQuery<T>;
-}>;
-export type CardNameQuery<T extends QueryParameter> = SetOperation<
-    | CardName
-    | CardName[]
-    | {
-          card: CardQuery<T>;
-      }
-    | { argument: QueryParameterNameOfSpecificType<T, "name"> }
->;
+export type CardNameCondition<T extends QueryParameter = QueryParameter> =
+    BooleanOperation<{
+        type: "oneOf" | "allOf";
+        name: CardNameQuery<T>;
+    }>;
+export type CardNameQuery<T extends QueryParameter = QueryParameter> =
+    SetOperation<
+        | CardName
+        | CardName[]
+        | {
+              card: CardQuery<T>;
+          }
+        | { argument: QueryParameterNameOfSpecificType<T, "name"> }
+    >;
 
 // =================================================================
 // MARK: 4種(タイプ)
-export type CardTypeCondition<T extends QueryParameter> = BooleanOperation<
-    | CardTypeQuery<T>
-    | {
-          type: "oneOf";
-          cardType: CardTypeQuery<T>;
-      }
->;
-export type CardTypeQuery<T extends QueryParameter> = SetOperation<
-    | CardType
-    | CardType[]
-    | { card: CardQuery<T> }
-    | { argument: QueryParameterNameOfSpecificType<T, "cardType"> }
->;
+export type CardTypeCondition<T extends QueryParameter = QueryParameter> =
+    BooleanOperation<
+        | CardTypeQuery<T>
+        | {
+              type: "oneOf";
+              cardType: CardTypeQuery<T>;
+          }
+    >;
+export type CardTypeQuery<T extends QueryParameter = QueryParameter> =
+    SetOperation<
+        | CardType
+        | CardType[]
+        | { card: CardQuery<T> }
+        | { argument: QueryParameterNameOfSpecificType<T, "cardType"> }
+    >;
 
 // =================================================================
 // サブタイプ
-export type SubtypeCondition<T extends QueryParameter> = BooleanOperation<
-    SubtypeQuery<T> | { type: "oneOf"; subtype: SubtypeQuery<T> }
->;
-export type SubtypeQuery<T extends QueryParameter> = SetOperation<
-    | Subtype
-    | Subtype[]
-    | { card: CardQuery<T> }
-    | { argument: QueryParameterNameOfSpecificType<T, "subtype"> }
->;
+export type SubtypeCondition<T extends QueryParameter = QueryParameter> =
+    BooleanOperation<
+        SubtypeQuery<T> | { type: "oneOf"; subtype: SubtypeQuery<T> }
+    >;
+export type SubtypeQuery<T extends QueryParameter = QueryParameter> =
+    SetOperation<
+        | Subtype
+        | Subtype[]
+        | { card: CardQuery<T> }
+        | { argument: QueryParameterNameOfSpecificType<T, "subtype"> }
+    >;
 
 // =================================================================
 // 特殊タイプ
-export type SupertypeCondition<T extends QueryParameter> = BooleanOperation<
-    SupertypeQuery<T> | { type: "oneOf"; supertype: SupertypeQuery<T> }
->;
-export type SupertypeQuery<T extends QueryParameter> = SetOperation<
-    Supertype | Supertype[] | { card: CardQuery<T> }
-    // | { argument: QueryParameterNameOfSpecificType<T, "supertype"> }
->;
+export type SupertypeCondition<T extends QueryParameter = QueryParameter> =
+    BooleanOperation<
+        SupertypeQuery<T> | { type: "oneOf"; supertype: SupertypeQuery<T> }
+    >;
+export type SupertypeQuery<T extends QueryParameter = QueryParameter> =
+    SetOperation<
+        Supertype | Supertype[] | { card: CardQuery<T> }
+        // | { argument: QueryParameterNameOfSpecificType<T, "supertype"> }
+    >;
 
 // =========================================================
 // MARK: 5種(色)
-export type ColorCondition<T extends QueryParameter> = BooleanOperation<
-    | ColorQuery<T>
-    | {
-          type: "oneOf";
-          color: ColorQuery<T>;
-      }
->;
-export type ColorQuery<T extends QueryParameter> = SetOperation<
-    | Color
-    | Color[]
-    | { card: CardQuery<T> }
-    | { argument: QueryParameterNameOfSpecificType<T, "color"> }
->;
+export type ColorCondition<T extends QueryParameter = QueryParameter> =
+    BooleanOperation<
+        | ColorQuery<T>
+        | {
+              type: "oneOf";
+              color: ColorQuery<T>;
+          }
+    >;
+export type ColorQuery<T extends QueryParameter = QueryParameter> =
+    SetOperation<
+        | Color
+        | Color[]
+        | { card: CardQuery<T> }
+        | { argument: QueryParameterNameOfSpecificType<T, "color"> }
+    >;
 
 // =================================================================
 // MARK: Zone
-export type ZoneCondition<T extends QueryParameter> = BooleanOperation<
-    | {
-          type: ZoneType;
-          owner?: PlayerQuery<T>;
-      }
-    | {
-          type?: ZoneType;
-          owner: PlayerQuery<T>;
-      }
->;
-export type ZoneQuery<T extends QueryParameter> = SetOperation<
+export type ZoneCondition<T extends QueryParameter = QueryParameter> =
+    BooleanOperation<
+        | {
+              type: ZoneType;
+              owner?: PlayerQuery<T>;
+          }
+        | {
+              type?: ZoneType;
+              owner: PlayerQuery<T>;
+          }
+    >;
+export type ZoneQuery<T extends QueryParameter = QueryParameter> = SetOperation<
     Zone | ZoneCondition<T>
 >;
 
 // =========================================================
 // MARK: 6種(能力) TODO:
-export type AbilityCondition<T extends QueryParameter> = BooleanOperation<{}>;
-export type AbilityQuery<T extends QueryParameter = {}> =
+export type AbilityCondition<T extends QueryParameter = QueryParameter> =
+    BooleanOperation<{}>;
+export type AbilityQuery<T extends QueryParameter = QueryParameter> =
     | Ability[]
     | {
           lose?: Ability[]; // TODO: 能力の同一性の検査
@@ -187,179 +223,113 @@ export type AbilityQuery<T extends QueryParameter = {}> =
       };
 // =========================================================
 // MARK: 3種(文章) TODO:
-export type TextCondition<T extends QueryParameter> = BooleanOperation<{}>;
-export type TextQuery<T extends QueryParameter> = {};
+export type TextCondition<T extends QueryParameter = QueryParameter> =
+    BooleanOperation<{}>;
+export type TextQuery<T extends QueryParameter = QueryParameter> = {};
 
 // =========================================================
 // MARK: 型ガード
-export function isGameObjectCondition<T extends QueryParameter>(
+export function isGameObjectCondition(
     arg: unknown,
-    parameter: T,
-): arg is GameObjectCondition<T> {
+): arg is GameObjectCondition {
     // TODO:
     return false;
 }
-export function isGameObjectQuery<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is GameObjectQuery<T> {
+export function isGameObjectQuery(arg: unknown): arg is GameObjectQuery {
     // TODO:
     return false;
 }
 
-export function isCardCondition<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is CardCondition<T> {
+export function isCardCondition(arg: unknown): arg is CardCondition {
     // TODO:
     return false;
 }
-export function isCardQuery<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is CardQuery<T> {
+export function isCardQuery(arg: unknown): arg is CardQuery {
     // TODO:
     return false;
 }
 
-export function isPlayerCondition<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is PlayerCondition<T> {
+export function isPlayerCondition(arg: unknown): arg is PlayerCondition {
     // TODO:
     return false;
 }
-export function isPlayerReference<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is PlayerReference<T> {
+export function isPlayerReference(arg: unknown): arg is PlayerReference {
     // TODO:
     return false;
 }
-export function isPlayerQuery<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is PlayerQuery<T> {
+export function isPlayerQuery(arg: unknown): arg is PlayerQuery {
     // TODO:
     return false;
 }
 
-export function isCardNameCondition<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is CardNameCondition<T> {
+export function isCardNameCondition(arg: unknown): arg is CardNameCondition {
     // TODO:
     return false;
 }
-export function isCardNameQuery<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is CardNameQuery<T> {
+export function isCardNameQuery(arg: unknown): arg is CardNameQuery {
     // TODO:
     return false;
 }
 
-export function isCardTypeCondition<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is CardTypeCondition<T> {
+export function isCardTypeCondition(arg: unknown): arg is CardTypeCondition {
     // TODO:
     return false;
 }
-export function isCardTypeQuery<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is CardTypeQuery<T> {
+export function isCardTypeQuery(arg: unknown): arg is CardTypeQuery {
     // TODO:
     return false;
 }
 
-export function isSubtypeCondition<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is SubtypeCondition<T> {
+export function isSubtypeCondition(arg: unknown): arg is SubtypeCondition {
     // TODO:
     return false;
 }
-export function isSubtypeQuery<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is SubtypeQuery<T> {
+export function isSubtypeQuery(arg: unknown): arg is SubtypeQuery {
     // TODO:
     return false;
 }
 
-export function isSupertypeCondition<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is SupertypeCondition<T> {
+export function isSupertypeCondition(arg: unknown): arg is SupertypeCondition {
     // TODO:
     return false;
 }
-export function isSupertypeQuery<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is SupertypeQuery<T> {
+export function isSupertypeQuery(arg: unknown): arg is SupertypeQuery {
     // TODO:
     return false;
 }
 
-export function isColorCondition<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is ColorCondition<T> {
+export function isColorCondition(arg: unknown): arg is ColorCondition {
     // TODO:
     return false;
 }
-export function isColorQuery<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is ColorQuery<T> {
+export function isColorQuery(arg: unknown): arg is ColorQuery {
     // TODO:
     return false;
 }
 
-export function isZoneCondition<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is ZoneCondition<T> {
+export function isZoneCondition(arg: unknown): arg is ZoneCondition {
     // TODO:
     return false;
 }
-export function isZoneQuery<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is ZoneQuery<T> {
+export function isZoneQuery(arg: unknown): arg is ZoneQuery {
     // TODO:
     return false;
 }
 
-export function isAbilityCondition<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is AbilityCondition<T> {
+export function isAbilityCondition(arg: unknown): arg is AbilityCondition {
     // TODO:
     return false;
 }
-export function isAbilityQuery<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is AbilityQuery<T> {
+export function isAbilityQuery(arg: unknown): arg is AbilityQuery {
     // TODO:
     return false;
 }
 
-export function isTextCondition<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is TextCondition<T> {
+export function isTextCondition(arg: unknown): arg is TextCondition {
     // TODO:
     return false;
 }
-export function isTextQuery<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is TextQuery<T> {
+export function isTextQuery(arg: unknown): arg is TextQuery {
     // TODO:
     return false;
 }

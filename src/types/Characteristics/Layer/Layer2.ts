@@ -4,18 +4,16 @@ import { type QueryParameter } from "../../Query/Query.js";
 import { isLayerCommonProperty, type LayerCommonProperty } from "./Layer.js";
 
 /** コントロール変更 */
-export type Layer2<T extends QueryParameter = {}> = LayerCommonProperty & {
-    type: "2";
-    controller: PlayerQuery<T>;
-};
-export function isLayer2<T extends QueryParameter>(
-    arg: unknown,
-    parameter: T,
-): arg is Layer2<T> {
+export type Layer2<T extends QueryParameter = QueryParameter> =
+    LayerCommonProperty & {
+        type: "2";
+        controller: PlayerQuery<T>;
+    };
+export function isLayer2(arg: unknown): arg is Layer2 {
     return (
         isLayerCommonProperty(arg) &&
         arg.type === "2" &&
         "controller" in arg &&
-        isPlayerQuery(arg.controller, parameter)
+        isPlayerQuery(arg.controller)
     );
 }
