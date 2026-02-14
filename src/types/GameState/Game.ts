@@ -15,7 +15,6 @@ import {
     type Ability,
 } from "../GameObject/Ability.js";
 import {
-    getLayer,
     isCharacteristicsAlteringEffect,
     type CharacteristicsAlteringEffect,
 } from "../GameObject/GeneratedEffect/ContinuousEffect.js";
@@ -140,7 +139,9 @@ export function setAllCharacteristics(game: Game): void {
     for (const category of layerCategories) {
         // 特性定義能力からであるもの
         _pushToQueue(
-            effects.filter((e) => isCharacteristicDefiningAbility(e.source)),
+            effects.filter((e) =>
+                isCharacteristicDefiningAbility(e.generatedBy),
+            ),
             category,
             layerQueue,
             appliedEffects,
@@ -148,7 +149,9 @@ export function setAllCharacteristics(game: Game): void {
         );
         // 特性定義能力からでないもの
         _pushToQueue(
-            effects.filter((e) => !isCharacteristicDefiningAbility(e.source)),
+            effects.filter(
+                (e) => !isCharacteristicDefiningAbility(e.generatedBy),
+            ),
             category,
             layerQueue,
             appliedEffects,
@@ -185,7 +188,7 @@ function _pushToQueue(
     };
     // 発生源が無効化されていない効果を抽出
     const validEffects = effects.filter(
-        (e) => !(isAbility(e.source) && !_isExist(e.source)),
+        (e) => !(isAbility(e.generatedBy) && !_isExist(e.generatedBy)),
     );
 
     // 指定した種類別のレイヤーを取り出す
@@ -204,7 +207,7 @@ function _pushToQueue(
         layer: Layer<T>;
     }[] =>
         arg
-            .map((_e) => ({ effect: _e, layer: getLayer(_e, category) }))
+            .map((_e) => ({ effect: _e, layer: getLayer(_e, category) })) // FIXME: getLayer
             .filter(_dropUndefined);
     let ls: _layers;
     switch (category) {

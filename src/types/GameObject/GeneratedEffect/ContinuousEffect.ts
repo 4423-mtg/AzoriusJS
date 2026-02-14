@@ -43,18 +43,19 @@ import type {
 /** 継続的効果。単一の常在型能力からの継続的効果か、または、単一の呪文や能力の解決によって生成された継続的効果 */
 export type ContinuousEffect = GameObject & ContinuousEffectProperty;
 export type ContinuousEffectProperty = {
-    // FIXME: 一時的にstringを追加
-    // FIXME: generatedBy
-    source: Spell | StackedAbility | Ability | undefined | string;
+    generatedBy: Spell | StackedAbility | Ability | undefined | string; // FIXME: stringは後で消す。StackedAbilityは正しい？
     timestamp: Timestamp;
 };
+type ContinuousEffectParameter = ContinuousEffectProperty;
 
 /** ContinuousEffect を作成する */
-export function createContinuousEffect(): ContinuousEffect {
-    // FIXME:
-    const obj = createGameObject();
-    const cep = { source: undefined, timestamp: createTimestamp() };
-    return { ...obj, ...cep } satisfies ContinuousEffect;
+export function createContinuousEffect(
+    parameter: ContinuousEffectParameter,
+): ContinuousEffect {
+    return {
+        ...createGameObject(),
+        ...parameter,
+    } satisfies ContinuousEffect;
 }
 
 // ========================================================================
@@ -67,7 +68,7 @@ export type CharacteristicsAlteringEffect<
 export type CharacteristicsAlteringEffectProperty<
     T extends QueryParameter = QueryParameter,
 > = {
-    affected: (GameObjectQuery<T> & CardQuery<T>) | PlayerQuery<T>;
+    affected: GameObjectQuery<T> | CardQuery<T> | PlayerQuery<T>;
     layer1a: Layer1a<T> | undefined;
     layer1b: Layer1b<T> | undefined;
     layer2: Layer2<T> | undefined;
@@ -81,20 +82,18 @@ export type CharacteristicsAlteringEffectProperty<
     layer7d: Layer7d<T> | undefined;
 };
 
-/** 値や特性を変更する継続的効果を作成する */
+/** 特性を変更する継続的効果を作成する */
 export function createCharacteristicsAlteringEffect<
     T extends QueryParameter = QueryParameter,
 >(
-    parameters: GameObjectParameters &
-        ContinuousEffectProperty &
+    parameters: ContinuousEffectParameter &
         CharacteristicsAlteringEffectParameter<T>,
 ): CharacteristicsAlteringEffect<T> {
-    const obj = createGameObject(parameters);
+    const effect = createContinuousEffect(parameters);
     return {
-        ...obj,
-        source: parameters?.source,
+        ...effect,
+        generatedBy: parameters.generatedBy,
         affected: parameters.affected,
-        timestamp: parameters?.timestamp,
         layer1a: parameters.layer1a,
         layer1b: parameters.layer1b,
         layer2: parameters.layer2,
@@ -108,106 +107,109 @@ export function createCharacteristicsAlteringEffect<
         layer7d: parameters.layer7d,
     };
 }
+
 // 作成時の引数
 export type CharacteristicsAlteringEffectParameter<
     T extends QueryParameter = QueryParameter,
 > = Required<Pick<CharacteristicsAlteringEffectProperty<T>, "affected">> &
     Partial<Omit<CharacteristicsAlteringEffectProperty<T>, "affected">>;
 
-/** 指定した種類別のレイヤーを取得する */
-export function getLayer<
-    T extends LayerCategory,
-    U extends QueryParameter = QueryParameter,
->(
-    effect: CharacteristicsAlteringEffect<U>,
-    category: T, // 型を絞り込むためジェネリクスを使う
-): Layer<T, U> | undefined {
-    return effect[`layer${category}`] as Layer<typeof category, U> | undefined; // FIXME: as
-}
+// /** 指定した種類別のレイヤーを取得する */
+// export function getLayer<T extends LayerCategory>(
+//     effect: CharacteristicsAlteringEffect,
+//     category: T,
+// ): Layer<typeof category> | undefined {
+//     switch (category) {
+//         case "1a":
+//             return effect.layer1a satisfies Layer<typeof category> | undefined;
+//         case "1b":
+//             return effect.layer1b;
+//         case "2":
+//             return effect.layer2;
+//         case "3":
+//             return effect.layer3;
+//         case "4":
+//             return effect.layer4;
+//         case "5":
+//             return effect.layer5;
+//         case "6":
+//             return effect.layer6;
+//         case "7a":
+//             return effect.layer7a;
+//         case "7b":
+//             return effect.layer7b;
+//         case "7c":
+//             return effect.layer7c;
+//         case "7d":
+//             return effect.layer7d;
+//         default:
+//             return undefined;
+//     }
+// }
 
-/** 指定した種類別の効果を持っているかどうか (undefinedも不可) */
-export function hasLayer<
-    T extends LayerCategory,
-    U extends QueryParameter = QueryParameter,
->(
-    effect: unknown,
-    layerCategory: T,
-    parameter: U,
-): effect is CharacteristicsAlteringEffect<U> & Required<_layerProperty<T, U>> {
-    return (
-        isCharacteristicsAlteringEffect(effect) &&
-        getLayer(effect, layerCategory) !== undefined
-    );
-}
+// /** 指定した種類別の効果を持っているかどうか (undefinedも不可) */
+// export function hasLayer<
+//     T extends LayerCategory,
+//     U extends QueryParameter = QueryParameter,
+// >(
+//     effect: unknown,
+//     layerCategory: T,
+//     parameter: U,
+// ): effect is CharacteristicsAlteringEffect<U> & Required<_layerProperty<T, U>> {
+//     return (
+//         isCharacteristicsAlteringEffect(effect) &&
+//         getLayer(effect, layerCategory) !== undefined
+//     );
+// }
 
-type _layerProperty<
-    T extends LayerCategory,
-    U extends QueryParameter = QueryParameter,
-> = {
-    [K in `layer${T}`]: Layer<T, U> | undefined;
-};
+// type _layerProperty<
+//     T extends LayerCategory,
+//     U extends QueryParameter = QueryParameter,
+// > = {
+//     [K in `layer${T}`]: Layer<T, U> | undefined;
+// };
 
 // ========================================================================
 // MARK: 手続きを変更する効果
 /** 手続きを変更する継続的効果 */
 export type ModifyProcedureEffect = ContinuousEffect &
-    ModifyProcedureEffectParameter;
-export type ModifyProcedureEffectParameter = {
-    /** 変更対象の手続きに該当するかどうかをチェックする関数 */
-    check: InstructionChecker | undefined;
-    /** 変更後の処理 */
-    replace: Instruction | ((...arg: unknown[]) => Instruction) | undefined; // FIXME: 2025-12-14
+    ModifyProcedureEffectProperty;
+export type ModifyProcedureEffectProperty = {
+    condition: ProcedureCondition;
+    instruction: InstructionQuery;
 };
+type ProcedureCondition = undefined; // TODO:
+type InstructionQuery = undefined; // TODO:
+type ModifyProcedureEffectParameter = ModifyProcedureEffectProperty;
 
 export function createModifyingProcedureEffect(
-    parameters?: GameObjectParameters &
-        Partial<ContinuousEffectProperty> &
-        ModifyProcedureEffectParameter,
+    parameters: ContinuousEffectProperty & ModifyProcedureEffectParameter,
 ): ModifyProcedureEffect {
-    const obj = createGameObject(parameters);
+    const effect = createContinuousEffect(parameters);
     return {
-        ...obj,
-        source: parameters?.source,
-        // timestamp: parameters?.timestamp,
-        check: parameters?.check,
-        replace: parameters?.replace,
+        ...effect,
+        ...parameters, // FIXME: continuouseffectの部分を取り除く
     };
 }
 
 // ========================================================================
 // MARK: 処理を禁止する効果
 /** 処理を禁止する継続的効果 */
-export type ForbidActionEffect = ContinuousEffect &
-    ForbidActionEffectParameters;
-export type ForbidActionEffectParameters = {
-    check: InstructionChecker | undefined;
+export type ForbidActionEffect = ContinuousEffect & ForbidActionEffectProperty;
+export type ForbidActionEffectProperty = {
+    condition: ProcedureCondition; // TODO: procedureとは区別してactionにする必要がある？
 };
+type ForbidActionEffectParameter = ForbidActionEffectProperty;
 
 export function createForbidActionEffect(
-    parameters?: GameObjectParameters &
-        Partial<ContinuousEffectProperty> &
-        ForbidActionEffectParameters,
+    parameters: ContinuousEffectProperty & ForbidActionEffectParameter,
 ): ForbidActionEffect {
-    const obj = createGameObject(parameters);
+    const obj = createContinuousEffect(parameters);
     return {
         ...obj,
-        source: parameters?.source,
-        // timestamp: parameters?.timestamp,
-        check: parameters?.check,
+        ...parameters, // FIXME: continuouseffectの部分を取り除く
     };
 }
-
-// =================================================================
-/** Instructionの実行が特定の条件を満たすかどうかを判定する関数を表す型 */ // FIXME: 2025-12-14
-type InstructionChecker = (args: {
-    instruction: Instruction;
-    state: GameState;
-    history: any; // FIXME:
-    performer: GameObject | Player;
-}) => boolean;
-
-/** Instructionを別の1つ以上のInstructionに置き換える関数を表す型 */
-type InstructionReplacer = (instruction: Instruction) => Instruction[];
 
 // ========================================================================================
 // ========================================================================================
@@ -272,4 +274,24 @@ export function isCharacteristicsAlteringEffectProperty(
         "layer7d" in arg &&
         isLayer(arg.layer7d, "7d")
     );
+}
+
+export function isModifyProcedureEffect(
+    arg: unknown,
+): arg is ModifyProcedureEffect {
+    return false; // TODO:
+}
+export function isModifyProcedureEffectProperty(
+    arg: unknown,
+): arg is ModifyProcedureEffectProperty {
+    return false; // TODO:
+}
+
+export function isForbidActionEffect(arg: unknown): arg is ForbidActionEffect {
+    return false; // TODO:
+}
+export function isForbidActionEffectProperty(
+    arg: unknown,
+): arg is ForbidActionEffectProperty {
+    return false; // TODO:
 }

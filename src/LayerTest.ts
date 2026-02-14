@@ -45,7 +45,7 @@ type param = {
     this: { type: "card" };
 };
 const bello = createCharacteristicsAlteringEffect<param>({
-    source: "Bello",
+    generatedBy: "Bello",
     timestamp: createTimestamp(),
     affected: {
         zone: {
