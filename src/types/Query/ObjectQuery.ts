@@ -20,7 +20,7 @@ import type {
     SupertypeCondition,
     SupertypeQuery,
     TextQuery,
-} from "./ArrayQuery.js";
+} from "./SetQuery.js";
 import type {
     ManaCostCondition,
     ManaCostQuery,

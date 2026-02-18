@@ -1,5 +1,5 @@
 // MARK: 型定義: 6
-import { isAbilityQuery, type AbilityQuery } from "../../Query/ArrayQuery.js";
+import { isAbilityQuery, type AbilityQuery } from "../../Query/SetQuery.js";
 import { type QueryParameter } from "../../Query/Query.js";
 import { isLayerCommonProperty, type LayerCommonProperty } from "./Layer.js";
 

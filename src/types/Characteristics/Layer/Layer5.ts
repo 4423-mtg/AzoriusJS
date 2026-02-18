@@ -1,5 +1,5 @@
 // MARK: 型定義: 5
-import { isColorQuery, type ColorQuery } from "../../Query/ArrayQuery.js";
+import { isColorQuery, type ColorQuery } from "../../Query/SetQuery.js";
 import { type QueryParameter } from "../../Query/Query.js";
 import { isLayerCommonProperty, type LayerCommonProperty } from "./Layer.js";
 

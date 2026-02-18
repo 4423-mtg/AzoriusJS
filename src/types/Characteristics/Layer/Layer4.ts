@@ -6,7 +6,7 @@ import {
     type CardTypeQuery,
     type SubtypeQuery,
     type SupertypeQuery,
-} from "../../Query/ArrayQuery.js";
+} from "../../Query/SetQuery.js";
 import { type QueryParameter } from "../../Query/Query.js";
 import { landTypes } from "../Subtype.js";
 import { isLayerCommonProperty, type LayerCommonProperty } from "./Layer.js";

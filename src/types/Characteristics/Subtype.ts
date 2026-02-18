@@ -620,3 +620,34 @@ export type DungeonType = (typeof dungeonTypes)[number];
 /** バトル・タイプ */
 export const battleTypes = ["Siege"] as const;
 export type BattleType = (typeof battleTypes)[number];
+
+export function isSubtype(arg: unknown): arg is Subtype {
+    return false;
+}
+export function isArtifactType(arg: unknown): arg is ArtifactType {
+    return false;
+}
+export function isEnchantmentType(arg: unknown): arg is EnchantmentType {
+    return false;
+}
+export function isLandType(arg: unknown): arg is LandType {
+    return false;
+}
+export function isPlaneswalkerType(arg: unknown): arg is PlaneswalkerType {
+    return false;
+}
+export function isSpellType(arg: unknown): arg is SpellType {
+    return false;
+}
+export function isCreatureType(arg: unknown): arg is CreatureType {
+    return false;
+}
+export function isPlanarType(arg: unknown): arg is Subtype {
+    return false;
+}
+export function isDungeonType(arg: unknown): arg is DungeonType {
+    return false;
+}
+export function isBattleType(arg: unknown): arg is BattleType {
+    return false;
+}

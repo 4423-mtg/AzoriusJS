@@ -1,6 +1,6 @@
 import { createCharacteristicsAlteringEffect } from "./types/GameObject/GeneratedEffect/ContinuousEffect.js";
 import { createTimestamp } from "./types/GameState/Timestamp.js";
-import type { CardQuery, GameObjectQuery } from "./types/Query/ArrayQuery.js";
+import type { CardQuery, GameObjectQuery } from "./types/Query/SetQuery.js";
 
 // 特性を変更する継続的効果の適用順は
 // - オブジェクト単位では決まらず、存在するすべてのオブジェクト（戦場以外も含む）を俯瞰したうえで決まる。

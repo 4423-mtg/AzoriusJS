@@ -5,7 +5,6 @@ import type { Subtype } from "../Characteristics/Subtype.js";
 import type { Card } from "../GameObject/Card/Card.js";
 import { isGameObject, type GameObject } from "../GameObject/GameObject.js";
 import { isPlayer, type Player } from "../GameObject/Player.js";
-import type { SetQuery } from "./ArrayQuery.js";
 
 // 種類別（レイヤー）に関してはこれでOK。
 // 手続き変更効果・処理禁止効果・置換効果・追加ターン効果についてはどう？
@@ -20,8 +19,11 @@ import type { SetQuery } from "./ArrayQuery.js";
 //   - 効果の定義を書くときに型ガードがないとチェックができない
 //     => タグ化しよう
 
-// Queryで参照値として使う
-// MARK: QueryParameter
+// ====================================================================
+// MARK: パラメータ
+// ====================================================================
+
+/** クエリのパラメータ */
 export type QueryParameter = Record<
     string,
     | { type: "gameObject"; value?: GameObject }
@@ -35,6 +37,7 @@ export type QueryParameter = Record<
     | { type: "name"; value?: CardName }
     // | { type: "zone"; value?: Zone }
 >;
+/** クエリのパラメータが取る型 */
 export type TypeOfQueryParameter = QueryParameter[string]["type"];
 
 // - なんらかのオブジェクト
@@ -45,12 +48,41 @@ export type TypeOfQueryParameter = QueryParameter[string]["type"];
 //       - 後から付与された能力も対象になりうる（コピーなど）
 //       - つまり、 Ability.id を指定する
 
+// ====================================================================
+// MARK: パラメータの演算
+// ====================================================================
+
+/** クエリパラメータのうちの、指定した型であるパラメータ */
 export type QueryParameterNameOfSpecificType<
     T extends QueryParameter,
     U extends TypeOfQueryParameter,
 > = keyof {
     [K in keyof T as T[K] extends { type: U } ? K : never]: T[K];
 };
+
+type QueryParameterNameOfSpecificType2<
+    T extends QueryParameter,
+    U extends TypeOfQueryParameter,
+> = keyof T;
+
+const x = {
+    p1: { type: "gameObject" },
+    p2: { type: "player" },
+    p3: { type: "gameObject" },
+} satisfies QueryParameter;
+type x2 = QueryParameterNameOfSpecificType<typeof x, "gameObject">;
+const test1: x2 = "p1";
+const test2: x2 = "p2";
+const test3: x2 = "p3";
+type y2 = QueryParameterNameOfSpecificType2<typeof x, "gameObject">;
+
+/** クエリパラメータの総和 */
+export function IntersectionOfQueryParameters(
+    params: QueryParameter[],
+): QueryParameter {
+    const merged = Object.assign({}, ...params);
+    return merged;
+}
 
 // 配列を返すもの
 // - GameObject: 集合演算
@@ -67,40 +99,7 @@ export type QueryParameterNameOfSpecificType<
 
 // 履歴 TODO:
 
-// =================================================================
-// MARK: 演算型
-export type _Intersection<T> = {
-    operation: "intersection";
-    operand: T[];
-};
-export type _Difference<T, U> = {
-    // FIXME: TとUの関係
-    operation: "difference";
-    left: T;
-    right: U;
-};
-export type SetOperation<T extends SetQuery> =
-    | T
-    | _Intersection<T>
-    | _Difference<T, T>
-    | _Difference<_Intersection<T>, T>
-    | (
-          | T
-          | _Intersection<T>
-          | _Difference<T, T>
-          | _Difference<_Intersection<T>, T>
-      )[]; // unionとして解釈する
-// (A & B) - C = (A - C) & (B - C)
-// A - (B + C) = (A - B) & (A - C)
-// A - (B & C) = (A - B) + (A - C)
-// A - (B - C) = (A - B) + (A & C)
-
-export function getQueryParameterOfSetOperation<T extends SetQuery>(
-    query: SetOperation<T>,
-): QueryParameter {
-    return {}; // TODO:
-}
-
+// MARK: BooleanOperation
 type BooleanQuery = any; // FIXME: T に型制約を付ける
 type BooleanOperand<T extends BooleanQuery> =
     | T
@@ -123,16 +122,20 @@ export type BooleanOperation<T> =
 // A and (B or ((not C) and D))
 // = (A and B) or (A and (not C) and D)
 export function getQueryParameterOfBooleanOperation<T>(
-    query: SetOperation<T>,
+    query: BooleanOperation<T>,
 ): QueryParameter {
     return {}; // TODO:
 }
 
 // ==================================================================
 // MARK: 型ガード
+// ====================================================================
+/** Record */
 function isRecord(arg: unknown): arg is Record<string, unknown> {
     return typeof arg === "object" && arg !== null;
 }
+
+/** QueryParameter */
 export function isQueryParameter(arg: unknown): arg is QueryParameter {
     if (!isRecord(arg)) {
         return false;
@@ -177,6 +180,7 @@ export function isQueryParameter(arg: unknown): arg is QueryParameter {
     return true;
 }
 
+/**  */
 function isTypeOfQueryParameter(arg: unknown): arg is TypeOfQueryParameter {
     return (
         arg === "gameObject" ||
@@ -185,6 +189,8 @@ function isTypeOfQueryParameter(arg: unknown): arg is TypeOfQueryParameter {
         arg === "string"
     );
 }
+
+/**  */
 function isQueryParameterNameOfSpecificType<
     T extends QueryParameter,
     U extends TypeOfQueryParameter,
@@ -199,10 +205,8 @@ function isQueryParameterNameOfSpecificType<
         return false;
     }
 }
-export function isSetOperation<T>(arg: unknown): arg is SetOperation<T> {
-    // TODO:
-    return false;
-}
+
+/**  */
 export function isBooleanOperation<T>(
     arg: unknown,
 ): arg is BooleanOperation<T> {

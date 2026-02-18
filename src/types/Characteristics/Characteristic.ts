@@ -39,7 +39,7 @@ export type Printed = {
     cardType?: CardType[];
     subtype?: Subtype[];
     supertypes?: Supertype[];
-    text?: string;
+    text?: RuleText;
     power?: Power;
     toughness?: Toughness;
     loyalty?: Loyalty;
@@ -56,7 +56,7 @@ export type Characteristics = {
     card_types: CardType[] | undefined;
     subtypes: Subtype[] | undefined;
     supertypes: Supertype[] | undefined;
-    text: string | undefined;
+    text: RuleText | undefined;
     abilities: Ability[] | undefined;
     power: Power | undefined;
     toughness: Toughness | undefined;
@@ -118,4 +118,11 @@ export function isBasicLand(chara: Characteristics): boolean {
 /** 基本でない土地であるなら `true` 。 */
 export function isNonbasicLand(chara: Characteristics): boolean {
     return hasCardType(chara, "Land") && !hasSupertype(chara, "Basic");
+}
+
+export function isCardName(arg: unknown): arg is CardName {
+    return false;
+}
+export function isRuleText(arg: unknown): arg is RuleText {
+    return false;
 }

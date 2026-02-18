@@ -71,3 +71,35 @@ export type AdventurerLayoutFace = {
     layout: "adventurer";
     faces: { main: Face; adventure: Face };
 };
+
+export function isCard(arg: unknown): arg is Card {
+    return false;
+}
+export function isStatus(arg: unknown): arg is Status {
+    return false;
+}
+export function isLayout(arg: unknown): arg is Layout {
+    return false;
+}
+export function isFace(arg: unknown): arg is Face {
+    return false;
+}
+export function isNormalLayoutFace(arg: unknown): arg is NormalLayoutFace {
+    return false;
+}
+export function isSplitLayoutFace(arg: unknown): arg is SplitLayoutFace {
+    return false;
+}
+export function isFlipLayoutFace(arg: unknown): arg is FlipLayoutFace {
+    return false;
+}
+export function isDoubleFacedLayoutFace(
+    arg: unknown,
+): arg is DoubleFacedLayoutFace {
+    return false;
+}
+export function isAdventurerLayoutFace(
+    arg: unknown,
+): arg is AdventurerLayoutFace {
+    return false;
+}
