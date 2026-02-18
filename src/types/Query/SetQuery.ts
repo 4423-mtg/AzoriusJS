@@ -13,49 +13,71 @@ import { isCard, type Card } from "../GameObject/Card/Card.js";
 import { isGameObject, type GameObject } from "../GameObject/GameObject.js";
 import { isPlayer, type Player } from "../GameObject/Player.js";
 import { isZone, type Zone } from "../GameState/Zone.js";
-import type {
-    AbilityConditionOperand,
-    AbilityQueryOperand,
+import {
+    getQueryParameterOfAbilityQueryOperand,
+    isAbilityQueryOperand,
+    type AbilityConditionOperand,
+    type AbilityQueryOperand,
 } from "./ArrayQuery/AbilityQuery.js";
-import type {
-    CardNameConditionOperand,
-    CardNameQueryOperand,
+import {
+    getQueryParameterOfCardNameQueryOperand,
+    isCardNameQueryOperand,
+    type CardNameConditionOperand,
+    type CardNameQueryOperand,
 } from "./ArrayQuery/CardNameQuery.js";
-import type {
-    CardConditionOperand,
-    CardQueryOperand,
+import {
+    getQueryParameterOfCardQueryOperand,
+    isCardQueryOperand,
+    type CardConditionOperand,
+    type CardQueryOperand,
 } from "./ArrayQuery/CardQuery.js";
-import type {
-    CardTypeConditionOperand,
-    CardTypeQueryOperand,
+import {
+    getQueryParameterOfCardTypeQueryOperand,
+    isCardTypeQueryOperand,
+    type CardTypeConditionOperand,
+    type CardTypeQueryOperand,
 } from "./ArrayQuery/CardTypeQuery.js";
-import type {
-    ColorConditionOperand,
-    ColorQueryOperand,
+import {
+    getQueryParameterOfColorQueryOperand,
+    isColorQueryOperand,
+    type ColorConditionOperand,
+    type ColorQueryOperand,
 } from "./ArrayQuery/ColorQuery.js";
-import type {
-    GameObjectConditionOperand,
-    GameObjectQueryOperand,
+import {
+    getQueryParameterOfGameObjectQueryOperand,
+    isGameObjectQueryOperand,
+    type GameObjectConditionOperand,
+    type GameObjectQueryOperand,
 } from "./ArrayQuery/GameObjectQuery.js";
-import type {
-    PlayerConditionOperand,
-    PlayerQueryOperand,
+import {
+    getQueryParameterOfPlayerQueryOperand,
+    isPlayerQueryOperand,
+    type PlayerConditionOperand,
+    type PlayerQueryOperand,
 } from "./ArrayQuery/PlayerQuery.js";
-import type {
-    TextConditionOperand,
-    TextQueryOperand,
+import {
+    getQueryParameterOfTextQueryOperand,
+    isTextQueryOperand,
+    type TextConditionOperand,
+    type TextQueryOperand,
 } from "./ArrayQuery/RuleTextQuery.js";
-import type {
-    SubtypeConditionOperand,
-    SubtypeQueryOperand,
+import {
+    getQueryParameterOfSubtypeQueryOperand,
+    isSubtypeQueryOperand,
+    type SubtypeConditionOperand,
+    type SubtypeQueryOperand,
 } from "./ArrayQuery/SubtypeQuery.js";
-import type {
-    SupertypeConditionOperand,
-    SupertypeQueryOperand,
+import {
+    getQueryParameterOfSupertypeQueryOperand,
+    isSupertypeQueryOperand,
+    type SupertypeConditionOperand,
+    type SupertypeQueryOperand,
 } from "./ArrayQuery/SupertypeQuery.js";
-import type {
-    ZoneConditionOperand,
-    ZoneQueryOperand,
+import {
+    getQueryParameterOfZoneQueryOperand,
+    isZoneQueryOperand,
+    type ZoneConditionOperand,
+    type ZoneQueryOperand,
 } from "./ArrayQuery/ZoneQuery.js";
 import {
     IntersectionOfQueryParameters,
@@ -88,6 +110,9 @@ export type SetElementTypeId = keyof _setElementTypeDefinition;
 export type SetElementType<T extends SetElementTypeId = SetElementTypeId> =
     _setElementTypeDefinition[T];
 
+export function isSetElementTypeId(arg: unknown): arg is SetElementTypeId {
+    return false;
+}
 export function isSetElementType(arg: unknown): arg is SetElementType {
     return (
         isGameObject(arg) ||
@@ -168,14 +193,20 @@ export type SetQuery<T extends SetElementType, U extends QueryParameter> = {
 };
 
 export function getQueryParameterOfSetQuery(
-    query: SetQuery<SetElementType, QueryParameter>,
+    setQuery: SetQuery<SetElementType, QueryParameter>,
 ): QueryParameter {
-    return getQueryParameterOfSetOperation(query.query);
+    return getQueryParameterOfSetOperation(setQuery.query);
 }
 export function isSetQuery(
     arg: unknown,
 ): arg is SetQuery<SetElementType, QueryParameter> {
-    return false;
+    return (
+        isObject(arg) &&
+        "elementType" in arg &&
+        isSetElementTypeId(arg.elementType) &&
+        "query" in arg &&
+        isSetOperation(arg.query)
+    );
 }
 
 // =================================================================
@@ -212,15 +243,38 @@ export type SetQueryOperand<
 export function getQueryParameterOfSetQueryOperand(
     operand: SetQueryOperand<SetElementType, QueryParameter>,
 ): QueryParameter {
-    //
-    return {};
+    if (isGameObjectQueryOperand(operand)) {
+        return getQueryParameterOfGameObjectQueryOperand(operand);
+    } else if (isCardQueryOperand(operand)) {
+        return getQueryParameterOfCardQueryOperand(operand);
+    } else if (isPlayerQueryOperand(operand)) {
+        return getQueryParameterOfPlayerQueryOperand(operand);
+    } else if (isCardNameQueryOperand(operand)) {
+        return getQueryParameterOfCardNameQueryOperand(operand);
+    } else if (isCardTypeQueryOperand(operand)) {
+        return getQueryParameterOfCardTypeQueryOperand(operand);
+    } else if (isSubtypeQueryOperand(operand)) {
+        return getQueryParameterOfSubtypeQueryOperand(operand);
+    } else if (isSupertypeQueryOperand(operand)) {
+        return getQueryParameterOfSupertypeQueryOperand(operand);
+    } else if (isColorQueryOperand(operand)) {
+        return getQueryParameterOfColorQueryOperand(operand);
+    } else if (isZoneQueryOperand(operand)) {
+        return getQueryParameterOfZoneQueryOperand(operand);
+    } else if (isAbilityQueryOperand(operand)) {
+        return getQueryParameterOfAbilityQueryOperand(operand);
+    } else if (isTextQueryOperand(operand)) {
+        return getQueryParameterOfTextQueryOperand(operand);
+    } else {
+        throw new Error(operand);
+    }
 }
 
 export type _Intersection<
     T extends SetQueryOperand<SetElementType, QueryParameter>, // QueryParameterは指定可能にすべき？
 > = {
     operation: "intersection";
-    operand: T[]; // TODO: ここの型チェックはどうするのか
+    operand: T[];
 };
 // A & (B & C) = A & B & C ☑️
 // A & (B + C) = (A & B) + (A & C) ☑️
@@ -253,8 +307,21 @@ export type _Difference<
 function getQueryParameterOfDifference(
     difference: _Difference<SetQueryOperand<SetElementType, QueryParameter>>,
 ): QueryParameter {
-    //
-    return {};
+    const qp_left = isIntersection(difference.left)
+        ? getQueryParameterOfIntersection(difference.left)
+        : getQueryParameterOfSetQueryOperand(difference.left);
+    const qp_right = isSetQueryOperand(difference.right)
+        ? getQueryParameterOfSetQueryOperand(difference.right)
+        : isIntersection(difference.right)
+        ? getQueryParameterOfIntersection(difference.right)
+        : difference.right.map((op) =>
+              isSetQueryOperand(op)
+                  ? getQueryParameterOfSetQueryOperand(op)
+                  : getQueryParameterOfIntersection(op),
+          );
+    return IntersectionOfQueryParameters(
+        Array.isArray(qp_right) ? [qp_left, ...qp_right] : [qp_left, qp_right],
+    );
 }
 
 // Union
@@ -270,13 +337,28 @@ export type SetOperation<
     | _Difference<T>
     | (T | _Intersection<T> | _Difference<T>)[]; // unionとして解釈する
 
-// FIXME: SetOperationだけでは戻り値の型がわからない。パラメータはSetQueryからしか取れない
-// SetQueryからトップダウンにチェックすること
-export function getQueryParameterOfSetOperation<T extends SetElementType>(
-    query: SetOperation<SetQueryOperand<SetElementType, QueryParameter>>,
+export function getQueryParameterOfSetOperation(
+    operation: SetOperation<SetQueryOperand<SetElementType, QueryParameter>>,
 ): QueryParameter {
-    // TODO: queryが何を取るクエリか判別するのにtypeプロパティが要るかも
-    return {};
+    if (isSetQueryOperand(operation)) {
+        return getQueryParameterOfSetQueryOperand(operation);
+    } else if (isIntersection(operation)) {
+        return getQueryParameterOfIntersection(operation);
+    } else if (isDifference(operation)) {
+        return getQueryParameterOfDifference(operation);
+    } else {
+        return IntersectionOfQueryParameters(
+            operation.map((op) =>
+                isSetQueryOperand(op)
+                    ? getQueryParameterOfSetQueryOperand(op)
+                    : isIntersection(op)
+                    ? getQueryParameterOfIntersection(op)
+                    : isDifference(op)
+                    ? getQueryParameterOfDifference(op)
+                    : {},
+            ),
+        );
+    }
 }
 
 export function isSetQueryOperand(
@@ -289,8 +371,10 @@ function isIntersection(
     arg: unknown,
 ): arg is _Intersection<SetQueryOperand<SetElementType, QueryParameter>> {
     return (
-        isRecord(arg) &&
+        isObject(arg) &&
+        "operation" in arg &&
         arg.operation === "intersection" &&
+        "operand" in arg &&
         isSetQueryOperand(arg.operand)
     );
 }
@@ -308,7 +392,6 @@ export function isSetOperation(
 }
 
 // =================================================================
-
-function isRecord(arg: unknown): arg is Record<string, unknown> {
+function isObject(arg: unknown): arg is object {
     return typeof arg === "object" && arg !== null;
 }

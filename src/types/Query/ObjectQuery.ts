@@ -1,52 +1,62 @@
 import type {
+    CardName,
     Characteristics,
     CopiableValue,
+    RuleText,
 } from "../Characteristics/Characteristic.js";
 import type { CounterOnObject } from "../GameObject/Counter.js";
 import type { Marker } from "../GameObject/Marker.js";
 import type { Sticker } from "../GameObject/Sticker.js";
-import type {} from "./SetQuery.js";
+import type { SetElementCondition, SetQuery } from "./SetQuery.js";
 import type {
-    ManaCostCondition,
     ManaCostQuery,
     NumberCondition,
     NumberQuery,
 } from "./NumberQuery.js";
 import type { BooleanOperation, QueryParameter } from "./Query.js";
+import type { GameObject } from "../GameObject/GameObject.js";
+import type { Color } from "../Characteristics/Color.js";
+import type { CardType } from "../Characteristics/CardType.js";
+import type { Subtype } from "../Characteristics/Subtype.js";
+import type { Supertype } from "../Characteristics/Supertype.js";
+import type { Ability } from "../GameObject/Ability.js";
+import type { Card } from "../GameObject/Card/Card.js";
 
 // =================================================================
 // MARK: CopiableValue
+// =================================================================
+
 // TODO: 呪文の場合
-export type CopiableValueCondition<T extends QueryParameter = QueryParameter> =
+export type CopiableValueCondition<T extends QueryParameter> =
     BooleanOperation<{
-        name?: CardNameCondition<T>;
-        manaCost?: ManaCostCondition<T>;
-        colorIdentity?: ColorCondition<T>;
-        cardTypes?: CardTypeCondition<T>;
-        subtypes?: SubtypeCondition<T>;
-        supertypes?: SupertypeCondition<T>;
-        text?: TextQuery<T>; // FIXME:
+        name?: SetElementCondition<CardName, T>; // TODO: nameが複数あるケースが有る
+        manaCost?: NumberCondition<T>;
+        colorIdentity?: SetElementCondition<Color, T>; // TODO: 複数ある
+        cardTypes?: SetElementCondition<CardType, T>; // TODO: 複数ある
+        subtypes?: SetElementCondition<Subtype, T>; // TODO: 複数ある
+        supertypes?: SetElementCondition<Supertype, T>; // TODO: 複数ある
+        text?: SetElementCondition<RuleText, T>;
         power?: NumberCondition<T>;
         toughness?: NumberCondition<T>;
         loyalty?: NumberCondition<T>;
     }>;
-export type CopiableValueQuery<T extends QueryParameter = QueryParameter> =
+export type CopiableValueQuery<T extends QueryParameter> =
     // 固定値
     | CopiableValue
     | {
-          name: CardNameQuery<T>;
-          manaCost: ManaCostQuery<T>;
-          colorIdentity: ColorQuery<T>;
-          cardTypes: CardTypeQuery<T>;
-          subtypes: SubtypeQuery<T>;
-          supertypes: SupertypeQuery<T>;
-          text: TextQuery<T>; // FIXME:
+          name: SetQuery<CardName, T>;
+          manaCost: ManaCostQuery<T>; // FIXME:
+          colorIdentity: SetQuery<Color, T>;
+          cardTypes: SetQuery<CardType, T>;
+          subtypes: SetQuery<Subtype, T>;
+          supertypes: SetQuery<Supertype, T>;
+          text: SetQuery<RuleText, T>; // FIXME:
           power: NumberQuery<T>;
           toughness: NumberQuery<T>;
           loyalty: NumberQuery<T>;
       }
     // 参照
-    | { object: GameObjectQuery<T> }
+    | { object: SetQuery<GameObject, T> } // FIXME: 1つだけ欲しい場合は？
     // 修整
     | {
           original: CopiableValueQuery<T>;
@@ -54,7 +64,7 @@ export type CopiableValueQuery<T extends QueryParameter = QueryParameter> =
           add?: Partial<CopiableValueQuery<T>>;
       };
 export function getQueryParameterOfCopiableQuery(
-    query: CopiableValueQuery,
+    query: CopiableValueQuery<QueryParameter>,
 ): QueryParameter {
     return {}; // TODO:
 }
@@ -65,14 +75,14 @@ export function getQueryParameterOfCopiableQuery(
 export type CharacteristicsCondition<
     T extends QueryParameter = QueryParameter,
 > = BooleanOperation<{
-    name?: CardNameCondition<T>;
-    manaCost?: ManaCostCondition<T>;
-    color?: ColorCondition<T>;
-    cardType?: CardTypeCondition<T>;
-    subtype?: SubtypeCondition<T>;
-    supertype?: SupertypeCondition<T>;
-    text?: TextQuery<T>; // FIXME:
-    ability?: AbilityQuery<T>; // FIXME:
+    name?: SetElementCondition<CardName, T>;
+    manaCost?: NumberCondition<T>;
+    color?: SetElementCondition<Color, T>;
+    cardType?: SetElementCondition<CardType, T>;
+    subtype?: SetElementCondition<Subtype, T>;
+    supertype?: SetElementCondition<Supertype, T>;
+    text?: SetElementCondition<RuleText, T>; // FIXME:
+    ability?: SetElementCondition<Ability, T>; // FIXME:
     power?: NumberCondition<T>;
     toughness?: NumberCondition<T>;
     loyalty?: NumberCondition<T>;
@@ -82,7 +92,7 @@ export type CharacteristicsCondition<
 }>;
 export type CharacteristicsQuery<T extends QueryParameter = QueryParameter> =
     | Characteristics
-    | { card: CardQuery<T> }; // FIXME: oneOf? merge?
+    | { card: SetQuery<Card, T> }; // FIXME: oneOf? merge?
 
 export function getQueryParameterOfCharacteristicsQuery(
     query: CharacteristicsQuery,
@@ -92,60 +102,59 @@ export function getQueryParameterOfCharacteristicsQuery(
 
 // =================================================================
 // MARK: Face
-export type FaceCondition<T extends QueryParameter = QueryParameter> =
-    BooleanOperation<{}>;
-export type FaceQuery<T extends QueryParameter = QueryParameter> =
-    BooleanOperation<{
-        front?: {
-            printed?: CharacteristicsCondition<T>;
-            charcteristics?: CharacteristicsCondition<T>;
-        };
-        back?: {
-            printed?: CharacteristicsCondition<T>;
-            charcteristics?: CharacteristicsCondition<T>;
-        };
-    }>;
+export type FaceCondition<T extends QueryParameter> = BooleanOperation<{}>;
+export type FaceQuery<T extends QueryParameter> = BooleanOperation<{
+    front?: {
+        printed?: CharacteristicsCondition<T>;
+        charcteristics?: CharacteristicsCondition<T>;
+    };
+    back?: {
+        printed?: CharacteristicsCondition<T>;
+        charcteristics?: CharacteristicsCondition<T>;
+    };
+}>;
 
-export function getQueryParameterOfFaceQuery(query: FaceQuery): QueryParameter {
+export function getQueryParameterOfFaceQuery(
+    query: FaceQuery<QueryParameter>,
+): QueryParameter {
     return {}; // TODO:
 }
 
 // =================================================================
 // MARK: Status
-export type StatusCondition<T extends QueryParameter = QueryParameter> = {
+export type StatusCondition<T extends QueryParameter> = {
     tapped?: boolean;
     flipped?: boolean;
     isFaceDown?: boolean;
     isPhasedOut?: boolean;
 };
-export type StatusQuery<T extends QueryParameter = QueryParameter> =
-    BooleanOperation<StatusCondition<T>>;
+export type StatusQuery<T extends QueryParameter> = BooleanOperation<
+    StatusCondition<T>
+>;
 export function getQueryParameterOfStatusQuery(
-    query: StatusQuery,
+    query: StatusQuery<QueryParameter>,
 ): QueryParameter {
     return {}; // TODO:
 }
 
 // =================================================================
 // MARK: Counter
-export type CounterCondition<T extends QueryParameter = QueryParameter> =
-    CounterOnObject[];
-export type CounterQuery<T extends QueryParameter = QueryParameter> =
-    BooleanOperation<CounterCondition<T>>;
+export type CounterCondition<T extends QueryParameter> = CounterOnObject[];
+export type CounterQuery<T extends QueryParameter> = BooleanOperation<
+    CounterCondition<T>
+>;
 export function getQueryParameterOfCounterQuery(
-    query: CounterQuery,
+    query: CounterQuery<QueryParameter>,
 ): QueryParameter {
     return {}; // TODO:
 }
 
 // =================================================================
 // MARK: Marker
-export type MarkerCondition<T extends QueryParameter = QueryParameter> =
-    BooleanOperation<{}>;
-export type MarkerQuery<T extends QueryParameter = QueryParameter> =
-    BooleanOperation<Marker[]>;
+export type MarkerCondition<T extends QueryParameter> = BooleanOperation<{}>;
+export type MarkerQuery<T extends QueryParameter> = BooleanOperation<Marker[]>;
 export function getQueryParameterOfMarkerQuery(
-    query: MarkerQuery,
+    query: MarkerQuery<QueryParameter>,
 ): QueryParameter {
     return {}; // TODO:
 }
@@ -154,12 +163,12 @@ export function getQueryParameterOfMarkerQuery(
 
 // =================================================================
 // MARK: Sticker
-export type StickerCondition<T extends QueryParameter = QueryParameter> =
-    BooleanOperation<{}>;
-export type StickerQuery<T extends QueryParameter = QueryParameter> =
-    BooleanOperation<Sticker[]>;
+export type StickerCondition<T extends QueryParameter> = BooleanOperation<{}>;
+export type StickerQuery<T extends QueryParameter> = BooleanOperation<
+    Sticker[]
+>;
 export function getQueryParameterOfStickerQuery(
-    query: StickerQuery,
+    query: StickerQuery<QueryParameter>,
 ): QueryParameter {
     return {}; // TODO:
 }

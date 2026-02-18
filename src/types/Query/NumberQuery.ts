@@ -9,16 +9,17 @@ import type {
 
 // =================================================================
 // MARK: Number
-export type NumberCondition<T extends QueryParameter = QueryParameter> =
-    BooleanOperation<
-        | NumberQuery<T>
-        | {
-              type: "greater" | "less" | "greaterEqual" | "lessEqual";
-              number: NumberQuery<T>;
-          }
-    >;
+/** 数に対して適用する条件 */
+export type NumberCondition<T extends QueryParameter> = BooleanOperation<
+    | NumberQuery<T>
+    | {
+          type: "greater" | "less" | "greaterEqual" | "lessEqual";
+          number: NumberQuery<T>;
+      }
+>;
 
-export type NumberReference<T extends QueryParameter = QueryParameter> =
+/**  */
+export type NumberReference<T extends QueryParameter> =
     // TODO: GameObject (Spellなど) 対象の数など
     | NumericalValue
     | {
