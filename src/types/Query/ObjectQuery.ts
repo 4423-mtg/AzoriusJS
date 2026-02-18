@@ -5,22 +5,7 @@ import type {
 import type { CounterOnObject } from "../GameObject/Counter.js";
 import type { Marker } from "../GameObject/Marker.js";
 import type { Sticker } from "../GameObject/Sticker.js";
-import type {
-    AbilityQuery,
-    CardNameCondition,
-    CardNameQuery,
-    CardQuery,
-    CardTypeCondition,
-    CardTypeQuery,
-    ColorCondition,
-    ColorQuery,
-    GameObjectQuery,
-    SubtypeCondition,
-    SubtypeQuery,
-    SupertypeCondition,
-    SupertypeQuery,
-    TextQuery,
-} from "./SetQuery.js";
+import type {} from "./SetQuery.js";
 import type {
     ManaCostCondition,
     ManaCostQuery,

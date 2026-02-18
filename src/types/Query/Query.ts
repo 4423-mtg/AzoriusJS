@@ -48,93 +48,6 @@ export type TypeOfQueryParameter = QueryParameter[string]["type"];
 //       - 後から付与された能力も対象になりうる（コピーなど）
 //       - つまり、 Ability.id を指定する
 
-// ====================================================================
-// MARK: パラメータの演算
-// ====================================================================
-
-/** クエリパラメータのうちの、指定した型であるパラメータ */
-export type QueryParameterNameOfSpecificType<
-    T extends QueryParameter,
-    U extends TypeOfQueryParameter,
-> = keyof {
-    [K in keyof T as T[K] extends { type: U } ? K : never]: T[K];
-};
-
-type QueryParameterNameOfSpecificType2<
-    T extends QueryParameter,
-    U extends TypeOfQueryParameter,
-> = keyof T;
-
-const x = {
-    p1: { type: "gameObject" },
-    p2: { type: "player" },
-    p3: { type: "gameObject" },
-} satisfies QueryParameter;
-type x2 = QueryParameterNameOfSpecificType<typeof x, "gameObject">;
-const test1: x2 = "p1";
-const test2: x2 = "p2";
-const test3: x2 = "p3";
-type y2 = QueryParameterNameOfSpecificType2<typeof x, "gameObject">;
-
-/** クエリパラメータの総和 */
-export function IntersectionOfQueryParameters(
-    params: QueryParameter[],
-): QueryParameter {
-    const merged = Object.assign({}, ...params);
-    return merged;
-}
-
-// 配列を返すもの
-// - GameObject: 集合演算
-// - Ability: 集合演算？
-// - Color: 集合演算
-// - CardType: 集合演算
-// - Name
-// 1つだけ返すもの
-// - number: 足し算
-// - Player: 対戦相手、チームメイト、その人以外、その人の次の人
-// オブジェクトを返すもの
-// - CopiableValue
-// - Characteristics:
-
-// 履歴 TODO:
-
-// MARK: BooleanOperation
-type BooleanQuery = any; // FIXME: T に型制約を付ける
-type BooleanOperand<T extends BooleanQuery> =
-    | T
-    | { operation: "not"; operand: T };
-export type BooleanOperation<T> =
-    | BooleanOperand<T>
-    | BooleanOperand<T>[] // andとして解釈する
-    | { operation: "or"; operand: BooleanOperand<T>[] };
-// not (A and B) = (not A) or (not B)
-// not (A or B) = (not A) and (not B)
-// A and (not B)
-// A and (B and C) = A and B and C
-// A and (B or C) = (A and B) or (A and C)
-// A or (not B)
-// A or (B and C) =
-// A or (B or C) = A or B or C
-// あなたがコントロールしていない基本でない土地
-// (not A) and (not B) and C
-// 対戦相手がコントロールする、クリーチャーと基本でない土地
-// A and (B or ((not C) and D))
-// = (A and B) or (A and (not C) and D)
-export function getQueryParameterOfBooleanOperation<T>(
-    query: BooleanOperation<T>,
-): QueryParameter {
-    return {}; // TODO:
-}
-
-// ==================================================================
-// MARK: 型ガード
-// ====================================================================
-/** Record */
-function isRecord(arg: unknown): arg is Record<string, unknown> {
-    return typeof arg === "object" && arg !== null;
-}
-
 /** QueryParameter */
 export function isQueryParameter(arg: unknown): arg is QueryParameter {
     if (!isRecord(arg)) {
@@ -190,6 +103,57 @@ function isTypeOfQueryParameter(arg: unknown): arg is TypeOfQueryParameter {
     );
 }
 
+// ====================================================================
+// MARK: パラメータの演算
+// ====================================================================
+
+/** クエリパラメータのうちの、指定した型であるパラメータ */
+export type QueryParameterNameOfSpecificType<
+    T extends QueryParameter,
+    U extends TypeOfQueryParameter,
+> = keyof {
+    [K in keyof T as T[K] extends { type: U } ? K : never]: T[K];
+};
+
+type QueryParameterNameOfSpecificType2<
+    T extends QueryParameter,
+    U extends TypeOfQueryParameter,
+> = keyof T;
+
+const x = {
+    p1: { type: "gameObject" },
+    p2: { type: "player" },
+    p3: { type: "gameObject" },
+} satisfies QueryParameter;
+type x2 = QueryParameterNameOfSpecificType<typeof x, "gameObject">;
+const test1: x2 = "p1";
+const test2: x2 = "p2";
+const test3: x2 = "p3";
+type y2 = QueryParameterNameOfSpecificType2<typeof x, "gameObject">;
+
+/** クエリパラメータの総和 */
+export function IntersectionOfQueryParameters(
+    params: QueryParameter[],
+): QueryParameter {
+    const merged = Object.assign({}, ...params);
+    return merged;
+}
+
+// 配列を返すもの
+// - GameObject: 集合演算
+// - Ability: 集合演算？
+// - Color: 集合演算
+// - CardType: 集合演算
+// - Name
+// 1つだけ返すもの
+// - number: 足し算
+// - Player: 対戦相手、チームメイト、その人以外、その人の次の人
+// オブジェクトを返すもの
+// - CopiableValue
+// - Characteristics:
+
+// 履歴 TODO:
+
 /**  */
 function isQueryParameterNameOfSpecificType<
     T extends QueryParameter,
@@ -206,10 +170,48 @@ function isQueryParameterNameOfSpecificType<
     }
 }
 
+// ====================================================================
+// MARK: BooleanOperation
+// ====================================================================
+type BooleanQuery = any; // FIXME: T に型制約を付ける
+type BooleanOperand<T extends BooleanQuery> =
+    | T
+    | { operation: "not"; operand: T };
+export type BooleanOperation<T> =
+    | BooleanOperand<T>
+    | BooleanOperand<T>[] // andとして解釈する
+    | { operation: "or"; operand: BooleanOperand<T>[] };
+// not (A and B) = (not A) or (not B)
+// not (A or B) = (not A) and (not B)
+// A and (not B)
+// A and (B and C) = A and B and C
+// A and (B or C) = (A and B) or (A and C)
+// A or (not B)
+// A or (B and C) =
+// A or (B or C) = A or B or C
+// あなたがコントロールしていない基本でない土地
+// (not A) and (not B) and C
+// 対戦相手がコントロールする、クリーチャーと基本でない土地
+// A and (B or ((not C) and D))
+// = (A and B) or (A and (not C) and D)
+export function getQueryParameterOfBooleanOperation<T>(
+    query: BooleanOperation<T>,
+): QueryParameter {
+    return {}; // TODO:
+}
+
 /**  */
 export function isBooleanOperation<T>(
     arg: unknown,
 ): arg is BooleanOperation<T> {
     // TODO:
     return false;
+}
+
+// ==================================================================
+// MARK: 型ガード
+// ====================================================================
+/** Record */
+function isRecord(arg: unknown): arg is Record<string, unknown> {
+    return typeof arg === "object" && arg !== null;
 }

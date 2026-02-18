@@ -18,19 +18,17 @@ import type {
     StatusQuery,
     StickerQuery,
 } from "../ObjectQuery.js";
-import type {
-    QueryParameter,
-    QueryParameterNameOfSpecificType,
-} from "../Query.js";
+import type { QueryParameter } from "../Query.js";
 import {
     getQueryParameterOfSetQuery,
     isSetElementCondition,
     type SetElementCondition,
     type SetQuery,
 } from "../SetQuery.js";
-// =================================================================
 
+// =================================================================
 // MARK: GameObject
+// =================================================================
 export type GameObjectConditionOperand<T extends QueryParameter> = {
     zone: SetQuery<Zone, T>;
 };
@@ -38,7 +36,7 @@ export type GameObjectConditionOperand<T extends QueryParameter> = {
 export type GameObjectQueryOperand<T extends QueryParameter> =
     | SetElementCondition<GameObject, T>
     | {
-          argument: QueryParameterNameOfSpecificType<T, "gameObject" | "card">;
+          argument: string;
       };
 
 export function getQueryParameterOfGameObjectConditionOperand(
@@ -60,9 +58,22 @@ export function getQueryParameterOfGameObjectQueryOperand(
     }
 }
 // GameObjectQuery -> SetOperation -> GameObjectCondition | {argument: string}
+export function isGameObjectConditionOperand(
+    arg: unknown,
+): arg is GameObjectConditionOperand<QueryParameter> {
+    // TODO:
+    return false;
+}
+export function isGameObjectQueryOperand(
+    arg: unknown,
+): arg is GameObjectQueryOperand<QueryParameter> {
+    // TODO:
+    return false;
+}
 
 // =================================================================
 // MARK: Card
+// =================================================================
 // FIXME: 継続的効果は一般に GameObject 全般に効果を及ぼすが、
 // 特性を変更する効果は Card にのみ影響するので、 CardQuery を指定したい場合が有る
 export type CardConditionOperand<T extends QueryParameter> = {
@@ -83,7 +94,7 @@ export type CardConditionOperand<T extends QueryParameter> = {
 export type CardQueryOperand<T extends QueryParameter> =
     | (SetElementCondition<GameObject, T> & SetElementCondition<Card, T>)
     | {
-          argument: QueryParameterNameOfSpecificType<T, "card">;
+          argument: string;
       };
 export function getQueryParameterOfCardConditionOperand(
     operand: CardConditionOperand<QueryParameter>,
@@ -96,9 +107,22 @@ export function getQueryParameterOfCardQueryOperand(
 ): QueryParameter {
     return {};
 }
+export function isCardConditionOperand(
+    arg: unknown,
+): arg is CardConditionOperand<QueryParameter> {
+    // TODO:
+    return false;
+}
+export function isCardQueryOperand(
+    arg: unknown,
+): arg is CardQueryOperand<QueryParameter> {
+    // TODO:
+    return false;
+}
 
 // =========================================================
 // MARK: Player
+// =================================================================
 export type PlayerConditionOperand<T extends QueryParameter> =
     | { type: "oneOf"; players: SetQuery<Player, T> }
     | {
@@ -116,7 +140,7 @@ export type PlayerQueryOperand<T extends QueryParameter> =
     | Player[]
     | { info: PlayerInfo } // TODO: プレイヤーID？
     | SetElementCondition<Player, T>
-    | { argument: QueryParameterNameOfSpecificType<T, "player"> };
+    | { argument: string };
 
 export function getQueryParameterOfPlayerConditionOperand(
     operand: PlayerConditionOperand<QueryParameter>,
@@ -128,6 +152,18 @@ export function getQueryParameterOfPlayerQueryOperand(
     operand: PlayerQueryOperand<QueryParameter>,
 ): QueryParameter {
     return {};
+}
+export function isPlayerConditionOperand(
+    arg: unknown,
+): arg is PlayerConditionOperand<QueryParameter> {
+    // TODO:
+    return false;
+}
+export function isPlayerQueryOperand(
+    arg: unknown,
+): arg is PlayerQueryOperand<QueryParameter> {
+    // TODO:
+    return false;
 }
 
 // =================================================================
@@ -142,7 +178,7 @@ export type CardNameQueryOperand<T extends QueryParameter> =
     | {
           card: SetQuery<Card, T>;
       }
-    | { argument: QueryParameterNameOfSpecificType<T, "name"> };
+    | { argument: string };
 
 export function getQueryParameterOfCardNameQueryOperand(
     operand: CardNameQueryOperand<QueryParameter>,
@@ -153,6 +189,18 @@ export function getQueryParameterOfCardNameConditionOperand(
     operand: CardNameConditionOperand<QueryParameter>,
 ): QueryParameter {
     return {}; // TODO:
+}
+export function isCardNameConditionOperand(
+    arg: unknown,
+): arg is CardNameConditionOperand<QueryParameter> {
+    // TODO:
+    return false;
+}
+export function isCardNameQueryOperand(
+    arg: unknown,
+): arg is CardNameQueryOperand<QueryParameter> {
+    // TODO:
+    return false;
 }
 
 // =================================================================
@@ -167,7 +215,7 @@ export type CardTypeQueryOperand<T extends QueryParameter> =
     | CardType
     | CardType[]
     | { card: SetQuery<Card, T> }
-    | { argument: QueryParameterNameOfSpecificType<T, "cardType"> };
+    | { argument: string };
 
 export function getQueryParameterOfCardTypeQueryOperand(
     query: CardTypeQueryOperand<QueryParameter>,
@@ -178,6 +226,18 @@ export function getQueryParameterOfCardTypeConditionOperand(
     query: CardTypeConditionOperand<QueryParameter>,
 ): QueryParameter {
     return {}; // TODO:
+}
+export function isCardTypeConditionOperand(
+    arg: unknown,
+): arg is CardTypeConditionOperand<QueryParameter> {
+    // TODO:
+    return false;
+}
+export function isCardTypeQueryOperand(
+    arg: unknown,
+): arg is CardTypeQueryOperand<QueryParameter> {
+    // TODO:
+    return false;
 }
 
 // =================================================================
@@ -190,7 +250,7 @@ export type SubtypeQueryOperand<T extends QueryParameter> =
     | Subtype
     | Subtype[]
     | { card: SetQuery<Card, T> }
-    | { argument: QueryParameterNameOfSpecificType<T, "subtype"> };
+    | { argument: string };
 
 export function getQueryParameterOfSubtypeQueryOperand(
     operand: SubtypeQueryOperand<QueryParameter>,
@@ -201,6 +261,18 @@ export function getQueryParameterOfSubtypeConditionOperand(
     operand: SubtypeConditionOperand<QueryParameter>,
 ): QueryParameter {
     return {}; // TODO:
+}
+export function isSubtypeConditionOperand(
+    arg: unknown,
+): arg is SubtypeConditionOperand<QueryParameter> {
+    // TODO:
+    return false;
+}
+export function isSubtypeQueryOperand(
+    arg: unknown,
+): arg is SubtypeQueryOperand<QueryParameter> {
+    // TODO:
+    return false;
 }
 
 // =================================================================
@@ -213,7 +285,7 @@ export type SupertypeQueryOperand<T extends QueryParameter> =
     | Supertype
     | Supertype[]
     | { card: SetQuery<Card, T> };
-// | { argument: QueryParameterNameOfSpecificType<T, "supertype"> }
+// | { argument: string }
 
 export function getQueryParameterOfSupertypeQueryOperand(
     operand: SupertypeQueryOperand<QueryParameter>,
@@ -224,6 +296,18 @@ export function getQueryParameterOfSupertypeConditionOperand(
     operand: SupertypeConditionOperand<QueryParameter>,
 ): QueryParameter {
     return {}; // TODO:
+}
+export function isSupertypeConditionOperand(
+    arg: unknown,
+): arg is SupertypeConditionOperand<QueryParameter> {
+    // TODO:
+    return false;
+}
+export function isSupertypeQueryOperand(
+    arg: unknown,
+): arg is SupertypeQueryOperand<QueryParameter> {
+    // TODO:
+    return false;
 }
 
 // =========================================================
@@ -239,7 +323,7 @@ export type ColorQueryOperand<T extends QueryParameter> =
     | Color
     | Color[]
     | { card: SetQuery<Card, T> }
-    | { argument: QueryParameterNameOfSpecificType<T, "color"> };
+    | { argument: string };
 
 export function getQueryParameterOfColorQueryOperand(
     operand: ColorQueryOperand<QueryParameter>,
@@ -250,6 +334,18 @@ export function getQueryParameterOfColorConditionOperand(
     operand: ColorConditionOperand<QueryParameter>,
 ): QueryParameter {
     return {}; // TODO:
+}
+export function isColorConditionOperand(
+    arg: unknown,
+): arg is ColorConditionOperand<QueryParameter> {
+    // TODO:
+    return false;
+}
+export function isColorQueryOperand(
+    arg: unknown,
+): arg is ColorQueryOperand<QueryParameter> {
+    // TODO:
+    return false;
 }
 
 // =================================================================
@@ -279,6 +375,18 @@ export function getQueryParameterOfZoneQueryOperand(
 ): QueryParameter {
     return {};
 }
+export function isZoneConditionOperand(
+    arg: unknown,
+): arg is ZoneConditionOperand<QueryParameter> {
+    // TODO:
+    return false;
+}
+export function isZoneQueryOperand(
+    arg: unknown,
+): arg is ZoneQueryOperand<QueryParameter> {
+    // TODO:
+    return false;
+}
 
 // =========================================================
 // MARK: 6種(能力) TODO:
@@ -300,6 +408,18 @@ export function getQueryParameterOfAbilityQueryOperand(
 ): QueryParameter {
     return {}; // TODO:
 }
+export function isAbilityConditionOperand(
+    arg: unknown,
+): arg is AbilityConditionOperand<QueryParameter> {
+    // TODO:
+    return false;
+}
+export function isAbilityQueryOperand(
+    arg: unknown,
+): arg is AbilityQueryOperand<QueryParameter> {
+    // TODO:
+    return false;
+}
 
 // =========================================================
 // MARK: 3種(文章) TODO:
@@ -317,139 +437,6 @@ export function getQueryParameterOfTextQueryOperand(
 ): QueryParameter {
     return {}; // TODO:
 }
-
-// =======================================================================
-// MARK: 型ガード
-export function isGameObjectConditionOperand(
-    arg: unknown,
-): arg is GameObjectConditionOperand<QueryParameter> {
-    // TODO:
-    return false;
-}
-export function isGameObjectQueryOperand(
-    arg: unknown,
-): arg is GameObjectQueryOperand<QueryParameter> {
-    // TODO:
-    return false;
-}
-
-export function isCardConditionOperand(
-    arg: unknown,
-): arg is CardConditionOperand<QueryParameter> {
-    // TODO:
-    return false;
-}
-export function isCardQueryOperand(
-    arg: unknown,
-): arg is CardQueryOperand<QueryParameter> {
-    // TODO:
-    return false;
-}
-
-export function isPlayerConditionOperand(
-    arg: unknown,
-): arg is PlayerConditionOperand<QueryParameter> {
-    // TODO:
-    return false;
-}
-export function isPlayerQueryOperand(
-    arg: unknown,
-): arg is PlayerQueryOperand<QueryParameter> {
-    // TODO:
-    return false;
-}
-
-export function isCardNameConditionOperand(
-    arg: unknown,
-): arg is CardNameConditionOperand<QueryParameter> {
-    // TODO:
-    return false;
-}
-export function isCardNameQueryOperand(
-    arg: unknown,
-): arg is CardNameQueryOperand<QueryParameter> {
-    // TODO:
-    return false;
-}
-
-export function isCardTypeConditionOperand(
-    arg: unknown,
-): arg is CardTypeConditionOperand<QueryParameter> {
-    // TODO:
-    return false;
-}
-export function isCardTypeQueryOperand(
-    arg: unknown,
-): arg is CardTypeQueryOperand<QueryParameter> {
-    // TODO:
-    return false;
-}
-
-export function isSubtypeConditionOperand(
-    arg: unknown,
-): arg is SubtypeConditionOperand<QueryParameter> {
-    // TODO:
-    return false;
-}
-export function isSubtypeQueryOperand(
-    arg: unknown,
-): arg is SubtypeQueryOperand<QueryParameter> {
-    // TODO:
-    return false;
-}
-
-export function isSupertypeConditionOperand(
-    arg: unknown,
-): arg is SupertypeConditionOperand<QueryParameter> {
-    // TODO:
-    return false;
-}
-export function isSupertypeQueryOperand(
-    arg: unknown,
-): arg is SupertypeQueryOperand<QueryParameter> {
-    // TODO:
-    return false;
-}
-
-export function isColorConditionOperand(
-    arg: unknown,
-): arg is ColorConditionOperand<QueryParameter> {
-    // TODO:
-    return false;
-}
-export function isColorQueryOperand(
-    arg: unknown,
-): arg is ColorQueryOperand<QueryParameter> {
-    // TODO:
-    return false;
-}
-
-export function isZoneConditionOperand(
-    arg: unknown,
-): arg is ZoneConditionOperand<QueryParameter> {
-    // TODO:
-    return false;
-}
-export function isZoneQueryOperand(
-    arg: unknown,
-): arg is ZoneQueryOperand<QueryParameter> {
-    // TODO:
-    return false;
-}
-
-export function isAbilityConditionOperand(
-    arg: unknown,
-): arg is AbilityConditionOperand<QueryParameter> {
-    // TODO:
-    return false;
-}
-export function isAbilityQueryOperand(
-    arg: unknown,
-): arg is AbilityQueryOperand<QueryParameter> {
-    // TODO:
-    return false;
-}
-
 export function isTextConditionOperand(
     arg: unknown,
 ): arg is TextConditionOperand<QueryParameter> {

@@ -44,7 +44,10 @@ import {
     type QueryParameter,
 } from "./Query.js";
 
+// =================================================================
 // MARK: SetElementType
+// =================================================================
+
 type _setElementTypeDefinition = {
     gameObject: GameObject;
     card: Card;
@@ -65,8 +68,26 @@ export type SetElementTypeId = keyof _setElementTypeDefinition;
 export type SetElementType<T extends SetElementTypeId = SetElementTypeId> =
     _setElementTypeDefinition[T];
 
+export function isSetElementType(arg: unknown): arg is SetElementType {
+    return (
+        isGameObject(arg) ||
+        isCard(arg) ||
+        isPlayer(arg) ||
+        isCardName(arg) ||
+        isCardType(arg) ||
+        isSubtype(arg) ||
+        isSupertype(arg) ||
+        isColor(arg) ||
+        isZone(arg) ||
+        isAbility(arg) ||
+        isRuleText(arg)
+    );
+}
+
 // =================================================================
 // MARK: Condition
+// =================================================================
+
 /** 指定した SetElementType に関する条件指定 */
 export type SetElementCondition<
     T extends SetElementType,
@@ -103,12 +124,43 @@ export type SetElementConditionOperand<
     ? TextConditionOperand<U>
     : never;
 
+export function isSetElementCondition<T extends SetElementType>(
+    // FIXME: Tはどうやって指定？
+    arg: unknown,
+): arg is SetElementCondition<T, QueryParameter> {
+    return isBooleanOperation(arg) && arg;
+}
+
+export function isSetElementConditionOperand(
+    arg: unknown,
+): arg is SetElementConditionOperand<SetElementType, QueryParameter> {
+    return false;
+}
+
+// =================================================================
 // MARK: Query
+// =================================================================
+
 /** 集合のクエリ */
 export type SetQuery<T extends SetElementType, U extends QueryParameter> = {
     elementType: SetElementTypeId;
-    query: SetOperation<SetQueryOperand<T, U>, U>;
+    query: SetOperation<SetQueryOperand<T, U>>;
 };
+
+export function getQueryParameterOfSetQuery(
+    query: SetQuery<SetElementType, QueryParameter>,
+): QueryParameter {
+    return getQueryParameterOfSetOperation(query.query);
+}
+export function isSetQuery(
+    arg: unknown,
+): arg is SetQuery<SetElementType, QueryParameter> {
+    return false;
+}
+
+// =================================================================
+// MARK: SetOperation
+// =================================================================
 /** 集合のクエリの１要素 */
 export type SetQueryOperand<
     T extends SetElementType,
@@ -144,14 +196,6 @@ export function getQueryParameterOfSetQueryOperand(
     return {};
 }
 
-export function getQueryParameterOfSetQuery<T extends SetElementType>(
-    query: SetQuery<T, QueryParameter>,
-): QueryParameter {
-    return getQueryParameterOfSetOperation(query);
-}
-
-// =================================================================
-// MARK: SetOperation
 export type _Intersection<
     T extends SetQueryOperand<SetElementType, QueryParameter>, // QueryParameterは指定可能にすべき？
 > = {
@@ -186,8 +230,8 @@ export type _Difference<
 // (A + B) - C = (A - C) + (B - C) ☑️
 // (A & B) - C = (A - C) & (B - C)
 // (A - B) - C = A - B - C ☑️
-function getQueryParameterOfDifference<T extends SetElementType>(
-    difference: _Difference<T>,
+function getQueryParameterOfDifference(
+    difference: _Difference<SetQueryOperand<SetElementType, QueryParameter>>,
 ): QueryParameter {
     //
     return {};
@@ -209,64 +253,28 @@ export type SetOperation<
 // FIXME: SetOperationだけでは戻り値の型がわからない。パラメータはSetQueryからしか取れない
 // SetQueryからトップダウンにチェックすること
 export function getQueryParameterOfSetOperation<T extends SetElementType>(
-    query: SetQuery<T, QueryParameter>,
+    query: SetOperation<SetQueryOperand<SetElementType, QueryParameter>>,
 ): QueryParameter {
     // TODO: queryが何を取るクエリか判別するのにtypeプロパティが要るかも
     return {};
 }
 
-// =========================================================
-// MARK: 型ガード
-function isRecord(arg: unknown): arg is Record<string, unknown> {
-    return typeof arg === "object" && arg !== null;
-}
-export function isSetElementType(arg: unknown): arg is SetElementType {
-    return (
-        isGameObject(arg) ||
-        isCard(arg) ||
-        isPlayer(arg) ||
-        isCardName(arg) ||
-        isCardType(arg) ||
-        isSubtype(arg) ||
-        isSupertype(arg) ||
-        isColor(arg) ||
-        isZone(arg) ||
-        isAbility(arg) ||
-        isRuleText(arg)
-    );
-}
-
-export function isSetElementCondition<T extends SetElementType>(
-    // FIXME: Tはどうやって指定？
-    arg: unknown,
-): arg is SetElementCondition<T, QueryParameter> {
-    return isBooleanOperation(arg) && arg;
-}
-
-export function isSetElementConditionOperand(
-    arg: unknown,
-): arg is SetElementConditionOperand<SetElementType, QueryParameter> {
-    return false;
-}
-
-export function isSetQuery(
-    arg: unknown,
-): arg is SetQuery<SetElementType, QueryParameter> {
-    return false;
-}
 export function isSetQueryOperand(
     arg: unknown,
 ): arg is SetQueryOperand<SetElementType, QueryParameter> {
     return false;
 }
 
-function isIntersection(arg: unknown): arg is _Intersection<SetElementType> {
+function isIntersection(
+    arg: unknown,
+): arg is _Intersection<SetQueryOperand<SetElementType, QueryParameter>> {
     return (
         isRecord(arg) &&
         arg.operation === "intersection" &&
         isSetQueryOperand(arg.operand)
     );
 }
+
 function isDifference(
     arg: unknown,
 ): arg is _Difference<SetQueryOperand<SetElementType, QueryParameter>> {
@@ -277,4 +285,10 @@ export function isSetOperation(
     arg: unknown,
 ): arg is SetOperation<SetQueryOperand<SetElementType, QueryParameter>> {
     return false;
+}
+
+// =================================================================
+
+function isRecord(arg: unknown): arg is Record<string, unknown> {
+    return typeof arg === "object" && arg !== null;
 }
