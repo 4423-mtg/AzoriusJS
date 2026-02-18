@@ -1,6 +1,5 @@
 import type { NumericalValue } from "../Characteristics/Characteristic.js";
 import type { ManaSymbol } from "../Characteristics/Symbol.js";
-import type { CardQuery, ColorQuery, GameObjectQuery } from "./SetQuery.js";
 import type { CounterCondition } from "./ObjectQuery.js";
 import type {
     BooleanOperation,

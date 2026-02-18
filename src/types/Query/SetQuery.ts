@@ -16,27 +16,47 @@ import { isZone, type Zone } from "../GameState/Zone.js";
 import type {
     AbilityConditionOperand,
     AbilityQueryOperand,
-    CardConditionOperand,
+} from "./ArrayQuery/AbilityQuery.js";
+import type {
     CardNameConditionOperand,
     CardNameQueryOperand,
+} from "./ArrayQuery/CardNameQuery.js";
+import type {
+    CardConditionOperand,
     CardQueryOperand,
+} from "./ArrayQuery/CardQuery.js";
+import type {
     CardTypeConditionOperand,
     CardTypeQueryOperand,
+} from "./ArrayQuery/CardTypeQuery.js";
+import type {
     ColorConditionOperand,
     ColorQueryOperand,
+} from "./ArrayQuery/ColorQuery.js";
+import type {
     GameObjectConditionOperand,
     GameObjectQueryOperand,
+} from "./ArrayQuery/GameObjectQuery.js";
+import type {
     PlayerConditionOperand,
     PlayerQueryOperand,
-    SubtypeConditionOperand,
-    SubtypeQueryOperand,
-    SupertypeConditionOperand,
-    SupertypeQueryOperand,
+} from "./ArrayQuery/PlayerQuery.js";
+import type {
     TextConditionOperand,
     TextQueryOperand,
+} from "./ArrayQuery/RuleTextQuery.js";
+import type {
+    SubtypeConditionOperand,
+    SubtypeQueryOperand,
+} from "./ArrayQuery/SubtypeQuery.js";
+import type {
+    SupertypeConditionOperand,
+    SupertypeQueryOperand,
+} from "./ArrayQuery/SupertypeQuery.js";
+import type {
     ZoneConditionOperand,
     ZoneQueryOperand,
-} from "./ArrayQuery/GameObjectQuery.js";
+} from "./ArrayQuery/ZoneQuery.js";
 import {
     IntersectionOfQueryParameters,
     isBooleanOperation,
