@@ -11,7 +11,7 @@ import type { ScalarQuery } from "../ScalarQuery.js";
 import type { SetQuery } from "../SetQuery.js";
 
 /** 数に対して適用する条件 */
-export type NumberConditionOperand<T extends QueryParameter> =
+export type NumericalValueConditionOperand<T extends QueryParameter> =
     | ScalarQuery<NumericalValue, T>
     | {
           type: "greater" | "less" | "greaterEqual" | "lessEqual";
@@ -19,7 +19,7 @@ export type NumberConditionOperand<T extends QueryParameter> =
       };
 
 /**  */
-export type NumberReference<T extends QueryParameter> =
+export type NumericalValueReference<T extends QueryParameter> =
     // TODO: GameObject (Spellなど) 対象の数など
     | NumericalValue
     | {
@@ -53,8 +53,8 @@ export type NumberReference<T extends QueryParameter> =
       }
     // 履歴 このターンに〇〇した数など TODO:
     | { valueType: "stormCount" };
-export type NumberQueryOperand<T extends QueryParameter> =
-    | NumberReference<T>
+export type NumericalValueQueryOperand<T extends QueryParameter> =
+    | NumericalValueReference<T>
     // 引数
     | { argument: QueryParameterNameOfSpecificType<T, "number"> }
     // 何かの合計値
@@ -69,7 +69,7 @@ export type NumberQueryOperand<T extends QueryParameter> =
       };
 
 export function getQueryParameterOfNumberConditionOperand(
-    query: NumberConditionOperand<QueryParameter>,
+    query: NumericalValueConditionOperand<QueryParameter>,
 ): QueryParameter {
     return {}; // TODO:
 }
@@ -78,19 +78,19 @@ export function getQueryParameterOfNumberConditionOperand(
 // MARK: 型ガード
 export function isNumberConditionOperand(
     arg: unknown,
-): arg is NumberConditionOperand<QueryParameter> {
+): arg is NumericalValueConditionOperand<QueryParameter> {
     // TODO:
     return false;
 }
 export function isNumberReference(
     arg: unknown,
-): arg is NumberReference<QueryParameter> {
+): arg is NumericalValueReference<QueryParameter> {
     // TODO:
     return false;
 }
 export function isNumberQueryOperand(
     arg: unknown,
-): arg is NumberQueryOperand<QueryParameter> {
+): arg is NumericalValueQueryOperand<QueryParameter> {
     // TODO:
     return false;
 }

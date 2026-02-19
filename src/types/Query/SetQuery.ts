@@ -139,7 +139,7 @@ export type SetElementCondition<
     T extends SetElementType,
     U extends QueryParameter,
 > = {
-    elementType: T;
+    elementType: T; // FIXME: SetElementTypeId of T
     condition: BooleanOperation<SetElementConditionOperand<T, U>>;
 };
 /** 条件指定のオペランド */
