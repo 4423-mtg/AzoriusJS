@@ -1,32 +1,35 @@
-import type { Card, Status } from "../../GameObject/Card/Card.js";
+import type {
+    Characteristics,
+    NumericalValue,
+} from "../../Characteristics/Characteristic.js";
+import type { Card, Face, Status } from "../../GameObject/Card/Card.js";
 import type { GameObject } from "../../GameObject/GameObject.js";
 import type { Player } from "../../GameObject/Player.js";
 import type {
     CounterQuery,
-    FaceQuery,
     MarkerQuery,
     StickerQuery,
 } from "../ObjectQuery.js";
 import type { QueryParameter } from "../Query.js";
-import type { ScalarQuery } from "../ScalarQuery.js";
-import type { SetElementCondition, SetQuery } from "../SetQuery.js";
+import type { ScalarCondition } from "../ScalarQuery.js";
+import type { SetElementCondition } from "../SetQuery.js";
 
 // FIXME: 継続的効果は一般に GameObject 全般に効果を及ぼすが、
 // 特性を変更する効果は Card にのみ影響するので、 CardQuery を指定したい場合が有る
 export type CardConditionOperand<T extends QueryParameter> = {
-    face?: FaceQuery<T>;
-    owner?: SetQuery<Player, T>;
-    controller?: SetQuery<Player, T>;
-    characteristics?: CharacteristicsCondition<T>;
-    status?: ScalarQuery<Status, T>;
+    face?: SetElementCondition<Face, T>;
+    owner?: SetElementCondition<Player, T>;
+    controller?: SetElementCondition<Player, T>;
+    characteristics?: ScalarCondition<Characteristics, T>;
+    status?: ScalarCondition<Status, T>;
     isToken?: boolean; // FIXME: booleanQuery
     isDoubleFaced?: boolean; // ?
     currentFace?: number; // FIXME: "front" | "back"
     counters?: CounterQuery<T>;
     markers?: MarkerQuery<T>;
     stickers?: StickerQuery<T>;
-    manaValue?: NumberCondition<T>; // ここでいいのか？
-};
+    manaValue?: ScalarCondition<NumericalValue, T>; // ここでいいのか？
+}; // {} を除外しなくていいのか？
 
 export type CardQueryOperand<T extends QueryParameter> =
     | (SetElementCondition<GameObject, T> & SetElementCondition<Card, T>)

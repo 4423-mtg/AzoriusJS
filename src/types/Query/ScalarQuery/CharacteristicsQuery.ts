@@ -12,25 +12,25 @@ import type { Supertype } from "../../Characteristics/Supertype.js";
 import type { Ability } from "../../GameObject/Ability.js";
 import type { Card } from "../../GameObject/Card/Card.js";
 import type { QueryParameter } from "../Query.js";
-import type { ScalarQuery } from "../ScalarQuery.js";
+import type { ScalarCondition } from "../ScalarQuery.js";
 import type { SetElementCondition, SetQuery } from "../SetQuery.js";
 
 /** 特性の条件 */
 export type CharacteristicsConditionOperand<T extends QueryParameter> = {
     name?: SetElementCondition<CardName, T>;
-    manaCost?: ScalarQuery<ManaCost, T>;
+    manaCost?: ScalarCondition<ManaCost, T>;
     color?: SetElementCondition<Color, T>;
     cardType?: SetElementCondition<CardType, T>;
     subtype?: SetElementCondition<Subtype, T>;
     supertype?: SetElementCondition<Supertype, T>;
     text?: SetElementCondition<RuleText, T>; // FIXME:
     ability?: SetElementCondition<Ability, T>; // FIXME:
-    power?: ScalarQuery<NumericalValue, T>;
-    toughness?: ScalarQuery<NumericalValue, T>;
-    loyalty?: ScalarQuery<NumericalValue, T>;
-    defense?: ScalarQuery<NumericalValue, T>;
-    handModifier?: ScalarQuery<NumericalValue, T>;
-    lifeModifier?: ScalarQuery<NumericalValue, T>;
+    power?: ScalarCondition<NumericalValue, T>;
+    toughness?: ScalarCondition<NumericalValue, T>;
+    loyalty?: ScalarCondition<NumericalValue, T>;
+    defense?: ScalarCondition<NumericalValue, T>;
+    handModifier?: ScalarCondition<NumericalValue, T>;
+    lifeModifier?: ScalarCondition<NumericalValue, T>;
 };
 
 /** 特性のクエリ */

@@ -6,13 +6,10 @@ import type { SetElementCondition, SetQuery } from "../SetQuery.js";
 
 // ZoneTypeかownerのどちらかは必須にする
 /** 領域の条件 */
-export type ZoneConditionOperand<T extends QueryParameter> = Exclude<
-    Partial<{
-        type: ZoneType | ZoneType[];
-        owner: SetQuery<Player, T>;
-    }>,
-    {}
->;
+export type ZoneConditionOperand<T extends QueryParameter> = {
+    type?: ZoneType | ZoneType[];
+    owner?: SetElementCondition<Player, T>;
+};
 
 /** 領域のクエリ */
 export type ZoneQueryOperand<T extends QueryParameter> =

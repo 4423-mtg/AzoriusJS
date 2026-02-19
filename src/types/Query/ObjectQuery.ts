@@ -1,19 +1,22 @@
+import type { Characteristics } from "../Characteristics/Characteristic.js";
 import type { CounterOnObject } from "../GameObject/Counter.js";
 import type { Marker } from "../GameObject/Marker.js";
 import type { Sticker } from "../GameObject/Sticker.js";
 import type { BooleanOperation, QueryParameter } from "./Query.js";
+import type { ScalarCondition } from "./ScalarQuery.js";
 
 // =================================================================
 // MARK: Face
 export type FaceCondition<T extends QueryParameter> = BooleanOperation<{}>;
 export type FaceQuery<T extends QueryParameter> = BooleanOperation<{
+    // FIXME: faceは両面カードだけではない
     front?: {
-        printed?: CharacteristicsCondition<T>;
-        charcteristics?: CharacteristicsCondition<T>;
+        printed?: ScalarCondition<Characteristics, T>;
+        charcteristics?: ScalarCondition<Characteristics, T>;
     };
     back?: {
-        printed?: CharacteristicsCondition<T>;
-        charcteristics?: CharacteristicsCondition<T>;
+        printed?: ScalarCondition<Characteristics, T>;
+        charcteristics?: ScalarCondition<Characteristics, T>;
     };
 }>;
 

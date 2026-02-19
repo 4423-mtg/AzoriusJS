@@ -5,14 +5,13 @@ import {
     getQueryParameterOfSetQuery,
     isSetElementCondition,
     type SetElementCondition,
-    type SetQuery,
 } from "../SetQuery.js";
 
 // =================================================================
 // MARK: GameObject
 // =================================================================
 export type GameObjectConditionOperand<T extends QueryParameter> = {
-    zone: SetQuery<Zone, T>;
+    zone: SetElementCondition<Zone, T>;
 };
 
 export type GameObjectQueryOperand<T extends QueryParameter> =

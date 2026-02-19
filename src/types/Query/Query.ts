@@ -173,14 +173,19 @@ function isQueryParameterNameOfSpecificType<
 // ====================================================================
 // MARK: BooleanOperation
 // ====================================================================
-type BooleanQuery = any; // FIXME: T に型制約を付ける
-type BooleanOperand<T extends BooleanQuery> =
-    | T
-    | { operation: "not"; operand: T };
-export type BooleanOperation<T> =
-    | BooleanOperand<T>
-    | BooleanOperand<T>[] // andとして解釈する
-    | { operation: "or"; operand: BooleanOperand<T>[] };
+export type BooleanQuery<T> = {
+    type: T;
+    query: undefined;
+}; // SetQueryと違って型をまたぐ
+
+type BooleanQueryOperand<T, U extends QueryParameter> = T extends {} ? {} : {};
+// | T
+// | { operation: "not"; operand: T };
+
+export type BooleanOperation<T extends BooleanQueryOperand<>> =
+    | BooleanQueryOperand<T>
+    | BooleanQueryOperand<T>[] // andとして解釈する
+    | { operation: "or"; operand: BooleanQueryOperand<T>[] };
 // not (A and B) = (not A) or (not B)
 // not (A or B) = (not A) and (not B)
 // A and (not B)

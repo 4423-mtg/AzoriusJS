@@ -11,22 +11,22 @@ import type { Subtype } from "../../Characteristics/Subtype.js";
 import type { Supertype } from "../../Characteristics/Supertype.js";
 import type { GameObject } from "../../GameObject/GameObject.js";
 import type { QueryParameter } from "../Query.js";
-import type { ScalarQuery } from "../ScalarQuery.js";
+import type { ScalarCondition, ScalarQuery } from "../ScalarQuery.js";
 import type { SetElementCondition, SetQuery } from "../SetQuery.js";
 
 // TODO: 呪文の場合
 /** コピー可能な値の条件 */
 export type CopiableValueConditionOperand<T extends QueryParameter> = {
     name?: SetElementCondition<CardName, T>;
-    manaCost?: ScalarQuery<ManaCost, T>;
+    manaCost?: ScalarCondition<ManaCost, T>;
     colorIdentity?: SetElementCondition<Color, T>;
     cardTypes?: SetElementCondition<CardType, T>;
     subtypes?: SetElementCondition<Subtype, T>;
     supertypes?: SetElementCondition<Supertype, T>;
     text?: SetElementCondition<RuleText, T>;
-    power?: ScalarQuery<NumericalValue, T>;
-    toughness?: ScalarQuery<NumericalValue, T>;
-    loyalty?: ScalarQuery<NumericalValue, T>;
+    power?: ScalarCondition<NumericalValue, T>;
+    toughness?: ScalarCondition<NumericalValue, T>;
+    loyalty?: ScalarCondition<NumericalValue, T>;
 };
 
 // TODO: 呪文の場合
