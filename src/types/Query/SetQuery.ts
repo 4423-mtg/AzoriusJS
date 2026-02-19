@@ -18,67 +18,67 @@ import {
     isAbilityQueryOperand,
     type AbilityConditionOperand,
     type AbilityQueryOperand,
-} from "./ArrayQuery/AbilityQuery.js";
+} from "./SetQuery/AbilityQuery.js";
 import {
     getQueryParameterOfCardNameQueryOperand,
     isCardNameQueryOperand,
     type CardNameConditionOperand,
     type CardNameQueryOperand,
-} from "./ArrayQuery/CardNameQuery.js";
+} from "./SetQuery/CardNameQuery.js";
 import {
     getQueryParameterOfCardQueryOperand,
     isCardQueryOperand,
     type CardConditionOperand,
     type CardQueryOperand,
-} from "./ArrayQuery/CardQuery.js";
+} from "./SetQuery/CardQuery.js";
 import {
     getQueryParameterOfCardTypeQueryOperand,
     isCardTypeQueryOperand,
     type CardTypeConditionOperand,
     type CardTypeQueryOperand,
-} from "./ArrayQuery/CardTypeQuery.js";
+} from "./SetQuery/CardTypeQuery.js";
 import {
     getQueryParameterOfColorQueryOperand,
     isColorQueryOperand,
     type ColorConditionOperand,
     type ColorQueryOperand,
-} from "./ArrayQuery/ColorQuery.js";
+} from "./SetQuery/ColorQuery.js";
 import {
     getQueryParameterOfGameObjectQueryOperand,
     isGameObjectQueryOperand,
     type GameObjectConditionOperand,
     type GameObjectQueryOperand,
-} from "./ArrayQuery/GameObjectQuery.js";
+} from "./SetQuery/GameObjectQuery.js";
 import {
     getQueryParameterOfPlayerQueryOperand,
     isPlayerQueryOperand,
     type PlayerConditionOperand,
     type PlayerQueryOperand,
-} from "./ArrayQuery/PlayerQuery.js";
+} from "./SetQuery/PlayerQuery.js";
 import {
     getQueryParameterOfTextQueryOperand,
     isTextQueryOperand,
     type TextConditionOperand,
     type TextQueryOperand,
-} from "./ArrayQuery/RuleTextQuery.js";
+} from "./SetQuery/RuleTextQuery.js";
 import {
     getQueryParameterOfSubtypeQueryOperand,
     isSubtypeQueryOperand,
     type SubtypeConditionOperand,
     type SubtypeQueryOperand,
-} from "./ArrayQuery/SubtypeQuery.js";
+} from "./SetQuery/SubtypeQuery.js";
 import {
     getQueryParameterOfSupertypeQueryOperand,
     isSupertypeQueryOperand,
     type SupertypeConditionOperand,
     type SupertypeQueryOperand,
-} from "./ArrayQuery/SupertypeQuery.js";
+} from "./SetQuery/SupertypeQuery.js";
 import {
     getQueryParameterOfZoneQueryOperand,
     isZoneQueryOperand,
     type ZoneConditionOperand,
     type ZoneQueryOperand,
-} from "./ArrayQuery/ZoneQuery.js";
+} from "./SetQuery/ZoneQuery.js";
 import {
     IntersectionOfQueryParameters,
     isBooleanOperation,
