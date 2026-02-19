@@ -27,37 +27,38 @@ import type { Card } from "../GameObject/Card/Card.js";
 // =================================================================
 
 // TODO: 呪文の場合
-export type CopiableValueCondition<T extends QueryParameter> =
-    BooleanOperation<{
-        name?: SetElementCondition<CardName, T>; // TODO: nameが複数あるケースが有る
-        manaCost?: NumberCondition<T>;
-        colorIdentity?: SetElementCondition<Color, T>; // TODO: 複数ある
-        cardTypes?: SetElementCondition<CardType, T>; // TODO: 複数ある
-        subtypes?: SetElementCondition<Subtype, T>; // TODO: 複数ある
-        supertypes?: SetElementCondition<Supertype, T>; // TODO: 複数ある
-        text?: SetElementCondition<RuleText, T>;
-        power?: NumberCondition<T>;
-        toughness?: NumberCondition<T>;
-        loyalty?: NumberCondition<T>;
-    }>;
-export type CopiableValueQuery<T extends QueryParameter> =
-    // 固定値
-    | CopiableValue
+/** コピー可能な値の条件 */
+export type CopiableValueConditionOperand<T extends QueryParameter> = {
+    name?: SetElementCondition<CardName, T>;
+    manaCost?: NumberCondition<T>;
+    colorIdentity?: SetElementCondition<Color, T>;
+    cardTypes?: SetElementCondition<CardType, T>;
+    subtypes?: SetElementCondition<Subtype, T>;
+    supertypes?: SetElementCondition<Supertype, T>;
+    text?: SetElementCondition<RuleText, T>;
+    power?: NumberCondition<T>;
+    toughness?: NumberCondition<T>;
+    loyalty?: NumberCondition<T>;
+};
+
+// TODO: 呪文の場合
+/** コピー可能な値のクエリ */
+export type CopiableValueQueryOperand<T extends QueryParameter> =
     | {
           name: SetQuery<CardName, T>;
-          manaCost: ManaCostQuery<T>; // FIXME:
+          manaCost: ManaCostQuery<T>;
           colorIdentity: SetQuery<Color, T>;
           cardTypes: SetQuery<CardType, T>;
           subtypes: SetQuery<Subtype, T>;
           supertypes: SetQuery<Supertype, T>;
-          text: SetQuery<RuleText, T>; // FIXME:
+          text: SetQuery<RuleText, T>;
           power: NumberQuery<T>;
           toughness: NumberQuery<T>;
           loyalty: NumberQuery<T>;
       }
     // 参照
-    | { object: SetQuery<GameObject, T> } // FIXME: 1つだけ欲しい場合は？
-    // 修整
+    | { object: SetQuery<GameObject, T> } // 1つだけ欲しい場合は？
+    // 部分的な修整
     | {
           original: CopiableValueQuery<T>;
           overwrite?: Partial<CopiableValueQuery<T>>;
@@ -71,6 +72,9 @@ export function getQueryParameterOfCopiableQuery(
 
 // =================================================================
 // MARK: Characteristics
+
+export type CharacteristicsConditionOperand<T extends QueryParameter> = {};
+
 // FIXME:
 export type CharacteristicsCondition<
     T extends QueryParameter = QueryParameter,

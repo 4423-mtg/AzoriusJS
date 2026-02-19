@@ -1,11 +1,15 @@
 import type { NumericalValue } from "../Characteristics/Characteristic.js";
+import type { Color } from "../Characteristics/Color.js";
 import type { ManaSymbol } from "../Characteristics/Symbol.js";
+import type { Card } from "../GameObject/Card/Card.js";
+import type { GameObject } from "../GameObject/GameObject.js";
 import type { CounterCondition } from "./ObjectQuery.js";
 import type {
     BooleanOperation,
     QueryParameter,
     QueryParameterNameOfSpecificType,
 } from "./Query.js";
+import type { SetQuery } from "./SetQuery.js";
 
 // =================================================================
 // MARK: Number
@@ -36,19 +40,19 @@ export type NumberReference<T extends QueryParameter> =
               | "defense"
               | "handModifier"
               | "lifeModifier";
-          card: CardQuery<T>;
+          card: SetQuery<Card, T>;
       }
     | {
           valueType: "devotion";
-          card: CardQuery<T>;
-          colors: ColorQuery<T>;
+          card: SetQuery<Card, T>;
+          colors: SetQuery<Color, T>;
       }
     // オブジェクトの個数
-    | { valueType: "numberOfObject"; objects: GameObjectQuery<T> }
+    | { valueType: "numberOfObject"; objects: SetQuery<GameObject, T> }
     // カウンターの数
     | {
           valueType: "numberOfCounter";
-          objects: CardQuery<T>;
+          objects: SetQuery<Card, T>;
           kindOfCounter?: CounterCondition<T>;
       }
     // 履歴 このターンに〇〇した数など TODO:

@@ -133,7 +133,8 @@ export function isSetElementType(arg: unknown): arg is SetElementType {
 // MARK: Condition
 // =================================================================
 
-/** 指定した SetElementType に関する条件指定 */
+/** 指定した SetElementType に関する条件指定。
+ * 条件を満たすものすべてを取ってくるのに使う */
 export type SetElementCondition<
     T extends SetElementType,
     U extends QueryParameter,
@@ -270,6 +271,7 @@ export function getQueryParameterOfSetQueryOperand(
     }
 }
 
+/** 共通部分 */
 export type _Intersection<
     T extends SetQueryOperand<SetElementType, QueryParameter>, // QueryParameterは指定可能にすべき？
 > = {
@@ -291,6 +293,7 @@ function getQueryParameterOfIntersection(
     );
 }
 
+/** 差集合 */
 export type _Difference<
     T extends SetQueryOperand<SetElementType, QueryParameter>,
 > = {
@@ -329,6 +332,7 @@ function getQueryParameterOfDifference(
 // A + (B & C)
 // A + (B - C)
 
+/** 集合演算 */
 export type SetOperation<
     T extends SetQueryOperand<SetElementType, QueryParameter>,
 > =

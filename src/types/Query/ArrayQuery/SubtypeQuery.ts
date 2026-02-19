@@ -1,16 +1,20 @@
 import type { Subtype } from "../../Characteristics/Subtype.js";
 import type { Card } from "../../GameObject/Card/Card.js";
 import type { QueryParameter } from "../Query.js";
-import type { SetQuery } from "../SetQuery.js";
+import type { SetElementCondition, SetQuery } from "../SetQuery.js";
 
-export type SubtypeConditionOperand<T extends QueryParameter> =
-    | SetQuery<Subtype, T>
-    | { type: "oneOf"; subtype: SetQuery<Subtype, T> };
+/** サブタイプの条件 */
+export type SubtypeConditionOperand<T extends QueryParameter> = {
+    type: "oneOf" | "allOf" | "equal";
+    subtype: SetQuery<Subtype, T>;
+};
 
+/** サブタイプのクエリ */
 export type SubtypeQueryOperand<T extends QueryParameter> =
     | Subtype
     | Subtype[]
     | { card: SetQuery<Card, T> }
+    | SetElementCondition<Subtype, T>
     | { argument: string };
 
 export function getQueryParameterOfSubtypeQueryOperand(

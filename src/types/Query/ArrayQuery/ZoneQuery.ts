@@ -1,21 +1,26 @@
+import type { Card } from "../../GameObject/Card/Card.js";
 import type { Player } from "../../GameObject/Player.js";
 import type { Zone, ZoneType } from "../../GameState/Zone.js";
 import type { QueryParameter } from "../Query.js";
 import type { SetElementCondition, SetQuery } from "../SetQuery.js";
 
-export type ZoneConditionOperand<T extends QueryParameter> =
-    | {
-          type: ZoneType;
-          owner?: SetQuery<Player, T>;
-      }
-    | {
-          type?: ZoneType;
-          owner: SetQuery<Player, T>;
-      };
+// ZoneTypeかownerのどちらかは必須にする
+/** 領域の条件 */
+export type ZoneConditionOperand<T extends QueryParameter> = Exclude<
+    Partial<{
+        type: ZoneType | ZoneType[];
+        owner: SetQuery<Player, T>;
+    }>,
+    {}
+>;
 
+/** 領域のクエリ */
 export type ZoneQueryOperand<T extends QueryParameter> =
     | Zone
+    | Zone[]
+    | { card: SetQuery<Card, T> } // カードが置かれている領域
     | SetElementCondition<Zone, T>;
+// カードが直前に置かれていた領域とか必要になるかも
 
 export function getQueryParameterOfZoneConditionOperand(
     operand: ZoneConditionOperand<QueryParameter>,

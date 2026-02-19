@@ -7,21 +7,23 @@ import type { SetElementCondition, SetQuery } from "../SetQuery.js";
 // MARK: Player
 // =================================================================
 export type PlayerConditionOperand<T extends QueryParameter> =
-    | { type: "oneOf"; players: SetQuery<Player, T> }
+    // オーナー、コントローラー
     | {
           type: "owner" | "controller";
           object: SetQuery<GameObject, T>;
       }
+    // 対戦相手、チームメイト、ターン順で次、ターン順で前
     | {
           type: "opponent" | "teamMate" | "next" | "previous";
           player: SetQuery<Player, T>;
       }
-    | { type: "isMonarch" | "startingPlayer" };
+    | { type: "isMonarch" | "startingPlayer" } // 統治者、開始プレイヤー
+    | { info: PlayerInfo } // TODO: プレイヤーID？
+    | { type: "oneOf" | "allOf" | "equal"; players: SetQuery<Player, T> };
 
 export type PlayerQueryOperand<T extends QueryParameter> =
     | Player
     | Player[]
-    | { info: PlayerInfo } // TODO: プレイヤーID？
     | SetElementCondition<Player, T>
     | { argument: string };
 

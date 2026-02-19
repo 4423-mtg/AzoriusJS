@@ -1,12 +1,30 @@
 import type { Ability } from "../../GameObject/Ability.js";
+import type { Card } from "../../GameObject/Card/Card.js";
 import type { QueryParameter } from "../Query.js";
+import type { SetElementCondition, SetQuery } from "../SetQuery.js";
 
-export type AbilityConditionOperand<T extends QueryParameter> = undefined;
-export type AbilityQueryOperand<T extends QueryParameter> =
-    | Ability[]
+export type AbilityConditionOperand<T extends QueryParameter> =
     | {
-          lose?: Ability[]; // TODO: 能力の同一性の検査
-          add?: Ability[];
+          type: "oneOf" | "allOf" | "equal";
+          abilities: SetQuery<Ability, T>;
+      }
+    | {
+          keyword:
+              | "flying"
+              | "protection"
+              | "hexproof"
+              | "trample"
+              | "devour"
+              | "affinity"
+              | "equip";
+      }; // TODO:
+export type AbilityQueryOperand<T extends QueryParameter> =
+    | Ability
+    | Ability[]
+    | { cards: SetQuery<Card, T> } // カードの能力
+    | {
+          abilities: SetQuery<Ability, T>;
+          condition?: SetElementCondition<Ability, T>; // 指定した条件を満たすもの
       };
 
 export function getQueryParameterOfAbilityConditionOperand(

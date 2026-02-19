@@ -1,17 +1,19 @@
 import type { Supertype } from "../../Characteristics/Supertype.js";
 import type { Card } from "../../GameObject/Card/Card.js";
 import type { QueryParameter } from "../Query.js";
-import type { SetQuery } from "../SetQuery.js";
+import type { SetElementCondition, SetQuery } from "../SetQuery.js";
 
-export type SupertypeConditionOperand<T extends QueryParameter> =
-    | SetQuery<Supertype, T>
-    | { type: "oneOf"; supertype: SetQuery<Supertype, T> };
+export type SupertypeConditionOperand<T extends QueryParameter> = {
+    type: "oneOf" | "allOf" | "equal";
+    supertype: SetQuery<Supertype, T>;
+};
 
 export type SupertypeQueryOperand<T extends QueryParameter> =
     | Supertype
     | Supertype[]
-    | { card: SetQuery<Card, T> };
-// | { argument: string }
+    | { card: SetQuery<Card, T> }
+    | SetElementCondition<Supertype, T>
+    | { argument: string };
 
 export function getQueryParameterOfSupertypeQueryOperand(
     operand: SupertypeQueryOperand<QueryParameter>,
