@@ -1,14 +1,15 @@
 // MARK: 型定義: 7a
-import { isNumberQuery, type NumberQuery } from "../../Query/NumberQuery.js";
 import { type QueryParameter } from "../../Query/Query.js";
+import type { ScalarQuery } from "../../Query/ScalarQuery.js";
+import type { NumericalValue } from "../Characteristic.js";
 import { isLayerCommonProperty, type LayerCommonProperty } from "./Layer.js";
 
 /** パワー・タフネスを定義する特性定義能力 */
 export type Layer7a<T extends QueryParameter = QueryParameter> =
     LayerCommonProperty & {
         type: "7a";
-        power?: NumberQuery<T>;
-        toughness?: NumberQuery<T>;
+        power?: ScalarQuery<NumericalValue, T>;
+        toughness?: ScalarQuery<NumericalValue, T>;
     };
 export function isLayer7a(arg: unknown): arg is Layer7a {
     return (
@@ -24,8 +25,8 @@ export function isLayer7a(arg: unknown): arg is Layer7a {
 export type Layer7b<T extends QueryParameter = QueryParameter> =
     LayerCommonProperty & {
         type: "7b";
-        power?: NumberQuery<T>;
-        toughness?: NumberQuery<T>;
+        power?: ScalarQuery<NumericalValue, T>;
+        toughness?: ScalarQuery<NumericalValue, T>;
     };
 export function isLayer7b(arg: unknown): arg is Layer7b {
     return (
@@ -41,8 +42,8 @@ export function isLayer7b(arg: unknown): arg is Layer7b {
 export type Layer7c<T extends QueryParameter = QueryParameter> =
     LayerCommonProperty & {
         type: "7c";
-        power: NumberQuery<T>;
-        toughness: NumberQuery<T>;
+        power: ScalarQuery<NumericalValue, T>;
+        toughness: ScalarQuery<NumericalValue, T>;
     };
 export function isLayer7c(arg: unknown): arg is Layer7c {
     return (

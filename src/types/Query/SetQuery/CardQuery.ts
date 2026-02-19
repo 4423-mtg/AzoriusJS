@@ -1,20 +1,14 @@
-// =================================================================
-// MARK: Card
-// =================================================================
-
-import type { Card } from "../../GameObject/Card/Card.js";
+import type { Card, Status } from "../../GameObject/Card/Card.js";
 import type { GameObject } from "../../GameObject/GameObject.js";
 import type { Player } from "../../GameObject/Player.js";
-import type { NumberCondition } from "../NumberQuery.js";
 import type {
-    CharacteristicsCondition,
     CounterQuery,
     FaceQuery,
     MarkerQuery,
-    StatusQuery,
     StickerQuery,
 } from "../ObjectQuery.js";
 import type { QueryParameter } from "../Query.js";
+import type { ScalarQuery } from "../ScalarQuery.js";
 import type { SetElementCondition, SetQuery } from "../SetQuery.js";
 
 // FIXME: 継続的効果は一般に GameObject 全般に効果を及ぼすが、
@@ -24,7 +18,7 @@ export type CardConditionOperand<T extends QueryParameter> = {
     owner?: SetQuery<Player, T>;
     controller?: SetQuery<Player, T>;
     characteristics?: CharacteristicsCondition<T>;
-    status?: StatusQuery<T>;
+    status?: ScalarQuery<Status, T>;
     isToken?: boolean; // FIXME: booleanQuery
     isDoubleFaced?: boolean; // ?
     currentFace?: number; // FIXME: "front" | "back"
