@@ -1,3 +1,4 @@
+import type { Marker } from "../../GameObject/Marker.js";
 import type { BooleanOperation } from "../Condition.js";
 import type { QueryParameter } from "../QueryParameter.js";
 

@@ -1,11 +1,12 @@
 import type { GameObject } from "../../GameObject/GameObject.js";
 import type { Zone } from "../../GameState/Zone.js";
-import type { QueryParameter } from "../QueryParameter.js";
 import {
-    getQueryParameterOfSetQuery,
     isSetElementCondition,
     type SetElementCondition,
-} from "../SetQuery.js";
+} from "../Condition.js";
+import type { QueryParameter } from "../QueryParameter.js";
+import { getQueryParameterOfSetQuery } from "../SetQuery.js";
+import { getQueryParameterOfZoneQueryOperand } from "./ZoneQuery.js";
 
 // =================================================================
 // MARK: GameObject

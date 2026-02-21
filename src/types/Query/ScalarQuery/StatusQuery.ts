@@ -1,6 +1,6 @@
 import type { Status } from "../../GameObject/Card/Card.js";
+import type { ScalarCondition } from "../Condition.js";
 import type { QueryParameter } from "../QueryParameter.js";
-import type { ScalarCondition } from "../ScalarQuery.js";
 
 /** 位相の条件 */
 export type StatusConditionOperand<T extends QueryParameter> = {

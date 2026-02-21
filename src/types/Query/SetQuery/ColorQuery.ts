@@ -1,7 +1,8 @@
 import type { Color } from "../../Characteristics/Color.js";
 import type { Card } from "../../GameObject/Card/Card.js";
+import type { SetElementCondition } from "../Condition.js";
 import type { QueryParameter } from "../QueryParameter.js";
-import type { SetElementCondition, SetQuery } from "../SetQuery.js";
+import type { SetQuery } from "../SetQuery.js";
 
 /** 色の条件 */
 export type ColorConditionOperand<T extends QueryParameter> = {

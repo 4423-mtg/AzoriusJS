@@ -1,8 +1,9 @@
 import type { Card } from "../../GameObject/Card/Card.js";
 import type { Player } from "../../GameObject/Player.js";
 import type { Zone, ZoneType } from "../../GameState/Zone.js";
+import type { SetElementCondition } from "../Condition.js";
 import type { QueryParameter } from "../QueryParameter.js";
-import type { SetElementCondition, SetQuery } from "../SetQuery.js";
+import type { SetQuery } from "../SetQuery.js";
 
 // ZoneTypeかownerのどちらかは必須にする
 /** 領域の条件 */
