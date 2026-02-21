@@ -10,6 +10,7 @@
   - _applyLayer (レイヤーの適用)
     - ~~Queryも見直す~~ ☑️
   - 文章変更効果
+- TODO/FIXMEを取る
 
 - その他
   - Spell.ts

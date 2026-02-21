@@ -16,78 +16,82 @@ import { isZone, type Zone } from "../GameState/Zone.js";
 import {
     getQueryParameterOfAbilityQueryOperand,
     isAbilityQueryOperand,
-    type AbilityConditionOperand,
     type AbilityQueryOperand,
 } from "./SetQuery/AbilityQuery.js";
 import {
     getQueryParameterOfCardNameQueryOperand,
     isCardNameQueryOperand,
-    type CardNameConditionOperand,
     type CardNameQueryOperand,
 } from "./SetQuery/CardNameQuery.js";
 import {
     getQueryParameterOfCardQueryOperand,
     isCardQueryOperand,
-    type CardConditionOperand,
     type CardQueryOperand,
 } from "./SetQuery/CardQuery.js";
 import {
     getQueryParameterOfCardTypeQueryOperand,
     isCardTypeQueryOperand,
-    type CardTypeConditionOperand,
     type CardTypeQueryOperand,
 } from "./SetQuery/CardTypeQuery.js";
 import {
     getQueryParameterOfColorQueryOperand,
     isColorQueryOperand,
-    type ColorConditionOperand,
     type ColorQueryOperand,
 } from "./SetQuery/ColorQuery.js";
 import {
     getQueryParameterOfGameObjectQueryOperand,
     isGameObjectQueryOperand,
-    type GameObjectConditionOperand,
     type GameObjectQueryOperand,
 } from "./SetQuery/GameObjectQuery.js";
 import {
     getQueryParameterOfPlayerQueryOperand,
     isPlayerQueryOperand,
-    type PlayerConditionOperand,
     type PlayerQueryOperand,
 } from "./SetQuery/PlayerQuery.js";
 import {
     getQueryParameterOfTextQueryOperand,
     isTextQueryOperand,
-    type TextConditionOperand,
     type TextQueryOperand,
 } from "./SetQuery/RuleTextQuery.js";
 import {
     getQueryParameterOfSubtypeQueryOperand,
     isSubtypeQueryOperand,
-    type SubtypeConditionOperand,
     type SubtypeQueryOperand,
 } from "./SetQuery/SubtypeQuery.js";
 import {
     getQueryParameterOfSupertypeQueryOperand,
     isSupertypeQueryOperand,
-    type SupertypeConditionOperand,
     type SupertypeQueryOperand,
 } from "./SetQuery/SupertypeQuery.js";
 import {
     getQueryParameterOfZoneQueryOperand,
     isZoneQueryOperand,
-    type ZoneConditionOperand,
     type ZoneQueryOperand,
 } from "./SetQuery/ZoneQuery.js";
 import {
     IntersectionOfQueryParameters,
     type QueryParameter,
 } from "./QueryParameter.js";
-import { isBooleanOperation, type BooleanOperation } from "./Condition.js";
 
 // =================================================================
 // MARK: SetElementType
 // =================================================================
+
+const _setElementTypeId = [
+    "gameObject",
+    "card",
+    "player",
+    "cardName",
+    "cardtype",
+    "subtype",
+    "supertype",
+    "color",
+    "zone",
+    "ability",
+    "ruleText",
+] as const;
+/** 集合の要素の型を表す文字列 */
+export type SetElementTypeId = (typeof _setElementTypeId)[number];
 
 type _setElementTypeDefinition = {
     gameObject: GameObject;
@@ -102,9 +106,6 @@ type _setElementTypeDefinition = {
     ability: Ability;
     ruleText: RuleText;
 };
-
-/** 集合の要素の型を表す文字列 */
-export type SetElementTypeId = keyof _setElementTypeDefinition;
 /** 集合の要素の型 */
 export type SetElementType<T extends SetElementTypeId = SetElementTypeId> =
     _setElementTypeDefinition[T];
@@ -129,63 +130,7 @@ export function isSetElementType(arg: unknown): arg is SetElementType {
 }
 
 // =================================================================
-// MARK: Condition
-// =================================================================
-
-// TODO: SetElementCondition を通常のConditionと区別する必要はあるのだろうか？
-// 受け取って処理する側を書くときに必要になるかもしれない。
-/** 指定した SetElementType に関する条件指定。
- * 条件を満たすものすべてを取ってくるのに使う */
-export type SetElementCondition<
-    T extends SetElementType,
-    U extends QueryParameter,
-> = {
-    elementType: T; // FIXME: SetElementTypeId of T
-    condition: BooleanOperation<SetElementConditionOperand<T, U>>;
-};
-/** 条件指定のオペランド */
-export type SetElementConditionOperand<
-    T extends SetElementType,
-    U extends QueryParameter,
-> = T extends GameObject
-    ? GameObjectConditionOperand<U>
-    : T extends Card
-    ? CardConditionOperand<U>
-    : T extends Player
-    ? PlayerConditionOperand<U>
-    : T extends CardName
-    ? CardNameConditionOperand<U>
-    : T extends CardType
-    ? CardTypeConditionOperand<U>
-    : T extends Subtype
-    ? SubtypeConditionOperand<U>
-    : T extends Supertype
-    ? SupertypeConditionOperand<U>
-    : T extends Color
-    ? ColorConditionOperand<U>
-    : T extends Zone
-    ? ZoneConditionOperand<U>
-    : T extends Ability
-    ? AbilityConditionOperand<U>
-    : T extends RuleText
-    ? TextConditionOperand<U>
-    : never;
-
-export function isSetElementCondition<T extends SetElementType>(
-    // FIXME: Tはどうやって指定？
-    arg: unknown,
-): arg is SetElementCondition<T, QueryParameter> {
-    return isBooleanOperation(arg) && arg;
-}
-
-export function isSetElementConditionOperand(
-    arg: unknown,
-): arg is SetElementConditionOperand<SetElementType, QueryParameter> {
-    return false;
-}
-
-// =================================================================
-// MARK: Query
+// MARK: SetQuery
 // =================================================================
 
 /** 集合のクエリ */

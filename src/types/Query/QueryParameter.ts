@@ -48,61 +48,6 @@ export type TypeOfQueryParameter = QueryParameter[string]["type"];
 //       - 後から付与された能力も対象になりうる（コピーなど）
 //       - つまり、 Ability.id を指定する
 
-/** QueryParameter */
-export function isQueryParameter(arg: unknown): arg is QueryParameter {
-    if (!isObject(arg)) {
-        return false;
-    }
-
-    for (const key in arg) {
-        const e = arg[key];
-        if (!isObject(e)) {
-            return false;
-        }
-        switch (e["type"]) {
-            case "gameObject":
-                if (!isGameObject(e["value"]) && e["value"] !== undefined) {
-                    return false;
-                }
-                break;
-            case "player":
-                if (!isPlayer(e["value"]) && e["value"] !== undefined) {
-                    return false;
-                }
-                break;
-            case "number":
-                if (
-                    !(typeof e["value"] !== "number") &&
-                    e["value"] !== undefined
-                ) {
-                    return false;
-                }
-                break;
-            case "string":
-                if (
-                    !(typeof e["value"] !== "string") &&
-                    e["value"] !== undefined
-                ) {
-                    return false;
-                }
-                break;
-            default:
-                return false;
-        }
-    }
-    return true;
-}
-
-/**  */
-function isTypeOfQueryParameter(arg: unknown): arg is TypeOfQueryParameter {
-    return (
-        arg === "gameObject" ||
-        arg === "player" ||
-        arg === "number" ||
-        arg === "string"
-    );
-}
-
 // ====================================================================
 // MARK: パラメータの演算
 // ====================================================================
@@ -154,6 +99,65 @@ export function IntersectionOfQueryParameters(
 
 // 履歴 TODO:
 
+// ==================================================================
+// MARK: 型ガード
+// ====================================================================
+/** QueryParameter */
+export function isQueryParameter(arg: unknown): arg is QueryParameter {
+    if (!isStringKeyRecord(arg)) {
+        return false;
+    }
+
+    for (const key in arg) {
+        const e = arg[key];
+        if (!isObject(e) || !("type" in e) || !("value" in e)) {
+            return false;
+        }
+
+        switch (e["type"]) {
+            case "gameObject":
+                if (!isGameObject(e["value"]) && e["value"] !== undefined) {
+                    return false;
+                }
+                break;
+            case "player":
+                if (!isPlayer(e["value"]) && e["value"] !== undefined) {
+                    return false;
+                }
+                break;
+            case "number":
+                if (
+                    !(typeof e["value"] !== "number") &&
+                    e["value"] !== undefined
+                ) {
+                    return false;
+                }
+                break;
+            case "string":
+                if (
+                    !(typeof e["value"] !== "string") &&
+                    e["value"] !== undefined
+                ) {
+                    return false;
+                }
+                break;
+            default:
+                return false;
+        }
+    }
+    return true;
+}
+
+/**  */
+function isTypeOfQueryParameter(arg: unknown): arg is TypeOfQueryParameter {
+    return (
+        arg === "gameObject" ||
+        arg === "player" ||
+        arg === "number" ||
+        arg === "string"
+    );
+}
+
 /**  */
 function isQueryParameterNameOfSpecificType<
     T extends QueryParameter,
@@ -170,10 +174,19 @@ function isQueryParameterNameOfSpecificType<
     }
 }
 
-// ==================================================================
-// MARK: 型ガード
-// ====================================================================
-/** Record */
+/** 型ガード */
 function isObject(arg: unknown): arg is object {
     return typeof arg === "object" && arg !== null;
+}
+function isStringKeyRecord(arg: unknown): arg is Record<string, unknown> {
+    if (!isObject(arg)) {
+        return false;
+    }
+    for (const key in arg) {
+        if (!Object.hasOwn(arg, key)) continue;
+        if (typeof key !== "string") {
+            return false;
+        }
+    }
+    return true;
 }

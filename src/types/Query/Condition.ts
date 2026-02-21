@@ -35,6 +35,10 @@ import type { SubtypeConditionOperand } from "./SetQuery/SubtypeQuery.js";
 import type { SupertypeConditionOperand } from "./SetQuery/SupertypeQuery.js";
 import type { ZoneConditionOperand } from "./SetQuery/ZoneQuery.js";
 
+// ========================================================================
+// MARK: ConditionTargetType
+// ========================================================================
+
 // TODO: SetElementCondition を通常のConditionと区別する必要はあるのだろうか？
 // 受け取って処理する側を書くときに必要になるかもしれない。
 export type ConditionTargetTypeId = SetElementTypeId | ScalarTypeId;
@@ -46,6 +50,9 @@ export type ConditionTargetType<
     ? ScalarType<T>
     : never;
 
+// ========================================================================
+// MARK: Condition
+// ========================================================================
 /** 条件 */
 export type Condition<
     T extends ConditionTargetType,
@@ -135,5 +142,82 @@ export function isBooleanOperation(
     BooleanQueryOperand<ConditionTargetType, QueryParameter>
 > {
     // TODO:
+    return false;
+}
+
+// MARK: Scalar
+/** スカラーの条件 */
+export type ScalarCondition<T extends ScalarType, U extends QueryParameter> = {
+    scalarType: T; // FIXME: ScalarTypeId of T
+    condition: BooleanOperation<ScalarConditionOperand<T, U>>;
+};
+
+/** 条件のオペランド */
+export type ScalarConditionOperand<
+    T extends ScalarType,
+    U extends QueryParameter,
+> = T extends Characteristics
+    ? CharacteristicsConditionOperand<U>
+    : T extends CopiableValue
+    ? CopiableValueConditionOperand<U>
+    : T extends ManaCost
+    ? ManaCostConditionOperand<U>
+    : T extends NumericalValue
+    ? NumericalValueConditionOperand<U>
+    : T extends Status
+    ? StatusConditionOperand<U>
+    : never;
+
+// =================================================================
+// MARK: SetElement
+// =================================================================
+
+/** 指定した SetElementType に関する条件指定。
+ * 条件を満たすものすべてを取ってくるのに使う */
+export type SetElementCondition<
+    T extends SetElementType,
+    U extends QueryParameter,
+> = {
+    elementType: T; // FIXME: SetElementTypeId of T
+    condition: BooleanOperation<SetElementConditionOperand<T, U>>;
+};
+/** 条件指定のオペランド */
+export type SetElementConditionOperand<
+    T extends SetElementType,
+    U extends QueryParameter,
+> = T extends GameObject
+    ? GameObjectConditionOperand<U>
+    : T extends Card
+    ? CardConditionOperand<U>
+    : T extends Player
+    ? PlayerConditionOperand<U>
+    : T extends CardName
+    ? CardNameConditionOperand<U>
+    : T extends CardType
+    ? CardTypeConditionOperand<U>
+    : T extends Subtype
+    ? SubtypeConditionOperand<U>
+    : T extends Supertype
+    ? SupertypeConditionOperand<U>
+    : T extends Color
+    ? ColorConditionOperand<U>
+    : T extends Zone
+    ? ZoneConditionOperand<U>
+    : T extends Ability
+    ? AbilityConditionOperand<U>
+    : T extends RuleText
+    ? TextConditionOperand<U>
+    : never;
+
+export function isSetElementCondition<T extends SetElementType>(
+    // FIXME: Tはどうやって指定？
+    arg: unknown,
+): arg is SetElementCondition<T, QueryParameter> {
+    return isBooleanOperation(arg) && arg;
+}
+
+export function isSetElementConditionOperand(
+    arg: unknown,
+): arg is SetElementConditionOperand<SetElementType, QueryParameter> {
     return false;
 }
