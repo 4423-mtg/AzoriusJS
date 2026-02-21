@@ -15,7 +15,22 @@ import type { Card, Status } from "../GameObject/Card/Card.js";
 import { isGameObject, type GameObject } from "../GameObject/GameObject.js";
 import { isPlayer, type Player } from "../GameObject/Player.js";
 import type { Zone } from "../GameState/Zone.js";
+import type { CharacteristicsConditionOperand } from "./ScalarQuery/CharacteristicsQuery.js";
+import type { CopiableValueConditionOperand } from "./ScalarQuery/CopiableValueQuery.js";
+import type { ManaCostConditionOperand } from "./ScalarQuery/ManaCostQuery.js";
+import type { NumericalValueConditionOperand } from "./ScalarQuery/NumericalValueQuery.js";
+import type { StatusConditionOperand } from "./ScalarQuery/StatusQuery.js";
+import type { AbilityConditionOperand } from "./SetQuery/AbilityQuery.js";
+import type { CardNameConditionOperand } from "./SetQuery/CardNameQuery.js";
 import type { CardConditionOperand } from "./SetQuery/CardQuery.js";
+import type { CardTypeConditionOperand } from "./SetQuery/CardTypeQuery.js";
+import type { ColorConditionOperand } from "./SetQuery/ColorQuery.js";
+import type { GameObjectConditionOperand } from "./SetQuery/GameObjectQuery.js";
+import type { PlayerConditionOperand } from "./SetQuery/PlayerQuery.js";
+import type { TextConditionOperand } from "./SetQuery/RuleTextQuery.js";
+import type { SubtypeConditionOperand } from "./SetQuery/SubtypeQuery.js";
+import type { SupertypeConditionOperand } from "./SetQuery/SupertypeQuery.js";
+import type { ZoneConditionOperand } from "./SetQuery/ZoneQuery.js";
 
 // 種類別（レイヤー）に関してはこれでOK。
 // 手続き変更効果・処理禁止効果・置換効果・追加ターン効果についてはどう？
@@ -184,36 +199,76 @@ function isQueryParameterNameOfSpecificType<
 // ====================================================================
 // MARK: BooleanOperation
 // ====================================================================
-export type BooleanQuery<T> = {
-    type: T;
-    query: undefined;
-}; // SetQueryと違って型をまたぐ
-
-export type ConditionTargetType =
+// TODO: SetElementCondition を通常のConditionと区別する必要はあるのだろうか？
+// 受け取って処理する側を書くときに必要になるかもしれない。
+type _conditionTargetTypeDefinition = {
     // SetElementType
-    | GameObject
-    | Card
-    | Player
-    | CardName
-    | CardType
-    | Subtype
-    | Supertype
-    | Color
-    | Zone
-    | Ability
-    | RuleText
+    gameObject: GameObject;
+    card: Card;
+    player: Player;
+    cardName: CardName;
+    cardType: CardType;
+    subtype: Subtype;
+    supertype: Supertype;
+    color: Color;
+    zone: Zone;
+    ability: Ability;
+    ruleText: RuleText;
     // Scalar
-    | NumericalValue
-    | ManaCost
-    | Characteristics
-    | CopiableValue
-    | Status;
+    numericalValue: NumericalValue;
+    manaCost: ManaCost;
+    characteristics: Characteristics;
+    copiableValue: CopiableValue;
+    status: Status;
+};
+export type ConditionTargetTypeId = keyof _conditionTargetTypeDefinition;
+export type ConditionTargetType<
+    T extends ConditionTargetTypeId = ConditionTargetTypeId,
+> = _conditionTargetTypeDefinition[T];
+
+/** 条件 */
+export type Condition<
+    T extends ConditionTargetType,
+    U extends QueryParameter,
+> = { targetType: T; condition: BooleanOperation<BooleanQueryOperand<T, U>> };
 
 /** 条件のオペランド */
 export type BooleanQueryOperand<
     T extends ConditionTargetType,
     U extends QueryParameter,
-> = T extends Card ? CardConditionOperand<U> : {};
+> = T extends GameObject
+    ? GameObjectConditionOperand<U>
+    : T extends Card
+    ? CardConditionOperand<U>
+    : T extends Player
+    ? PlayerConditionOperand<U>
+    : T extends CardName
+    ? CardNameConditionOperand<U>
+    : T extends CardType
+    ? CardTypeConditionOperand<U>
+    : T extends Subtype
+    ? SubtypeConditionOperand<U>
+    : T extends Supertype
+    ? SupertypeConditionOperand<U>
+    : T extends Color
+    ? ColorConditionOperand<U>
+    : T extends Zone
+    ? ZoneConditionOperand<U>
+    : T extends Ability
+    ? AbilityConditionOperand<U>
+    : T extends RuleText
+    ? TextConditionOperand<U>
+    : T extends NumericalValue
+    ? NumericalValueConditionOperand<U>
+    : T extends ManaCost
+    ? ManaCostConditionOperand<U>
+    : T extends Characteristics
+    ? CharacteristicsConditionOperand<U>
+    : T extends CopiableValue
+    ? CopiableValueConditionOperand<U>
+    : T extends Status
+    ? StatusConditionOperand<U>
+    : never;
 
 /** 条件演算 */
 type _Not<T extends BooleanQueryOperand<ConditionTargetType, QueryParameter>> =
@@ -245,7 +300,7 @@ export type BooleanOperation<
 // = (A and B) or (A and (not C) and D)
 
 export function getQueryParameterOfBooleanOperation<T>(
-    query: BooleanOperation<T>,
+    query: BooleanOperation<>,
 ): QueryParameter {
     return {}; // TODO:
 }

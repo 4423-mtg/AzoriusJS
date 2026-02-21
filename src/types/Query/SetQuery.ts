@@ -133,6 +133,8 @@ export function isSetElementType(arg: unknown): arg is SetElementType {
 // MARK: Condition
 // =================================================================
 
+// TODO: SetElementCondition を通常のConditionと区別する必要はあるのだろうか？
+// 受け取って処理する側を書くときに必要になるかもしれない。
 /** 指定した SetElementType に関する条件指定。
  * 条件を満たすものすべてを取ってくるのに使う */
 export type SetElementCondition<

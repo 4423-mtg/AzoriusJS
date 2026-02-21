@@ -11,7 +11,7 @@ import type { Subtype } from "../../Characteristics/Subtype.js";
 import type { Supertype } from "../../Characteristics/Supertype.js";
 import type { Ability } from "../../GameObject/Ability.js";
 import type { Card } from "../../GameObject/Card/Card.js";
-import type { QueryParameter } from "../Query.js";
+import type { Condition, QueryParameter } from "../Query.js";
 import type { ScalarCondition } from "../ScalarQuery.js";
 import type { SetElementCondition, SetQuery } from "../SetQuery.js";
 
@@ -36,7 +36,8 @@ export type CharacteristicsConditionOperand<T extends QueryParameter> = {
 /** 特性のクエリ */
 export type CharacteristicsQueryOperand<T extends QueryParameter> =
     | Characteristics
-    | { card: SetQuery<Card, T> }; // FIXME: oneOf? merge?
+    | { card: SetQuery<Card, T> } // FIXME: oneOf? merge?
+    | Condition<Characteristics, T>;
 
 // ===================================================================
 export function getQueryParameterOfCharacteristicsConditionOperand(
