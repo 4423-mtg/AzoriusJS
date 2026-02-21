@@ -21,7 +21,7 @@ import type {
 import type {
     NumericalValueConditionOperand,
     NumericalValueQueryOperand,
-} from "./ScalarQuery/NumberQuery.js";
+} from "./ScalarQuery/NumericalValueQuery.js";
 import type {
     StatusConditionOperand,
     StatusQueryOperand,
