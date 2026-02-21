@@ -1,6 +1,6 @@
 // MARK: 型定義: 2
 import { isPlayerQuery, type PlayerQuery } from "../../Query/SetQuery.js";
-import { type QueryParameter } from "../../Query/Query.js";
+import { type QueryParameter } from "../../Query/QueryParameter.js";
 import { isLayerCommonProperty, type LayerCommonProperty } from "./Layer.js";
 
 /** コントロール変更 */

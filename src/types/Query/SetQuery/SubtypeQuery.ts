@@ -1,6 +1,6 @@
 import type { Subtype } from "../../Characteristics/Subtype.js";
 import type { Card } from "../../GameObject/Card/Card.js";
-import type { QueryParameter } from "../Query.js";
+import type { QueryParameter } from "../QueryParameter.js";
 import type { SetElementCondition, SetQuery } from "../SetQuery.js";
 
 /** サブタイプの条件 */

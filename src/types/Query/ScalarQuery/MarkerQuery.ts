@@ -1,4 +1,5 @@
-import type { BooleanOperation, QueryParameter } from "../Query.js";
+import type { BooleanOperation } from "../Condition.js";
+import type { QueryParameter } from "../QueryParameter.js";
 
 // MARK: Marker
 export type MarkerCondition<T extends QueryParameter> = BooleanOperation<{}>;

@@ -1,7 +1,7 @@
 import type { ManaCost } from "../../Characteristics/Characteristic.js";
 import type { ManaSymbol } from "../../Characteristics/Symbol.js";
 import type { Card } from "../../GameObject/Card/Card.js";
-import type { QueryParameter } from "../Query.js";
+import type { QueryParameter } from "../QueryParameter.js";
 import type { ScalarQuery } from "../ScalarQuery.js";
 import type { SetQuery } from "../SetQuery.js";
 

@@ -1,6 +1,6 @@
 import type { Color } from "../../Characteristics/Color.js";
 import type { Card } from "../../GameObject/Card/Card.js";
-import type { QueryParameter } from "../Query.js";
+import type { QueryParameter } from "../QueryParameter.js";
 import type { SetElementCondition, SetQuery } from "../SetQuery.js";
 
 /** 色の条件 */

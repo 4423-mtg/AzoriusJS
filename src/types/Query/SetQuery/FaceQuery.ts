@@ -1,4 +1,5 @@
-import type { BooleanOperation, QueryParameter } from "../Query.js";
+import type { BooleanOperation } from "../Condition.js";
+import type { QueryParameter } from "../QueryParameter.js";
 
 // FIXME: SetElementにする
 export type FaceCondition<T extends QueryParameter> = BooleanOperation<{}>;

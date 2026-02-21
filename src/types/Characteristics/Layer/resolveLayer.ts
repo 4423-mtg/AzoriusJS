@@ -2,7 +2,7 @@ import type { CharacteristicsAlteringEffect } from "../../GameObject/GeneratedEf
 import type { Game } from "../../GameState/Game.js";
 import { compareTimestamp } from "../../GameState/Timestamp.js";
 
-import { type QueryParameter } from "../../Query/Query.js";
+import { type QueryParameter } from "../../Query/QueryParameter.js";
 import type { Layer, LayerCategory } from "./Layer.js";
 
 // =================================================================

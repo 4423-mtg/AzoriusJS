@@ -5,13 +5,11 @@ import type {
 import type { Card, Face, Status } from "../../GameObject/Card/Card.js";
 import type { GameObject } from "../../GameObject/GameObject.js";
 import type { Player } from "../../GameObject/Player.js";
-import type {
-    CounterQuery,
-    MarkerQuery,
-    StickerQuery,
-} from "../ObjectQuery.js";
-import type { QueryParameter } from "../Query.js";
+import type { QueryParameter } from "../QueryParameter.js";
 import type { ScalarCondition } from "../ScalarQuery.js";
+import type { CounterQuery } from "../ScalarQuery/CounterOnObjectQuery.js";
+import type { MarkerQuery } from "../ScalarQuery/MarkerQuery.js";
+import type { StickerQuery } from "../ScalarQuery/StickerQuery.js";
 import type { SetElementCondition } from "../SetQuery.js";
 
 // FIXME: 継続的効果は一般に GameObject 全般に効果を及ぼすが、

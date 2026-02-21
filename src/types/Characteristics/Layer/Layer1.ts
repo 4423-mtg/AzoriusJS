@@ -5,7 +5,7 @@ import {
     isCopiableValueQuery,
     type CopiableValueQuery,
 } from "../../Query/ObjectQuery.js";
-import { type QueryParameter } from "../../Query/Query.js";
+import { type QueryParameter } from "../../Query/QueryParameter.js";
 import type { Characteristics } from "../Characteristic.js";
 import { isLayerCommonProperty, type LayerCommonProperty } from "./Layer.js";
 

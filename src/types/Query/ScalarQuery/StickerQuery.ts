@@ -1,5 +1,6 @@
 import type { Sticker } from "../../GameObject/Sticker.js";
-import type { BooleanOperation, QueryParameter } from "../Query.js";
+import type { BooleanOperation } from "../Condition.js";
+import type { QueryParameter } from "../QueryParameter.js";
 
 // MARK: Sticker
 export type StickerCondition<T extends QueryParameter> = BooleanOperation<{}>;

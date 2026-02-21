@@ -7,7 +7,7 @@ import {
     type SubtypeQuery,
     type SupertypeQuery,
 } from "../../Query/SetQuery.js";
-import { type QueryParameter } from "../../Query/Query.js";
+import { type QueryParameter } from "../../Query/QueryParameter.js";
 import { landTypes } from "../Subtype.js";
 import { isLayerCommonProperty, type LayerCommonProperty } from "./Layer.js";
 

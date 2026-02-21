@@ -1,6 +1,6 @@
 import type { Supertype } from "../../Characteristics/Supertype.js";
 import type { Card } from "../../GameObject/Card/Card.js";
-import type { QueryParameter } from "../Query.js";
+import type { QueryParameter } from "../QueryParameter.js";
 import type { SetElementCondition, SetQuery } from "../SetQuery.js";
 
 export type SupertypeConditionOperand<T extends QueryParameter> = {

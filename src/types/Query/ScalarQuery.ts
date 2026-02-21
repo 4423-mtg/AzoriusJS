@@ -5,7 +5,8 @@ import type {
     NumericalValue,
 } from "../Characteristics/Characteristic.js";
 import type { Status } from "../GameObject/Card/Card.js";
-import type { BooleanOperation, QueryParameter } from "./Query.js";
+import type { BooleanOperation } from "./Condition.js";
+import type { QueryParameter } from "./QueryParameter.js";
 import type {
     CharacteristicsConditionOperand,
     CharacteristicsQueryOperand,

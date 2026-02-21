@@ -81,10 +81,9 @@ import {
 } from "./SetQuery/ZoneQuery.js";
 import {
     IntersectionOfQueryParameters,
-    isBooleanOperation,
-    type BooleanOperation,
     type QueryParameter,
-} from "./Query.js";
+} from "./QueryParameter.js";
+import { isBooleanOperation, type BooleanOperation } from "./Condition.js";
 
 // =================================================================
 // MARK: SetElementType

@@ -1,5 +1,5 @@
 import type { RuleText } from "../../Characteristics/Characteristic.js";
-import type { QueryParameter } from "../Query.js";
+import type { QueryParameter } from "../QueryParameter.js";
 import type { SetElementCondition } from "../SetQuery.js";
 
 export type TextConditionOperand<T extends QueryParameter> = undefined;

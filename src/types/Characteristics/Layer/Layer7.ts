@@ -1,5 +1,5 @@
 // MARK: 型定義: 7a
-import { type QueryParameter } from "../../Query/Query.js";
+import { type QueryParameter } from "../../Query/QueryParameter.js";
 import type { ScalarQuery } from "../../Query/ScalarQuery.js";
 import type { NumericalValue } from "../Characteristic.js";
 import { isLayerCommonProperty, type LayerCommonProperty } from "./Layer.js";

@@ -1,5 +1,6 @@
 import type { CounterOnObject } from "../../GameObject/Counter.js";
-import type { BooleanOperation, QueryParameter } from "../Query.js";
+import type { BooleanOperation } from "../Condition.js";
+import type { QueryParameter } from "../QueryParameter.js";
 
 // MARK: Counter
 export type CounterCondition<T extends QueryParameter> = CounterOnObject[];

@@ -32,7 +32,7 @@ import type {
     Layer7c,
     Layer7d,
 } from "../../Characteristics/Layer/Layer7.js";
-import type { QueryParameter } from "../../Query/Query.js";
+import type { QueryParameter } from "../../Query/QueryParameter.js";
 import type {
     CardQuery,
     GameObjectQuery,

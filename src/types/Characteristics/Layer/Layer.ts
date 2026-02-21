@@ -16,7 +16,7 @@ import {
     type Layer7c,
     type Layer7d,
 } from "./Layer7.js";
-import { type QueryParameter } from "../../Query/Query.js";
+import { type QueryParameter } from "../../Query/QueryParameter.js";
 
 // 単一の常在型能力からの継続的効果または呪文や能力の解決によって生成された単一の継続的効果の中に含まれる、各種類別の効果
 

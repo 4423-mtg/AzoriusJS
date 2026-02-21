@@ -1,7 +1,7 @@
 import type { GameObject } from "../../GameObject/GameObject.js";
 import type { Player } from "../../GameObject/Player.js";
 import type { PlayerInfo } from "../../GameState/Match.js";
-import type { QueryParameter } from "../Query.js";
+import type { QueryParameter } from "../QueryParameter.js";
 import type { SetElementCondition, SetQuery } from "../SetQuery.js";
 // =========================================================
 // MARK: Player

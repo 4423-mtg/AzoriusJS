@@ -1,38 +1,10 @@
 import type { CardType } from "../Characteristics/CardType.js";
-import type {
-    CardName,
-    Characteristics,
-    CopiableValue,
-    ManaCost,
-    NumericalValue,
-    RuleText,
-} from "../Characteristics/Characteristic.js";
+import type { CardName } from "../Characteristics/Characteristic.js";
 import type { Color } from "../Characteristics/Color.js";
 import type { Subtype } from "../Characteristics/Subtype.js";
-import type { Supertype } from "../Characteristics/Supertype.js";
-import type { Ability } from "../GameObject/Ability.js";
-import type { Card, Status } from "../GameObject/Card/Card.js";
+import type { Card } from "../GameObject/Card/Card.js";
 import { isGameObject, type GameObject } from "../GameObject/GameObject.js";
 import { isPlayer, type Player } from "../GameObject/Player.js";
-import type { Zone } from "../GameState/Zone.js";
-import type { ScalarType, ScalarTypeId } from "./ScalarQuery.js";
-import type { CharacteristicsConditionOperand } from "./ScalarQuery/CharacteristicsQuery.js";
-import type { CopiableValueConditionOperand } from "./ScalarQuery/CopiableValueQuery.js";
-import type { ManaCostConditionOperand } from "./ScalarQuery/ManaCostQuery.js";
-import type { NumericalValueConditionOperand } from "./ScalarQuery/NumericalValueQuery.js";
-import type { StatusConditionOperand } from "./ScalarQuery/StatusQuery.js";
-import type { SetElementType, SetElementTypeId } from "./SetQuery.js";
-import type { AbilityConditionOperand } from "./SetQuery/AbilityQuery.js";
-import type { CardNameConditionOperand } from "./SetQuery/CardNameQuery.js";
-import type { CardConditionOperand } from "./SetQuery/CardQuery.js";
-import type { CardTypeConditionOperand } from "./SetQuery/CardTypeQuery.js";
-import type { ColorConditionOperand } from "./SetQuery/ColorQuery.js";
-import type { GameObjectConditionOperand } from "./SetQuery/GameObjectQuery.js";
-import type { PlayerConditionOperand } from "./SetQuery/PlayerQuery.js";
-import type { TextConditionOperand } from "./SetQuery/RuleTextQuery.js";
-import type { SubtypeConditionOperand } from "./SetQuery/SubtypeQuery.js";
-import type { SupertypeConditionOperand } from "./SetQuery/SupertypeQuery.js";
-import type { ZoneConditionOperand } from "./SetQuery/ZoneQuery.js";
 
 // 種類別（レイヤー）に関してはこれでOK。
 // 手続き変更効果・処理禁止効果・置換効果・追加ターン効果についてはどう？
@@ -196,112 +168,6 @@ function isQueryParameterNameOfSpecificType<
     } else {
         return false;
     }
-}
-
-// ====================================================================
-// MARK: BooleanOperation
-// ====================================================================
-// TODO: SetElementCondition を通常のConditionと区別する必要はあるのだろうか？
-// 受け取って処理する側を書くときに必要になるかもしれない。
-export type ConditionTargetTypeId = SetElementTypeId | ScalarTypeId;
-export type ConditionTargetType<
-    T extends ConditionTargetTypeId = ConditionTargetTypeId,
-> = T extends SetElementTypeId
-    ? SetElementType<T>
-    : T extends ScalarTypeId
-    ? ScalarType<T>
-    : never;
-
-/** 条件 */
-export type Condition<
-    T extends ConditionTargetType,
-    U extends QueryParameter,
-> = { targetType: T; condition: BooleanOperation<BooleanQueryOperand<T, U>> };
-
-/** 条件のオペランド */
-export type BooleanQueryOperand<
-    T extends ConditionTargetType,
-    U extends QueryParameter,
-> = T extends GameObject
-    ? GameObjectConditionOperand<U>
-    : T extends Card
-    ? CardConditionOperand<U>
-    : T extends Player
-    ? PlayerConditionOperand<U>
-    : T extends CardName
-    ? CardNameConditionOperand<U>
-    : T extends CardType
-    ? CardTypeConditionOperand<U>
-    : T extends Subtype
-    ? SubtypeConditionOperand<U>
-    : T extends Supertype
-    ? SupertypeConditionOperand<U>
-    : T extends Color
-    ? ColorConditionOperand<U>
-    : T extends Zone
-    ? ZoneConditionOperand<U>
-    : T extends Ability
-    ? AbilityConditionOperand<U>
-    : T extends RuleText
-    ? TextConditionOperand<U>
-    : T extends NumericalValue
-    ? NumericalValueConditionOperand<U>
-    : T extends ManaCost
-    ? ManaCostConditionOperand<U>
-    : T extends Characteristics
-    ? CharacteristicsConditionOperand<U>
-    : T extends CopiableValue
-    ? CopiableValueConditionOperand<U>
-    : T extends Status
-    ? StatusConditionOperand<U>
-    : never;
-
-/** 条件演算 */
-type _Not<T extends BooleanQueryOperand<ConditionTargetType, QueryParameter>> =
-    { operation: "not"; operand: T };
-type _And<T extends BooleanQueryOperand<ConditionTargetType, QueryParameter>> =
-    (T | _Not<T>)[];
-type _Or<T extends BooleanQueryOperand<ConditionTargetType, QueryParameter>> = {
-    operaion: "or";
-    operand: (T | _And<T> | _Not<T>)[];
-};
-export type BooleanOperation<
-    T extends BooleanQueryOperand<ConditionTargetType, QueryParameter>,
-> = T | _Not<T> | _And<T> | _Or<T>;
-
-// A and (B and C) = A and B and C
-// A and (B or C) = (A and B) or (A and C)
-// A and (not B)
-// A or (B and C)
-// A or (B or C) = A or B or C
-// A or (not B)
-// not (A and B) = (not A) or (not B)
-// not (A or B) = (not A) and (not B)
-// not (not A) = A
-
-// あなたがコントロールしていない基本でない土地
-// (not A) and (not B) and C
-// 対戦相手がコントロールする、クリーチャーと基本でない土地
-// A and (B or ((not C) and D))
-// = (A and B) or (A and (not C) and D)
-
-/** BooleanOperationのパラメータ */
-export function getQueryParameterOfBooleanOperation(
-    query: BooleanOperation<
-        BooleanQueryOperand<ConditionTargetType, QueryParameter>
-    >,
-): QueryParameter {
-    return {}; // TODO:
-}
-
-/** 型ガード */
-export function isBooleanOperation(
-    arg: unknown,
-): arg is BooleanOperation<
-    BooleanQueryOperand<ConditionTargetType, QueryParameter>
-> {
-    // TODO:
-    return false;
 }
 
 // ==================================================================

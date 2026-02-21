@@ -2,13 +2,13 @@ import type { NumericalValue } from "../../Characteristics/Characteristic.js";
 import type { Color } from "../../Characteristics/Color.js";
 import type { Card } from "../../GameObject/Card/Card.js";
 import type { GameObject } from "../../GameObject/GameObject.js";
-import type { CounterCondition } from "../ObjectQuery.js";
 import type {
     QueryParameter,
     QueryParameterNameOfSpecificType,
-} from "../Query.js";
+} from "../QueryParameter.js";
 import type { ScalarQuery } from "../ScalarQuery.js";
 import type { SetQuery } from "../SetQuery.js";
+import type { CounterCondition } from "./CounterOnObjectQuery.js";
 
 /** 数に対して適用する条件 */
 export type NumericalValueConditionOperand<T extends QueryParameter> =

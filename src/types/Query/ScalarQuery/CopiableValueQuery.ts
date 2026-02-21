@@ -10,7 +10,7 @@ import type { Color } from "../../Characteristics/Color.js";
 import type { Subtype } from "../../Characteristics/Subtype.js";
 import type { Supertype } from "../../Characteristics/Supertype.js";
 import type { GameObject } from "../../GameObject/GameObject.js";
-import type { QueryParameter } from "../Query.js";
+import type { QueryParameter } from "../QueryParameter.js";
 import type { ScalarCondition, ScalarQuery } from "../ScalarQuery.js";
 import type { SetElementCondition, SetQuery } from "../SetQuery.js";
 

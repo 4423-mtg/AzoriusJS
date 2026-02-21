@@ -11,7 +11,8 @@ import type { Subtype } from "../../Characteristics/Subtype.js";
 import type { Supertype } from "../../Characteristics/Supertype.js";
 import type { Ability } from "../../GameObject/Ability.js";
 import type { Card } from "../../GameObject/Card/Card.js";
-import type { Condition, QueryParameter } from "../Query.js";
+import type { Condition } from "../Condition.js";
+import type { QueryParameter } from "../QueryParameter.js";
 import type { ScalarCondition } from "../ScalarQuery.js";
 import type { SetElementCondition, SetQuery } from "../SetQuery.js";
 

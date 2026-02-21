@@ -1,6 +1,6 @@
 // MARK: 型定義: 3
 import { isTextQuery, type TextQuery } from "../../Query/SetQuery.js";
-import { type QueryParameter } from "../../Query/Query.js";
+import { type QueryParameter } from "../../Query/QueryParameter.js";
 import { isLayerCommonProperty, type LayerCommonProperty } from "./Layer.js";
 
 /** 文章変更 */
