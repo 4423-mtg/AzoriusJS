@@ -42,7 +42,6 @@ import {
 // ====================================================================
 // MARK: パラメータ
 // ====================================================================
-export type QueryParameterTypeId = (typeof _queryParameterTypeId)[number];
 const _queryParameterTypeId = [
     "gameObject",
     "card",
@@ -53,11 +52,9 @@ const _queryParameterTypeId = [
     "subtype",
     "color",
     "name",
-] as const;
+];
 
-export type QueryParameterType<
-    T extends QueryParameterTypeId = QueryParameterTypeId,
-> = {
+type _QueryParameterTypeDef = {
     gameObject: GameObject;
     card: Card;
     player: Player;
@@ -67,7 +64,17 @@ export type QueryParameterType<
     subtype: Subtype;
     color: Color;
     name: CardName;
-}[T];
+};
+
+export type QueryParameterTypeId<T = QueryParameterType> = keyof {
+    [K in keyof _QueryParameterTypeDef as _QueryParameterTypeDef[K] extends T
+        ? K
+        : never]: _QueryParameterTypeDef[K];
+};
+
+export type QueryParameterType<
+    T extends QueryParameterTypeId = keyof _QueryParameterTypeDef,
+> = _QueryParameterTypeDef[T];
 
 type _QueryParameterEntry<T extends QueryParameterTypeId> = {
     type: T;
@@ -135,7 +142,7 @@ export function getQueryParameter(
 ): QueryParameter {
     if (isSetQuery(arg)) {
         return getQueryParameterOfSetQuery(arg);
-    } else if (isScalarQuery(arg)) {
+    } else if (isScalarQuery(arg, undefined)) {
         return getQueryParameterOfScalarQuery(arg);
     } else if (isCondition(arg)) {
         return getQueryParameterOfCondition(arg);

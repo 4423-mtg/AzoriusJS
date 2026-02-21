@@ -81,9 +81,6 @@ import {
 // =================================================================
 // MARK: SetElementType
 // =================================================================
-
-/** 集合の要素の型を表す文字列 */
-export type SetElementTypeId = (typeof _setElementTypeId)[number];
 const _setElementTypeId = [
     "ability",
     "cardName",
@@ -97,10 +94,9 @@ const _setElementTypeId = [
     "subtype",
     "supertype",
     "zone",
-] as const;
+] satisfies (keyof _SetElementTypeDef)[];
 
-/** 集合の要素の型 */
-export type SetElementType<T extends SetElementTypeId = SetElementTypeId> = {
+type _SetElementTypeDef = {
     ability: Ability;
     cardName: CardName;
     card: Card;
@@ -113,7 +109,19 @@ export type SetElementType<T extends SetElementTypeId = SetElementTypeId> = {
     subtype: Subtype;
     supertype: Supertype;
     zone: Zone;
-}[T];
+};
+
+/** 集合の要素の型を表す文字列 */
+export type SetElementTypeId<T = SetElementType> = keyof {
+    [K in keyof _SetElementTypeDef as _SetElementTypeDef[K] extends T
+        ? K
+        : never]: _SetElementTypeDef[K];
+};
+
+/** 集合の要素の型 */
+export type SetElementType<
+    T extends SetElementTypeId = keyof _SetElementTypeDef,
+> = _SetElementTypeDef[T];
 
 /** 型ガード */
 export function isSetElementTypeId(arg: unknown): arg is SetElementTypeId {
@@ -142,7 +150,7 @@ export function isSetElementType(arg: unknown): arg is SetElementType {
 
 /** 集合のクエリ */
 export type SetQuery<T extends SetElementType, U extends QueryParameter> = {
-    elementType: SetElementTypeId;
+    elementType: SetElementTypeId<T>;
     query: SetOperation<SetQueryOperand<T, U>>;
 };
 
