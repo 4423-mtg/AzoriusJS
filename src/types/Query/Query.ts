@@ -1,10 +1,21 @@
 import type { CardType } from "../Characteristics/CardType.js";
-import type { CardName } from "../Characteristics/Characteristic.js";
+import type {
+    CardName,
+    Characteristics,
+    CopiableValue,
+    ManaCost,
+    NumericalValue,
+    RuleText,
+} from "../Characteristics/Characteristic.js";
 import type { Color } from "../Characteristics/Color.js";
 import type { Subtype } from "../Characteristics/Subtype.js";
-import type { Card } from "../GameObject/Card/Card.js";
+import type { Supertype } from "../Characteristics/Supertype.js";
+import type { Ability } from "../GameObject/Ability.js";
+import type { Card, Status } from "../GameObject/Card/Card.js";
 import { isGameObject, type GameObject } from "../GameObject/GameObject.js";
 import { isPlayer, type Player } from "../GameObject/Player.js";
+import type { Zone } from "../GameState/Zone.js";
+import type { CardConditionOperand } from "./SetQuery/CardQuery.js";
 
 // 種類別（レイヤー）に関してはこれでOK。
 // 手続き変更効果・処理禁止効果・置換効果・追加ターン効果についてはどう？
@@ -178,27 +189,61 @@ export type BooleanQuery<T> = {
     query: undefined;
 }; // SetQueryと違って型をまたぐ
 
-type BooleanQueryOperand<T, U extends QueryParameter> = T extends {} ? {} : {};
-// | T
-// | { operation: "not"; operand: T };
+export type ConditionTargetType =
+    // SetElementType
+    | GameObject
+    | Card
+    | Player
+    | CardName
+    | CardType
+    | Subtype
+    | Supertype
+    | Color
+    | Zone
+    | Ability
+    | RuleText
+    // Scalar
+    | NumericalValue
+    | ManaCost
+    | Characteristics
+    | CopiableValue
+    | Status;
 
-export type BooleanOperation<T extends BooleanQueryOperand<>> =
-    | BooleanQueryOperand<T>
-    | BooleanQueryOperand<T>[] // andとして解釈する
-    | { operation: "or"; operand: BooleanQueryOperand<T>[] };
-// not (A and B) = (not A) or (not B)
-// not (A or B) = (not A) and (not B)
-// A and (not B)
+/** 条件のオペランド */
+export type BooleanQueryOperand<
+    T extends ConditionTargetType,
+    U extends QueryParameter,
+> = T extends Card ? CardConditionOperand<U> : {};
+
+/** 条件演算 */
+type _Not<T extends BooleanQueryOperand<ConditionTargetType, QueryParameter>> =
+    { operation: "not"; operand: T };
+type _And<T extends BooleanQueryOperand<ConditionTargetType, QueryParameter>> =
+    (T | _Not<T>)[];
+type _Or<T extends BooleanQueryOperand<ConditionTargetType, QueryParameter>> = {
+    operaion: "or";
+    operand: (T | _And<T> | _Not<T>)[];
+};
+export type BooleanOperation<
+    T extends BooleanQueryOperand<ConditionTargetType, QueryParameter>,
+> = T | _Not<T> | _And<T> | _Or<T>;
+
 // A and (B and C) = A and B and C
 // A and (B or C) = (A and B) or (A and C)
-// A or (not B)
-// A or (B and C) =
+// A and (not B)
+// A or (B and C)
 // A or (B or C) = A or B or C
+// A or (not B)
+// not (A and B) = (not A) or (not B)
+// not (A or B) = (not A) and (not B)
+// not (not A) = A
+
 // あなたがコントロールしていない基本でない土地
 // (not A) and (not B) and C
 // 対戦相手がコントロールする、クリーチャーと基本でない土地
 // A and (B or ((not C) and D))
 // = (A and B) or (A and (not C) and D)
+
 export function getQueryParameterOfBooleanOperation<T>(
     query: BooleanOperation<T>,
 ): QueryParameter {
