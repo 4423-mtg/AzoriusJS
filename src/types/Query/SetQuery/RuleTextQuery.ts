@@ -2,32 +2,30 @@ import type { RuleText } from "../../Characteristics/Characteristic.js";
 import type { SetElementCondition } from "../Condition.js";
 import type { QueryParameter } from "../QueryParameter.js";
 
-export type TextConditionOperand<T extends QueryParameter> = undefined;
+export type RuleTextConditionOperand<T extends QueryParameter> = undefined;
 
-export type TextQueryOperand<T extends QueryParameter> = SetElementCondition<
-    RuleText,
-    T
->;
+export type RuleTextQueryOperand<T extends QueryParameter> =
+    SetElementCondition<RuleText, T>;
 
-export function getQueryParameterOfTextConditionOperand(
-    operand: TextConditionOperand<QueryParameter>,
+export function getQueryParameterOfRuleTextConditionOperand(
+    operand: RuleTextConditionOperand<QueryParameter>,
 ): QueryParameter {
     return {}; // TODO:
 }
-export function getQueryParameterOfTextQueryOperand(
-    operand: TextQueryOperand<QueryParameter>,
+export function getQueryParameterOfRuleTextQueryOperand(
+    operand: RuleTextQueryOperand<QueryParameter>,
 ): QueryParameter {
     return {}; // TODO:
 }
-export function isTextConditionOperand(
+export function isRuleTextConditionOperand(
     arg: unknown,
-): arg is TextConditionOperand<QueryParameter> {
+): arg is RuleTextConditionOperand<QueryParameter> {
     // TODO:
     return false;
 }
-export function isTextQueryOperand(
+export function isRuleTextQueryOperand(
     arg: unknown,
-): arg is TextQueryOperand<QueryParameter> {
+): arg is RuleTextQueryOperand<QueryParameter> {
     // TODO:
     return false;
 }

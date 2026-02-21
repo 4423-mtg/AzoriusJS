@@ -54,9 +54,9 @@ import {
     type PlayerQueryOperand,
 } from "./SetQuery/PlayerQuery.js";
 import {
-    getQueryParameterOfTextQueryOperand,
-    isTextQueryOperand,
-    type TextQueryOperand,
+    getQueryParameterOfRuleTextQueryOperand,
+    isRuleTextQueryOperand,
+    type RuleTextQueryOperand,
 } from "./SetQuery/RuleTextQuery.js";
 import {
     getQueryParameterOfSubtypeQueryOperand,
@@ -191,7 +191,7 @@ export type SetQueryOperand<
     : T extends Ability
     ? AbilityQueryOperand<U>
     : T extends RuleText
-    ? TextQueryOperand<U>
+    ? RuleTextQueryOperand<U>
     : never;
 
 export function getQueryParameterOfSetQueryOperand(
@@ -217,8 +217,8 @@ export function getQueryParameterOfSetQueryOperand(
         return getQueryParameterOfZoneQueryOperand(operand);
     } else if (isAbilityQueryOperand(operand)) {
         return getQueryParameterOfAbilityQueryOperand(operand);
-    } else if (isTextQueryOperand(operand)) {
-        return getQueryParameterOfTextQueryOperand(operand);
+    } else if (isRuleTextQueryOperand(operand)) {
+        return getQueryParameterOfRuleTextQueryOperand(operand);
     } else {
         throw new Error(operand);
     }

@@ -2,10 +2,7 @@ import type { NumericalValue } from "../../Characteristics/Characteristic.js";
 import type { Color } from "../../Characteristics/Color.js";
 import type { Card } from "../../GameObject/Card/Card.js";
 import type { GameObject } from "../../GameObject/GameObject.js";
-import type {
-    QueryParameter,
-    QueryParameterNameOfSpecificType,
-} from "../QueryParameter.js";
+import type { QueryParameter } from "../QueryParameter.js";
 import type { ScalarQuery } from "../ScalarQuery.js";
 import type { SetQuery } from "../SetQuery.js";
 import type { CounterCondition } from "./CounterOnObjectQuery.js";
@@ -56,7 +53,7 @@ export type NumericalValueReference<T extends QueryParameter> =
 export type NumericalValueQueryOperand<T extends QueryParameter> =
     | NumericalValueReference<T>
     // 引数
-    | { argument: QueryParameterNameOfSpecificType<T, "number"> }
+    | { argument: string }
     // 何かの合計値
     | {
           valueType: "total";
@@ -68,7 +65,13 @@ export type NumericalValueQueryOperand<T extends QueryParameter> =
           value2: ScalarQuery<NumericalValue, T>;
       };
 
-export function getQueryParameterOfNumberConditionOperand(
+export function getQueryParameterOfNumericalValueQueryOperand(
+    arg: NumericalValueQueryOperand<QueryParameter>,
+): QueryParameter {
+    return {};
+}
+
+export function getQueryParameterOfNumericalValueConditionOperand(
     query: NumericalValueConditionOperand<QueryParameter>,
 ): QueryParameter {
     return {}; // TODO:
@@ -76,19 +79,19 @@ export function getQueryParameterOfNumberConditionOperand(
 
 // =================================================================
 // MARK: 型ガード
-export function isNumberConditionOperand(
+export function isNumericalValueConditionOperand(
     arg: unknown,
 ): arg is NumericalValueConditionOperand<QueryParameter> {
     // TODO:
     return false;
 }
-export function isNumberReference(
+export function isNumericalValueReference(
     arg: unknown,
 ): arg is NumericalValueReference<QueryParameter> {
     // TODO:
     return false;
 }
-export function isNumberQueryOperand(
+export function isNumericalValueQueryOperand(
     arg: unknown,
 ): arg is NumericalValueQueryOperand<QueryParameter> {
     // TODO:

@@ -120,9 +120,45 @@ export function isNonbasicLand(chara: Characteristics): boolean {
     return hasCardType(chara, "Land") && !hasSupertype(chara, "Basic");
 }
 
+// ====================================================================
+// MARK: 型ガード
+// ====================================================================
+export function isNumericalValue(arg: unknown): arg is NumericalValue {
+    return false;
+}
 export function isCardName(arg: unknown): arg is CardName {
     return false;
 }
+export function isManaCost(arg: unknown): arg is ManaCost {
+    return false;
+}
 export function isRuleText(arg: unknown): arg is RuleText {
+    return false;
+}
+export function isPower(arg: unknown): arg is Power {
+    return false;
+}
+export function isToughness(arg: unknown): arg is Toughness {
+    return false;
+}
+export function isLoyalty(arg: unknown): arg is Loyalty {
+    return false;
+}
+export function isDefense(arg: unknown): arg is Defense {
+    return false;
+}
+export function isHandModifier(arg: unknown): arg is HandModifier {
+    return false;
+}
+export function isLifeModifier(arg: unknown): arg is LifeModifier {
+    return false;
+}
+export function isPrinted(arg: unknown): arg is Printed {
+    return false;
+}
+export function isCharacteristics(arg: unknown): arg is Characteristics {
+    return false;
+}
+export function isCopiableValue(arg: unknown): arg is CopiableValue {
     return false;
 }

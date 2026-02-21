@@ -22,6 +22,12 @@ export function getQueryParameterOfManaCostConditionOperand(
 ): QueryParameter {
     return {}; // TODO:
 }
+export function getQueryParameterOfManaCostQueryOperand(
+    query: ManaCostQueryOperand<QueryParameter>,
+): QueryParameter {
+    return {}; // TODO:
+}
+
 export function isManaCostConditionOperand(
     arg: unknown,
 ): arg is ManaCostConditionOperand<QueryParameter> {

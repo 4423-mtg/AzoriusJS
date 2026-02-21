@@ -54,6 +54,11 @@ export type CopiableValueQueryOperand<T extends QueryParameter> =
           add?: Partial<ScalarQuery<CopiableValue, T>>;
       };
 export function getQueryParameterOfCopiableValueConditionOperand(
+    query: CopiableValueConditionOperand<QueryParameter>,
+): QueryParameter {
+    return {}; // TODO:
+}
+export function getQueryParameterOfCopiableValueQueryOperand(
     query: CopiableValueQueryOperand<QueryParameter>,
 ): QueryParameter {
     return {}; // TODO:

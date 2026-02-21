@@ -49,6 +49,13 @@ export function getQueryParameterOfCharacteristicsConditionOperand(
 ): QueryParameter {
     return {}; // TODO:
 }
+
+export function getQueryParameterOfCharacteristicsQueryOperand(
+    query: CharacteristicsQueryOperand<QueryParameter>,
+): QueryParameter {
+    return {}; // TODO:
+}
+
 export function isCharacteristicsConditionOperand(
     arg: unknown,
 ): arg is CharacteristicsConditionOperand<QueryParameter> {

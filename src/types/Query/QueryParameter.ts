@@ -1,10 +1,30 @@
 import type { CardType } from "../Characteristics/CardType.js";
-import type { CardName } from "../Characteristics/Characteristic.js";
+import type {
+    CardName,
+    NumericalValue,
+} from "../Characteristics/Characteristic.js";
 import type { Color } from "../Characteristics/Color.js";
 import type { Subtype } from "../Characteristics/Subtype.js";
 import type { Card } from "../GameObject/Card/Card.js";
 import { isGameObject, type GameObject } from "../GameObject/GameObject.js";
 import { isPlayer, type Player } from "../GameObject/Player.js";
+import {
+    getQueryParameterOfCondition,
+    isCondition,
+    type Condition,
+} from "./Condition.js";
+import {
+    getQueryParameterOfScalarQuery,
+    isScalarQuery,
+    type ScalarQuery,
+    type ScalarType,
+} from "./ScalarQuery.js";
+import {
+    getQueryParameterOfSetQuery,
+    isSetQuery,
+    type SetElementType,
+    type SetQuery,
+} from "./SetQuery.js";
 
 // 種類別（レイヤー）に関してはこれでOK。
 // 手続き変更効果・処理禁止効果・置換効果・追加ターン効果についてはどう？
@@ -22,22 +42,43 @@ import { isPlayer, type Player } from "../GameObject/Player.js";
 // ====================================================================
 // MARK: パラメータ
 // ====================================================================
+export type QueryParameterTypeId = (typeof _queryParameterTypeId)[number];
+const _queryParameterTypeId = [
+    "gameObject",
+    "card",
+    "player",
+    "number",
+    "string",
+    "cardType",
+    "subtype",
+    "color",
+    "name",
+] as const;
 
+export type QueryParameterType<
+    T extends QueryParameterTypeId = QueryParameterTypeId,
+> = {
+    gameObject: GameObject;
+    card: Card;
+    player: Player;
+    number: NumericalValue;
+    string: string;
+    cardType: CardType;
+    subtype: Subtype;
+    color: Color;
+    name: CardName;
+}[T];
+
+type _QueryParameterEntry<T extends QueryParameterTypeId> = {
+    type: T;
+    value?: QueryParameterType<T>;
+};
 /** クエリのパラメータ */
 export type QueryParameter = Record<
     string,
-    | { type: "gameObject"; value?: GameObject }
-    | { type: "card"; value?: Card }
-    | { type: "player"; value?: Player }
-    | { type: "number"; value?: number }
-    | { type: "string"; value?: string }
-    | { type: "cardType"; value?: CardType }
-    | { type: "subtype"; value?: Subtype }
-    | { type: "color"; value?: Color }
-    | { type: "name"; value?: CardName }
-    // | { type: "zone"; value?: Zone }
+    _QueryParameterEntry<QueryParameterTypeId>
 >;
-/** クエリのパラメータが取る型 */
+/** クエリのパラメータが取る型 */ // TODO: 要る?
 export type TypeOfQueryParameter = QueryParameter[string]["type"];
 
 // - なんらかのオブジェクト
@@ -52,52 +93,56 @@ export type TypeOfQueryParameter = QueryParameter[string]["type"];
 // MARK: パラメータの演算
 // ====================================================================
 
-/** クエリパラメータのうちの、指定した型であるパラメータ */
-export type QueryParameterNameOfSpecificType<
-    T extends QueryParameter,
-    U extends TypeOfQueryParameter,
-> = keyof {
-    [K in keyof T as T[K] extends { type: U } ? K : never]: T[K];
-};
+// /** クエリパラメータのうちの、指定した型であるパラメータ */ // TODO: 要らない?
+// export type QueryParameterNameOfSpecificType<
+//     T extends QueryParameter,
+//     U extends TypeOfQueryParameter,
+// > = keyof {
+//     [K in keyof T as T[K] extends { type: U } ? K : never]: T[K];
+// };
 
-type QueryParameterNameOfSpecificType2<
-    T extends QueryParameter,
-    U extends TypeOfQueryParameter,
-> = keyof T;
+// type QueryParameterNameOfSpecificType2<
+//     T extends QueryParameter,
+//     U extends TypeOfQueryParameter,
+// > = keyof T;
 
-const x = {
-    p1: { type: "gameObject" },
-    p2: { type: "player" },
-    p3: { type: "gameObject" },
-} satisfies QueryParameter;
-type x2 = QueryParameterNameOfSpecificType<typeof x, "gameObject">;
-const test1: x2 = "p1";
-const test2: x2 = "p2";
-const test3: x2 = "p3";
-type y2 = QueryParameterNameOfSpecificType2<typeof x, "gameObject">;
+// const x = {
+//     p1: { type: "gameObject" },
+//     p2: { type: "player" },
+//     p3: { type: "gameObject" },
+// } satisfies QueryParameter;
+// type x2 = QueryParameterNameOfSpecificType<typeof x, "gameObject">;
+// const test1: x2 = "p1";
+// const test2: x2 = "p2";
+// const test3: x2 = "p3";
+// type y2 = QueryParameterNameOfSpecificType2<typeof x, "gameObject">;
 
 /** クエリパラメータの総和 */
 export function IntersectionOfQueryParameters(
     params: QueryParameter[],
 ): QueryParameter {
+    // FIXME: キーの衝突
     const merged = Object.assign({}, ...params);
     return merged;
 }
 
-// 配列を返すもの
-// - GameObject: 集合演算
-// - Ability: 集合演算？
-// - Color: 集合演算
-// - CardType: 集合演算
-// - Name
-// 1つだけ返すもの
-// - number: 足し算
-// - Player: 対戦相手、チームメイト、その人以外、その人の次の人
-// オブジェクトを返すもの
-// - CopiableValue
-// - Characteristics:
-
-// 履歴 TODO:
+/** クエリのパラメータを取得する。 */
+export function getQueryParameter(
+    arg:
+        | SetQuery<SetElementType, QueryParameter>
+        | ScalarQuery<ScalarType, QueryParameter>
+        | Condition<SetElementType, QueryParameter>,
+): QueryParameter {
+    if (isSetQuery(arg)) {
+        return getQueryParameterOfSetQuery(arg);
+    } else if (isScalarQuery(arg)) {
+        return getQueryParameterOfScalarQuery(arg);
+    } else if (isCondition(arg)) {
+        return getQueryParameterOfCondition(arg);
+    } else {
+        throw new Error(arg);
+    }
+}
 
 // ==================================================================
 // MARK: 型ガード
@@ -159,20 +204,20 @@ function isTypeOfQueryParameter(arg: unknown): arg is TypeOfQueryParameter {
 }
 
 /**  */
-function isQueryParameterNameOfSpecificType<
-    T extends QueryParameter,
-    U extends TypeOfQueryParameter,
->(
-    parameters: T,
-    type: U,
-    arg: unknown,
-): arg is QueryParameterNameOfSpecificType<T, U> {
-    if (typeof arg === "string" && parameters[arg] !== undefined) {
-        return parameters[arg]["type"] === type;
-    } else {
-        return false;
-    }
-}
+// function isQueryParameterNameOfSpecificType<
+//     T extends QueryParameter,
+//     U extends TypeOfQueryParameter,
+// >(
+//     parameters: T,
+//     type: U,
+//     arg: unknown,
+// ): arg is QueryParameterNameOfSpecificType<T, U> {
+//     if (typeof arg === "string" && parameters[arg] !== undefined) {
+//         return parameters[arg]["type"] === type;
+//     } else {
+//         return false;
+//     }
+// }
 
 /** 型ガード */
 function isObject(arg: unknown): arg is object {

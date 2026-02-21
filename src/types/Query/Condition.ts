@@ -15,35 +15,102 @@ import type { Card, Status } from "../GameObject/Card/Card.js";
 import type { GameObject } from "../GameObject/GameObject.js";
 import type { Player } from "../GameObject/Player.js";
 import type { Zone } from "../GameState/Zone.js";
-import type { QueryParameter } from "./QueryParameter.js";
+import {
+    IntersectionOfQueryParameters,
+    type QueryParameter,
+} from "./QueryParameter.js";
 import {
     isScalarType,
     isScalarTypeId,
     type ScalarType,
     type ScalarTypeId,
 } from "./ScalarQuery.js";
-import type { CharacteristicsConditionOperand } from "./ScalarQuery/CharacteristicsQuery.js";
-import type { CopiableValueConditionOperand } from "./ScalarQuery/CopiableValueQuery.js";
-import type { ManaCostConditionOperand } from "./ScalarQuery/ManaCostQuery.js";
-import type { NumericalValueConditionOperand } from "./ScalarQuery/NumericalValueQuery.js";
-import type { StatusConditionOperand } from "./ScalarQuery/StatusQuery.js";
+import {
+    getQueryParameterOfCharacteristicsConditionOperand,
+    isCharacteristicsConditionOperand,
+    type CharacteristicsConditionOperand,
+} from "./ScalarQuery/CharacteristicsQuery.js";
+import {
+    getQueryParameterOfCopiableValueConditionOperand,
+    isCopiableValueConditionOperand,
+    type CopiableValueConditionOperand,
+} from "./ScalarQuery/CopiableValueQuery.js";
+import {
+    getQueryParameterOfManaCostConditionOperand,
+    isManaCostConditionOperand,
+    type ManaCostConditionOperand,
+} from "./ScalarQuery/ManaCostQuery.js";
+import {
+    getQueryParameterOfNumericalValueConditionOperand,
+    isNumericalValueConditionOperand,
+    type NumericalValueConditionOperand,
+} from "./ScalarQuery/NumericalValueQuery.js";
+import {
+    getQueryParameterOfStatusConditionOperand,
+    isStatusConditionOperand,
+    type StatusConditionOperand,
+} from "./ScalarQuery/StatusQuery.js";
 import {
     isSetElementType,
     isSetElementTypeId,
     type SetElementType,
     type SetElementTypeId,
 } from "./SetQuery.js";
-import type { AbilityConditionOperand } from "./SetQuery/AbilityQuery.js";
-import type { CardNameConditionOperand } from "./SetQuery/CardNameQuery.js";
-import type { CardConditionOperand } from "./SetQuery/CardQuery.js";
-import type { CardTypeConditionOperand } from "./SetQuery/CardTypeQuery.js";
-import type { ColorConditionOperand } from "./SetQuery/ColorQuery.js";
-import type { GameObjectConditionOperand } from "./SetQuery/GameObjectQuery.js";
-import type { PlayerConditionOperand } from "./SetQuery/PlayerQuery.js";
-import type { TextConditionOperand } from "./SetQuery/RuleTextQuery.js";
-import type { SubtypeConditionOperand } from "./SetQuery/SubtypeQuery.js";
-import type { SupertypeConditionOperand } from "./SetQuery/SupertypeQuery.js";
-import type { ZoneConditionOperand } from "./SetQuery/ZoneQuery.js";
+import {
+    getQueryParameterOfAbilityConditionOperand,
+    isAbilityConditionOperand,
+    type AbilityConditionOperand,
+} from "./SetQuery/AbilityQuery.js";
+import {
+    getQueryParameterOfCardNameConditionOperand,
+    isCardNameConditionOperand,
+    type CardNameConditionOperand,
+} from "./SetQuery/CardNameQuery.js";
+import {
+    getQueryParameterOfCardConditionOperand,
+    isCardConditionOperand,
+    type CardConditionOperand,
+} from "./SetQuery/CardQuery.js";
+import {
+    getQueryParameterOfCardTypeConditionOperand,
+    isCardTypeConditionOperand,
+    type CardTypeConditionOperand,
+} from "./SetQuery/CardTypeQuery.js";
+import {
+    getQueryParameterOfColorConditionOperand,
+    isColorConditionOperand,
+    type ColorConditionOperand,
+} from "./SetQuery/ColorQuery.js";
+import {
+    getQueryParameterOfGameObjectConditionOperand,
+    isGameObjectConditionOperand,
+    type GameObjectConditionOperand,
+} from "./SetQuery/GameObjectQuery.js";
+import {
+    getQueryParameterOfPlayerConditionOperand,
+    isPlayerConditionOperand,
+    type PlayerConditionOperand,
+} from "./SetQuery/PlayerQuery.js";
+import {
+    getQueryParameterOfRuleTextConditionOperand,
+    isRuleTextConditionOperand,
+    type RuleTextConditionOperand,
+} from "./SetQuery/RuleTextQuery.js";
+import {
+    getQueryParameterOfSubtypeConditionOperand,
+    isSubtypeConditionOperand,
+    type SubtypeConditionOperand,
+} from "./SetQuery/SubtypeQuery.js";
+import {
+    getQueryParameterOfSupertypeConditionOperand,
+    isSupertypeConditionOperand,
+    type SupertypeConditionOperand,
+} from "./SetQuery/SupertypeQuery.js";
+import {
+    getQueryParameterOfZoneConditionOperand,
+    isZoneConditionOperand,
+    type ZoneConditionOperand,
+} from "./SetQuery/ZoneQuery.js";
 
 // ========================================================================
 // MARK: ConditionTargetType
@@ -105,7 +172,7 @@ export type BooleanQueryOperand<
     : T extends Ability
     ? AbilityConditionOperand<U>
     : T extends RuleText
-    ? TextConditionOperand<U>
+    ? RuleTextConditionOperand<U>
     : T extends NumericalValue
     ? NumericalValueConditionOperand<U>
     : T extends ManaCost
@@ -147,13 +214,98 @@ export type BooleanOperation<
 // A and (B or ((not C) and D))
 // = (A and B) or (A and (not C) and D)
 
+export function getQueryParameterOfCondition(
+    arg: Condition<ConditionTargetType, QueryParameter>,
+): QueryParameter {
+    return getQueryParameterOfBooleanOperation(arg.condition);
+}
+
 /** BooleanOperationのパラメータ */
 export function getQueryParameterOfBooleanOperation(
-    query: BooleanOperation<
+    arg: BooleanOperation<
         BooleanQueryOperand<ConditionTargetType, QueryParameter>
     >,
 ): QueryParameter {
-    return {}; // TODO:
+    if (isBooleanQueryOperand(arg)) {
+        return getQueryParameterOfBooleanQueryOperand(arg);
+    } else if (isNot(arg)) {
+        return getQueryParameterOfNot(arg);
+    } else if (isAnd(arg)) {
+        return getQueryParameterOfAnd(arg);
+    } else if (isOr(arg)) {
+        return getQueryParameterOfOr(arg);
+    } else {
+        throw new Error(arg);
+    }
+}
+function getQueryParameterOfNot(
+    arg: _Not<BooleanQueryOperand<ConditionTargetType, QueryParameter>>,
+): QueryParameter {
+    return getQueryParameterOfBooleanQueryOperand(arg.operand);
+}
+function getQueryParameterOfAnd(
+    arg: _And<BooleanQueryOperand<ConditionTargetType, QueryParameter>>,
+): QueryParameter {
+    return IntersectionOfQueryParameters(
+        arg.map((e) =>
+            isBooleanQueryOperand(e)
+                ? getQueryParameterOfBooleanQueryOperand(e)
+                : getQueryParameterOfNot(e),
+        ),
+    );
+}
+function getQueryParameterOfOr(
+    arg: _Or<BooleanQueryOperand<ConditionTargetType, QueryParameter>>,
+): QueryParameter {
+    return IntersectionOfQueryParameters(
+        arg.operand.map((e) =>
+            isBooleanQueryOperand(e)
+                ? getQueryParameterOfBooleanQueryOperand(e)
+                : isAnd(e)
+                ? getQueryParameterOfAnd(e)
+                : getQueryParameterOfNot(e),
+        ),
+    );
+}
+
+export function getQueryParameterOfBooleanQueryOperand(
+    arg: BooleanQueryOperand<ConditionTargetType, QueryParameter>,
+): QueryParameter {
+    if (isGameObjectConditionOperand(arg)) {
+        return getQueryParameterOfGameObjectConditionOperand(arg);
+    } else if (isCardConditionOperand(arg)) {
+        return getQueryParameterOfCardConditionOperand(arg);
+    } else if (isPlayerConditionOperand(arg)) {
+        return getQueryParameterOfPlayerConditionOperand(arg);
+    } else if (isCardNameConditionOperand(arg)) {
+        return getQueryParameterOfCardNameConditionOperand(arg);
+    } else if (isCardTypeConditionOperand(arg)) {
+        return getQueryParameterOfCardTypeConditionOperand(arg);
+    } else if (isSubtypeConditionOperand(arg)) {
+        return getQueryParameterOfSubtypeConditionOperand(arg);
+    } else if (isSupertypeConditionOperand(arg)) {
+        return getQueryParameterOfSupertypeConditionOperand(arg);
+    } else if (isColorConditionOperand(arg)) {
+        return getQueryParameterOfColorConditionOperand(arg);
+    } else if (isZoneConditionOperand(arg)) {
+        return getQueryParameterOfZoneConditionOperand(arg);
+    } else if (isAbilityConditionOperand(arg)) {
+        return getQueryParameterOfAbilityConditionOperand(arg);
+    } else if (isRuleTextConditionOperand(arg)) {
+        return getQueryParameterOfRuleTextConditionOperand(arg);
+    } else if (isNumericalValueConditionOperand(arg)) {
+        return getQueryParameterOfNumericalValueConditionOperand(arg);
+    } else if (isManaCostConditionOperand(arg)) {
+        return getQueryParameterOfManaCostConditionOperand(arg);
+    } else if (isCharacteristicsConditionOperand(arg)) {
+        return getQueryParameterOfCharacteristicsConditionOperand(arg);
+    } else if (isCopiableValueConditionOperand(arg)) {
+        return getQueryParameterOfCopiableValueConditionOperand(arg);
+    } else if (isStatusConditionOperand(arg)) {
+        return getQueryParameterOfStatusConditionOperand(arg);
+    } else {
+        throw new Error(arg);
+    }
 }
 
 // MARK: Scalar
@@ -217,7 +369,7 @@ export type SetElementConditionOperand<
     : T extends Ability
     ? AbilityConditionOperand<U>
     : T extends RuleText
-    ? TextConditionOperand<U>
+    ? RuleTextConditionOperand<U>
     : never;
 
 // =================================================================

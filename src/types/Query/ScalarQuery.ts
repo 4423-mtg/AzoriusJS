@@ -1,16 +1,40 @@
-import type {
-    Characteristics,
-    CopiableValue,
-    ManaCost,
-    NumericalValue,
+import {
+    isCharacteristics,
+    isCopiableValue,
+    isManaCost,
+    isNumericalValue,
+    type Characteristics,
+    type CopiableValue,
+    type ManaCost,
+    type NumericalValue,
 } from "../Characteristics/Characteristic.js";
 import { isStatus, type Status } from "../GameObject/Card/Card.js";
 import type { QueryParameter } from "./QueryParameter.js";
-import type { CharacteristicsQueryOperand } from "./ScalarQuery/CharacteristicsQuery.js";
-import type { CopiableValueQueryOperand } from "./ScalarQuery/CopiableValueQuery.js";
-import type { ManaCostQueryOperand } from "./ScalarQuery/ManaCostQuery.js";
-import type { NumericalValueQueryOperand } from "./ScalarQuery/NumericalValueQuery.js";
-import type { StatusQueryOperand } from "./ScalarQuery/StatusQuery.js";
+import {
+    getQueryParameterOfCharacteristicsQueryOperand,
+    isCharacteristicsQueryOperand,
+    type CharacteristicsQueryOperand,
+} from "./ScalarQuery/CharacteristicsQuery.js";
+import {
+    getQueryParameterOfCopiableValueQueryOperand,
+    isCopiableValueQueryOperand,
+    type CopiableValueQueryOperand,
+} from "./ScalarQuery/CopiableValueQuery.js";
+import {
+    getQueryParameterOfManaCostQueryOperand,
+    isManaCostQueryOperand,
+    type ManaCostQueryOperand,
+} from "./ScalarQuery/ManaCostQuery.js";
+import {
+    getQueryParameterOfNumericalValueQueryOperand,
+    isNumericalValueQueryOperand,
+    type NumericalValueQueryOperand,
+} from "./ScalarQuery/NumericalValueQuery.js";
+import {
+    getQueryParameterOfStatusQueryOperand,
+    isStatusQueryOperand,
+    type StatusQueryOperand,
+} from "./ScalarQuery/StatusQuery.js";
 
 // =================================================================
 // MARK: ScalarType
@@ -69,3 +93,37 @@ export type ScalarQueryOperand<
     : T extends Status
     ? StatusQueryOperand<U>
     : never;
+
+export function isScalarQuery(
+    arg: unknown,
+): arg is ScalarQuery<ScalarType, QueryParameter> {
+    return false;
+}
+export function isScalarQueryOperand(
+    arg: unknown,
+): arg is ScalarQueryOperand<ScalarType, QueryParameter> {
+    return false;
+}
+
+export function getQueryParameterOfScalarQuery(
+    arg: ScalarQuery<ScalarType, QueryParameter>,
+): QueryParameter {
+    return getQueryParameterOfScalarQueryOperand(arg.query);
+}
+export function getQueryParameterOfScalarQueryOperand(
+    arg: ScalarQueryOperand<ScalarType, QueryParameter>,
+): QueryParameter {
+    if (isCharacteristicsQueryOperand(arg)) {
+        return getQueryParameterOfCharacteristicsQueryOperand(arg);
+    } else if (isCopiableValueQueryOperand(arg)) {
+        return getQueryParameterOfCopiableValueQueryOperand(arg);
+    } else if (isManaCostQueryOperand(arg)) {
+        return getQueryParameterOfManaCostQueryOperand(arg);
+    } else if (isNumericalValueQueryOperand(arg)) {
+        return getQueryParameterOfNumericalValueQueryOperand(arg);
+    } else if (isStatusQueryOperand(arg)) {
+        return getQueryParameterOfStatusQueryOperand(arg);
+    } else {
+        throw new Error(arg);
+    }
+}

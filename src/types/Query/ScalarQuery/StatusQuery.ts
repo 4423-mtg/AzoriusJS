@@ -21,6 +21,12 @@ export function getQueryParameterOfStatusConditionOperand(
 ): QueryParameter {
     return {}; // TODO:
 }
+export function getQueryParameterOfStatusQueryOperand(
+    query: StatusQueryOperand<QueryParameter>,
+): QueryParameter {
+    return {}; // TODO:
+}
+
 export function isStatusConditionOperand(
     arg: unknown,
 ): arg is StatusConditionOperand<QueryParameter> {
