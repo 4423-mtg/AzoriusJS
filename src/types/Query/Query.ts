@@ -15,11 +15,13 @@ import type { Card, Status } from "../GameObject/Card/Card.js";
 import { isGameObject, type GameObject } from "../GameObject/GameObject.js";
 import { isPlayer, type Player } from "../GameObject/Player.js";
 import type { Zone } from "../GameState/Zone.js";
+import type { ScalarType, ScalarTypeId } from "./ScalarQuery.js";
 import type { CharacteristicsConditionOperand } from "./ScalarQuery/CharacteristicsQuery.js";
 import type { CopiableValueConditionOperand } from "./ScalarQuery/CopiableValueQuery.js";
 import type { ManaCostConditionOperand } from "./ScalarQuery/ManaCostQuery.js";
 import type { NumericalValueConditionOperand } from "./ScalarQuery/NumericalValueQuery.js";
 import type { StatusConditionOperand } from "./ScalarQuery/StatusQuery.js";
+import type { SetElementType, SetElementTypeId } from "./SetQuery.js";
 import type { AbilityConditionOperand } from "./SetQuery/AbilityQuery.js";
 import type { CardNameConditionOperand } from "./SetQuery/CardNameQuery.js";
 import type { CardConditionOperand } from "./SetQuery/CardQuery.js";
@@ -76,13 +78,13 @@ export type TypeOfQueryParameter = QueryParameter[string]["type"];
 
 /** QueryParameter */
 export function isQueryParameter(arg: unknown): arg is QueryParameter {
-    if (!isRecord(arg)) {
+    if (!isObject(arg)) {
         return false;
     }
 
     for (const key in arg) {
         const e = arg[key];
-        if (!isRecord(e)) {
+        if (!isObject(e)) {
             return false;
         }
         switch (e["type"]) {
@@ -201,30 +203,14 @@ function isQueryParameterNameOfSpecificType<
 // ====================================================================
 // TODO: SetElementCondition を通常のConditionと区別する必要はあるのだろうか？
 // 受け取って処理する側を書くときに必要になるかもしれない。
-type _conditionTargetTypeDefinition = {
-    // SetElementType
-    gameObject: GameObject;
-    card: Card;
-    player: Player;
-    cardName: CardName;
-    cardType: CardType;
-    subtype: Subtype;
-    supertype: Supertype;
-    color: Color;
-    zone: Zone;
-    ability: Ability;
-    ruleText: RuleText;
-    // Scalar
-    numericalValue: NumericalValue;
-    manaCost: ManaCost;
-    characteristics: Characteristics;
-    copiableValue: CopiableValue;
-    status: Status;
-};
-export type ConditionTargetTypeId = keyof _conditionTargetTypeDefinition;
+export type ConditionTargetTypeId = SetElementTypeId | ScalarTypeId;
 export type ConditionTargetType<
     T extends ConditionTargetTypeId = ConditionTargetTypeId,
-> = _conditionTargetTypeDefinition[T];
+> = T extends SetElementTypeId
+    ? SetElementType<T>
+    : T extends ScalarTypeId
+    ? ScalarType<T>
+    : never;
 
 /** 条件 */
 export type Condition<
@@ -299,16 +285,21 @@ export type BooleanOperation<
 // A and (B or ((not C) and D))
 // = (A and B) or (A and (not C) and D)
 
-export function getQueryParameterOfBooleanOperation<T>(
-    query: BooleanOperation<>,
+/** BooleanOperationのパラメータ */
+export function getQueryParameterOfBooleanOperation(
+    query: BooleanOperation<
+        BooleanQueryOperand<ConditionTargetType, QueryParameter>
+    >,
 ): QueryParameter {
     return {}; // TODO:
 }
 
-/**  */
-export function isBooleanOperation<T>(
+/** 型ガード */
+export function isBooleanOperation(
     arg: unknown,
-): arg is BooleanOperation<T> {
+): arg is BooleanOperation<
+    BooleanQueryOperand<ConditionTargetType, QueryParameter>
+> {
     // TODO:
     return false;
 }
@@ -317,6 +308,6 @@ export function isBooleanOperation<T>(
 // MARK: 型ガード
 // ====================================================================
 /** Record */
-function isRecord(arg: unknown): arg is Record<string, unknown> {
+function isObject(arg: unknown): arg is object {
     return typeof arg === "object" && arg !== null;
 }

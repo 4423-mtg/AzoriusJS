@@ -101,7 +101,7 @@ type _setElementTypeDefinition = {
     color: Color;
     zone: Zone;
     ability: Ability;
-    text: RuleText;
+    ruleText: RuleText;
 };
 
 /** 集合の要素の型を表す文字列 */
