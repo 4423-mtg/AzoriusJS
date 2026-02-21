@@ -16,13 +16,23 @@ import type { GameObject } from "../GameObject/GameObject.js";
 import type { Player } from "../GameObject/Player.js";
 import type { Zone } from "../GameState/Zone.js";
 import type { QueryParameter } from "./QueryParameter.js";
-import type { ScalarType, ScalarTypeId } from "./ScalarQuery.js";
+import {
+    isScalarType,
+    isScalarTypeId,
+    type ScalarType,
+    type ScalarTypeId,
+} from "./ScalarQuery.js";
 import type { CharacteristicsConditionOperand } from "./ScalarQuery/CharacteristicsQuery.js";
 import type { CopiableValueConditionOperand } from "./ScalarQuery/CopiableValueQuery.js";
 import type { ManaCostConditionOperand } from "./ScalarQuery/ManaCostQuery.js";
 import type { NumericalValueConditionOperand } from "./ScalarQuery/NumericalValueQuery.js";
 import type { StatusConditionOperand } from "./ScalarQuery/StatusQuery.js";
-import type { SetElementType, SetElementTypeId } from "./SetQuery.js";
+import {
+    isSetElementType,
+    isSetElementTypeId,
+    type SetElementType,
+    type SetElementTypeId,
+} from "./SetQuery.js";
 import type { AbilityConditionOperand } from "./SetQuery/AbilityQuery.js";
 import type { CardNameConditionOperand } from "./SetQuery/CardNameQuery.js";
 import type { CardConditionOperand } from "./SetQuery/CardQuery.js";
@@ -49,6 +59,17 @@ export type ConditionTargetType<
     : T extends ScalarTypeId
     ? ScalarType<T>
     : never;
+
+export function isConditionTargetTypeId(
+    arg: unknown,
+): arg is ConditionTargetTypeId {
+    return isSetElementTypeId(arg) || isScalarTypeId(arg);
+}
+export function isConditionTargetType(
+    arg: unknown,
+): arg is ConditionTargetType {
+    return isSetElementType(arg) || isScalarType(arg);
+}
 
 // ========================================================================
 // MARK: Condition
@@ -135,16 +156,6 @@ export function getQueryParameterOfBooleanOperation(
     return {}; // TODO:
 }
 
-/** 型ガード */
-export function isBooleanOperation(
-    arg: unknown,
-): arg is BooleanOperation<
-    BooleanQueryOperand<ConditionTargetType, QueryParameter>
-> {
-    // TODO:
-    return false;
-}
-
 // MARK: Scalar
 /** スカラーの条件 */
 export type ScalarCondition<T extends ScalarType, U extends QueryParameter> = {
@@ -209,11 +220,55 @@ export type SetElementConditionOperand<
     ? TextConditionOperand<U>
     : never;
 
-export function isSetElementCondition<T extends SetElementType>(
-    // FIXME: Tはどうやって指定？
+// =================================================================
+// MARK: 型ガード
+// =================================================================
+export function isCondition(
     arg: unknown,
-): arg is SetElementCondition<T, QueryParameter> {
-    return isBooleanOperation(arg) && arg;
+): arg is Condition<ConditionTargetType, QueryParameter> {
+    return false;
+}
+export function isBooleanQueryOperand(
+    arg: unknown,
+): arg is BooleanQueryOperand<ConditionTargetType, QueryParameter> {
+    return false;
+}
+function isNot(
+    arg: unknown,
+): arg is _Not<BooleanQueryOperand<ConditionTargetType, QueryParameter>> {
+    return false;
+}
+function isAnd(
+    arg: unknown,
+): arg is _And<BooleanQueryOperand<ConditionTargetType, QueryParameter>> {
+    return false;
+}
+function isOr(
+    arg: unknown,
+): arg is _Or<BooleanQueryOperand<ConditionTargetType, QueryParameter>> {
+    return false;
+}
+export function isBooleanOperation(
+    arg: unknown,
+): arg is BooleanOperation<
+    BooleanQueryOperand<ConditionTargetType, QueryParameter>
+> {
+    return false;
+}
+export function isScalarCondition(
+    arg: unknown,
+): arg is ScalarCondition<ScalarType, QueryParameter> {
+    return false;
+}
+export function isScalarConditionOperand(
+    arg: unknown,
+): arg is ScalarConditionOperand<ScalarType, QueryParameter> {
+    return false;
+}
+export function isSetElementCondition(
+    arg: unknown,
+): arg is SetElementCondition<SetElementType, QueryParameter> {
+    return false;
 }
 
 export function isSetElementConditionOperand(

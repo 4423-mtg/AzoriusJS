@@ -1,10 +1,10 @@
-import type { BooleanOperation } from "../Condition.js";
+import type { Characteristics } from "../../Characteristics/Characteristic.js";
+import type { ScalarCondition } from "../Condition.js";
 import type { QueryParameter } from "../QueryParameter.js";
 
-// FIXME: SetElementにする
-export type FaceCondition<T extends QueryParameter> = BooleanOperation<{}>;
-export type FaceQuery<T extends QueryParameter> = BooleanOperation<{
-    // FIXME: faceは両面カードだけではない
+export type FaceConditionOperand<T extends QueryParameter> = {};
+export type FaceQueryOperand<T extends QueryParameter> = {
+    // FIXME: faceは両面カードだけではない -> Faceも修正
     front?: {
         printed?: ScalarCondition<Characteristics, T>;
         charcteristics?: ScalarCondition<Characteristics, T>;
@@ -13,18 +13,22 @@ export type FaceQuery<T extends QueryParameter> = BooleanOperation<{
         printed?: ScalarCondition<Characteristics, T>;
         charcteristics?: ScalarCondition<Characteristics, T>;
     };
-}>;
+};
 
-export function getQueryParameterOfFaceQuery(
-    query: FaceQuery<QueryParameter>,
+export function getQueryParameterOfFaceQueryOperand(
+    query: FaceQueryOperand<QueryParameter>,
 ): QueryParameter {
     return {}; // TODO:
 }
-export function isFaceCondition(arg: unknown): arg is FaceCondition {
+export function isFaceConditionOperand(
+    arg: unknown,
+): arg is FaceConditionOperand<QueryParameter> {
     // TODO:
     return false;
 }
-export function isFaceQuery(arg: unknown): arg is FaceQuery {
+export function isFaceQueryOperand(
+    arg: unknown,
+): arg is FaceQueryOperand<QueryParameter> {
     // TODO:
     return false;
 }

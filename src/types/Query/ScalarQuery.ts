@@ -4,7 +4,7 @@ import type {
     ManaCost,
     NumericalValue,
 } from "../Characteristics/Characteristic.js";
-import type { Status } from "../GameObject/Card/Card.js";
+import { isStatus, type Status } from "../GameObject/Card/Card.js";
 import type { QueryParameter } from "./QueryParameter.js";
 import type { CharacteristicsQueryOperand } from "./ScalarQuery/CharacteristicsQuery.js";
 import type { CopiableValueQueryOperand } from "./ScalarQuery/CopiableValueQuery.js";
@@ -15,18 +15,35 @@ import type { StatusQueryOperand } from "./ScalarQuery/StatusQuery.js";
 // =================================================================
 // MARK: ScalarType
 // =================================================================
-type _scalarTypeDefinition = {
+export type ScalarTypeId = (typeof _scalarTypeId)[number];
+const _scalarTypeId = [
+    "characteristics",
+    "copiableValue",
+    "manaCost",
+    "numericalValue",
+    "status",
+] as const;
+
+export type ScalarType<T extends ScalarTypeId = ScalarTypeId> = {
     characteristics: Characteristics;
     copiableValue: CopiableValue;
     manaCost: ManaCost;
     numericalValue: NumericalValue;
     status: Status;
-};
+}[T];
 
-export type ScalarTypeId = keyof _scalarTypeDefinition;
-
-export type ScalarType<T extends ScalarTypeId = ScalarTypeId> =
-    | _scalarTypeDefinition[T];
+export function isScalarTypeId(arg: unknown): arg is ScalarTypeId {
+    return typeof arg === "string" && _scalarTypeId.some((e) => e === arg);
+}
+export function isScalarType(arg: unknown): arg is ScalarType {
+    return (
+        isCharacteristics(arg) ||
+        isCopiableValue(arg) ||
+        isManaCost(arg) ||
+        isNumericalValue(arg) ||
+        isStatus(arg)
+    );
+}
 
 // ========================================================================
 // MARK: ScalarQuery

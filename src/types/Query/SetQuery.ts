@@ -9,7 +9,12 @@ import { isColor, type Color } from "../Characteristics/Color.js";
 import { isSubtype, type Subtype } from "../Characteristics/Subtype.js";
 import { isSupertype, type Supertype } from "../Characteristics/Supertype.js";
 import { isAbility, type Ability } from "../GameObject/Ability.js";
-import { isCard, type Card } from "../GameObject/Card/Card.js";
+import {
+    isCard,
+    isFace,
+    type Card,
+    type Face,
+} from "../GameObject/Card/Card.js";
 import { isGameObject, type GameObject } from "../GameObject/GameObject.js";
 import { isPlayer, type Player } from "../GameObject/Player.js";
 import { isZone, type Zone } from "../GameState/Zone.js";
@@ -77,55 +82,57 @@ import {
 // MARK: SetElementType
 // =================================================================
 
-const _setElementTypeId = [
-    "gameObject",
-    "card",
-    "player",
-    "cardName",
-    "cardtype",
-    "subtype",
-    "supertype",
-    "color",
-    "zone",
-    "ability",
-    "ruleText",
-] as const;
 /** 集合の要素の型を表す文字列 */
 export type SetElementTypeId = (typeof _setElementTypeId)[number];
+const _setElementTypeId = [
+    "ability",
+    "cardName",
+    "card",
+    "cardType",
+    "color",
+    "face",
+    "gameObject",
+    "player",
+    "ruleText",
+    "subtype",
+    "supertype",
+    "zone",
+] as const;
 
-type _setElementTypeDefinition = {
-    gameObject: GameObject;
-    card: Card;
-    player: Player;
+/** 集合の要素の型 */
+export type SetElementType<T extends SetElementTypeId = SetElementTypeId> = {
+    ability: Ability;
     cardName: CardName;
-    cardtype: CardType;
+    card: Card;
+    cardType: CardType;
+    color: Color;
+    face: Face;
+    gameObject: GameObject;
+    player: Player;
+    ruleText: RuleText;
     subtype: Subtype;
     supertype: Supertype;
-    color: Color;
     zone: Zone;
-    ability: Ability;
-    ruleText: RuleText;
-};
-/** 集合の要素の型 */
-export type SetElementType<T extends SetElementTypeId = SetElementTypeId> =
-    _setElementTypeDefinition[T];
+}[T];
 
+/** 型ガード */
 export function isSetElementTypeId(arg: unknown): arg is SetElementTypeId {
-    return false;
+    return typeof arg === "string" && _setElementTypeId.some((e) => e === arg);
 }
 export function isSetElementType(arg: unknown): arg is SetElementType {
     return (
-        isGameObject(arg) ||
-        isCard(arg) ||
-        isPlayer(arg) ||
+        isAbility(arg) ||
         isCardName(arg) ||
+        isCard(arg) ||
         isCardType(arg) ||
+        isColor(arg) ||
+        isFace(arg) ||
+        isGameObject(arg) ||
+        isPlayer(arg) ||
+        isRuleText(arg) ||
         isSubtype(arg) ||
         isSupertype(arg) ||
-        isColor(arg) ||
-        isZone(arg) ||
-        isAbility(arg) ||
-        isRuleText(arg)
+        isZone(arg)
     );
 }
 
