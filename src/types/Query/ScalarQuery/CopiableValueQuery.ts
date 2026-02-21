@@ -30,28 +30,42 @@ export type CopiableValueConditionOperand<T extends QueryParameter> = {
     loyalty?: ScalarCondition<NumericalValue, T>;
 };
 
+// type x<T extends QueryParameter> = {
+//     [K in keyof CopiableValue]: CopiableValue[K] extends (infer U)[]
+//         ? SetQuery<U, T>
+//         : CopiableValue[K] extends infer U
+//         ? ScalarQuery<U, T>
+//         : never;
+// };
+
+export type _q<T extends QueryParameter> = {
+    // FIXME: どうせここでCopiableValueのプロパティを名指ししているので、
+    // overwriteについても名指しでいいか？
+    // プロパティの値の型を見てジェネリクスする手もある
+    name: SetQuery<CardName, T>;
+    manaCost: ScalarQuery<ManaCost, T>;
+    colorIdentity: SetQuery<Color, T>;
+    cardTypes: SetQuery<CardType, T>;
+    subtypes: SetQuery<Subtype, T>;
+    supertypes: SetQuery<Supertype, T>;
+    text: SetQuery<RuleText, T>;
+    power: ScalarQuery<NumericalValue, T>;
+    toughness: ScalarQuery<NumericalValue, T>;
+    loyalty: ScalarQuery<NumericalValue, T>;
+};
+
 // TODO: 呪文の場合
 /** コピー可能な値のクエリ */
 export type CopiableValueQueryOperand<T extends QueryParameter> =
-    | {
-          name: SetQuery<CardName, T>;
-          manaCost: ScalarQuery<ManaCost, T>;
-          colorIdentity: SetQuery<Color, T>;
-          cardTypes: SetQuery<CardType, T>;
-          subtypes: SetQuery<Subtype, T>;
-          supertypes: SetQuery<Supertype, T>;
-          text: SetQuery<RuleText, T>;
-          power: ScalarQuery<NumericalValue, T>;
-          toughness: ScalarQuery<NumericalValue, T>;
-          loyalty: ScalarQuery<NumericalValue, T>;
-      }
+    | _q<T>
     // 参照
     | { object: SetQuery<GameObject, T> } // 1つだけ欲しい場合は？
     // 部分的な修整
     | {
           original: ScalarQuery<CopiableValue, T>;
-          overwrite?: Partial<ScalarQuery<CopiableValue, T>>;
-          add?: Partial<ScalarQuery<CopiableValue, T>>;
+          overwrite?: Partial<_q<T>>; // FIXME: Partialが困る
+          add?: Partial<_q<T>>;
+          exclude?: Partial<_q<T>>;
       };
 export function getQueryParameterOfCopiableValueConditionOperand(
     query: CopiableValueConditionOperand<QueryParameter>,
