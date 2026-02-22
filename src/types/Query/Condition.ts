@@ -142,12 +142,6 @@ export function isConditionTargetType(
 // ========================================================================
 // MARK: Condition
 // ========================================================================
-/** 条件 */
-export type Condition<
-    T extends ConditionTargetType,
-    U extends QueryParameter,
-> = { targetType: T; condition: BooleanOperation<BooleanQueryOperand<T, U>> };
-
 /** 条件のオペランド */
 export type BooleanQueryOperand<
     T extends ConditionTargetType,
@@ -313,12 +307,6 @@ export function getQueryParameterOfBooleanQueryOperand(
 }
 
 // MARK: Scalar
-/** スカラーの条件 */
-export type ScalarCondition<T extends ScalarType, U extends QueryParameter> = {
-    scalarType: T; // FIXME: ScalarTypeId of T
-    condition: BooleanOperation<ScalarConditionOperand<T, U>>;
-};
-
 /** 条件のオペランド */
 export type ScalarConditionOperand<
     T extends ScalarType,
@@ -338,16 +326,6 @@ export type ScalarConditionOperand<
 // =================================================================
 // MARK: SetElement
 // =================================================================
-
-/** 指定した SetElementType に関する条件指定。
- * 条件を満たすものすべてを取ってくるのに使う */
-export type SetElementCondition<
-    T extends SetElementType,
-    U extends QueryParameter,
-> = {
-    elementType: T; // FIXME: SetElementTypeId of T
-    condition: BooleanOperation<SetElementConditionOperand<T, U>>;
-};
 /** 条件指定のオペランド */
 export type SetElementConditionOperand<
     T extends SetElementType,

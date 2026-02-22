@@ -1,5 +1,5 @@
 import type { Color } from "../../Characteristics/Color.js";
-import type { BooleanOperation, SetElementCondition } from "../Condition.js";
+import type { BooleanOperation } from "../Condition.js";
 import type { QueryParameter } from "../QueryParameter.js";
 import type { SetOperation } from "../SetQuery.js";
 import type { CardQuery } from "./CardQuery.js";
@@ -23,7 +23,7 @@ export type ColorQueryOperand<T extends QueryParameter> =
     | Color
     | Color[]
     | { card: CardQuery<T> } // カードの色
-    | SetElementCondition<Color, T>
+    | ColorCondition<T>
     | { argument: string };
 
 // =================================================================

@@ -1,20 +1,17 @@
-import type { GameObject } from "../../GameObject/GameObject.js";
-import type { Zone } from "../../GameState/Zone.js";
-import {
-    isSetElementCondition,
-    type BooleanOperation,
-    type SetElementCondition,
-} from "../Condition.js";
+import { isSetElementCondition, type BooleanOperation } from "../Condition.js";
 import type { QueryParameter } from "../QueryParameter.js";
 import { type SetOperation } from "../SetQuery.js";
-import { getQueryParameterOfZoneQueryOperand } from "./ZoneQuery.js";
+import {
+    getQueryParameterOfZoneQueryOperand,
+    type ZoneCondition,
+} from "./ZoneQuery.js";
 
 // =================================================================
 export type GameObjectCondition<T extends QueryParameter> = BooleanOperation<
     GameObjectConditionOperand<T>
 >;
 export type GameObjectConditionOperand<T extends QueryParameter> = {
-    zone: SetElementCondition<Zone, T>;
+    zone: ZoneCondition<T>;
 };
 
 // =================================================================
@@ -22,7 +19,7 @@ export type GameObjectQuery<T extends QueryParameter> = SetOperation<
     GameObjectQueryOperand<T>
 >;
 export type GameObjectQueryOperand<T extends QueryParameter> =
-    | SetElementCondition<GameObject, T>
+    | GameObjectCondition<T>
     | {
           argument: string;
       };

@@ -1,6 +1,6 @@
 import type { Player } from "../../GameObject/Player.js";
 import type { PlayerInfo } from "../../GameState/Match.js";
-import type { BooleanOperation, SetElementCondition } from "../Condition.js";
+import type { BooleanOperation } from "../Condition.js";
 import type { QueryParameter } from "../QueryParameter.js";
 import type { SetOperation } from "../SetQuery.js";
 import type { GameObjectQuery } from "./GameObjectQuery.js";
@@ -31,7 +31,7 @@ export type PlayerQuery<T extends QueryParameter> = SetOperation<
 export type PlayerQueryOperand<T extends QueryParameter> =
     | Player
     | Player[]
-    | SetElementCondition<Player, T>
+    | PlayerCondition<T>
     | { argument: string };
 
 // =================================================================

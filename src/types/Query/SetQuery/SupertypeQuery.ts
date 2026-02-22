@@ -1,5 +1,5 @@
 import type { Supertype } from "../../Characteristics/Supertype.js";
-import type { BooleanOperation, SetElementCondition } from "../Condition.js";
+import type { BooleanOperation } from "../Condition.js";
 import type { QueryParameter } from "../QueryParameter.js";
 import type { SetOperation } from "../SetQuery.js";
 import type { CardQuery } from "./CardQuery.js";
@@ -21,7 +21,7 @@ export type SupertypeQueryOperand<T extends QueryParameter> =
     | Supertype
     | Supertype[]
     | { card: CardQuery<T> }
-    | SetElementCondition<Supertype, T>
+    | SupertypeCondition<T>
     | { argument: string };
 
 // =================================================================

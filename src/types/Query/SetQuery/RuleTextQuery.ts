@@ -1,5 +1,4 @@
-import type { RuleText } from "../../Characteristics/Characteristic.js";
-import type { BooleanOperation, SetElementCondition } from "../Condition.js";
+import type { BooleanOperation } from "../Condition.js";
 import type { QueryParameter } from "../QueryParameter.js";
 import type { SetOperation } from "../SetQuery.js";
 
@@ -14,7 +13,7 @@ export type RuleTextQuery<T extends QueryParameter> = SetOperation<
     RuleTextQueryOperand<T>
 >;
 export type RuleTextQueryOperand<T extends QueryParameter> =
-    SetElementCondition<RuleText, T>;
+    RuleTextCondition<T>;
 
 // =================================================================
 export function getQueryParameterOfRuleTextConditionOperand(

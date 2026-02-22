@@ -1,6 +1,6 @@
-import type { Characteristics } from "../../Characteristics/Characteristic.js";
-import type { BooleanOperation, ScalarCondition } from "../Condition.js";
+import type { BooleanOperation } from "../Condition.js";
 import type { QueryParameter } from "../QueryParameter.js";
+import type { CharacteristicsCondition } from "../ScalarQuery/CharacteristicsQuery.js";
 import type { SetOperation } from "../SetQuery.js";
 
 // =================================================================
@@ -16,12 +16,12 @@ export type FaceQuery<T extends QueryParameter> = SetOperation<
 export type FaceQueryOperand<T extends QueryParameter> = {
     // FIXME: faceは両面カードだけではない -> Faceも修正
     front?: {
-        printed?: ScalarCondition<Characteristics, T>;
-        charcteristics?: ScalarCondition<Characteristics, T>;
+        printed?: CharacteristicsCondition<T>;
+        charcteristics?: CharacteristicsCondition<T>;
     };
     back?: {
-        printed?: ScalarCondition<Characteristics, T>;
-        charcteristics?: ScalarCondition<Characteristics, T>;
+        printed?: CharacteristicsCondition<T>;
+        charcteristics?: CharacteristicsCondition<T>;
     };
 };
 

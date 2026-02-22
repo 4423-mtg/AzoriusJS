@@ -1,5 +1,5 @@
 import type { Subtype } from "../../Characteristics/Subtype.js";
-import type { BooleanOperation, SetElementCondition } from "../Condition.js";
+import type { BooleanOperation } from "../Condition.js";
 import type { QueryParameter } from "../QueryParameter.js";
 import type { SetOperation } from "../SetQuery.js";
 import type { CardQuery } from "./CardQuery.js";
@@ -24,7 +24,7 @@ export type SubtypeQueryOperand<T extends QueryParameter> =
     | Subtype
     | Subtype[]
     | { card: CardQuery<T> }
-    | SetElementCondition<Subtype, T>
+    | SubtypeCondition<T>
     | { argument: string };
 
 // =================================================================

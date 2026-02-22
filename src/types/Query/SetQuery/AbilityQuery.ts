@@ -1,5 +1,5 @@
 import type { Ability } from "../../GameObject/Ability.js";
-import type { BooleanOperation, SetElementCondition } from "../Condition.js";
+import type { BooleanOperation } from "../Condition.js";
 import type { QueryParameter } from "../QueryParameter.js";
 import type { SetOperation } from "../SetQuery.js";
 import type { CardQuery } from "./CardQuery.js";
@@ -35,7 +35,7 @@ export type AbilityQueryOperand<T extends QueryParameter> =
     | { cards: CardQuery<T> } // カードの能力
     | {
           abilities: AbilityQuery<T>;
-          condition?: SetElementCondition<Ability, T>; // 指定した条件を満たすもの
+          condition?: AbilityCondition<T>; // 指定した条件を満たすもの
       };
 
 // =================================================================

@@ -1,5 +1,5 @@
 import type { CardType } from "../../Characteristics/CardType.js";
-import type { BooleanOperation, SetElementCondition } from "../Condition.js";
+import type { BooleanOperation } from "../Condition.js";
 import type { QueryParameter } from "../QueryParameter.js";
 import type { SetOperation } from "../SetQuery.js";
 import type { CardQuery } from "./CardQuery.js";
@@ -23,7 +23,7 @@ export type CardTypeQueryOperand<T extends QueryParameter> =
     | CardType
     | CardType[]
     | { card: CardQuery<T> }
-    | SetElementCondition<CardType, T>
+    | CardTypeCondition<T>
     | { argument: string };
 
 // =================================================================

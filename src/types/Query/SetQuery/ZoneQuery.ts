@@ -1,9 +1,9 @@
-import type { Player } from "../../GameObject/Player.js";
 import type { Zone, ZoneType } from "../../GameState/Zone.js";
-import type { BooleanOperation, SetElementCondition } from "../Condition.js";
+import type { BooleanOperation } from "../Condition.js";
 import type { QueryParameter } from "../QueryParameter.js";
 import type { SetOperation } from "../SetQuery.js";
 import type { CardQuery } from "./CardQuery.js";
+import type { PlayerCondition } from "./PlayerQuery.js";
 
 // =================================================================
 // ZoneTypeかownerのどちらかは必須にする
@@ -13,7 +13,7 @@ export type ZoneCondition<T extends QueryParameter> = BooleanOperation<
 >;
 export type ZoneConditionOperand<T extends QueryParameter> = {
     type?: ZoneType | ZoneType[];
-    owner?: SetElementCondition<Player, T>;
+    owner?: PlayerCondition<T>;
 };
 
 // =================================================================
@@ -25,7 +25,7 @@ export type ZoneQueryOperand<T extends QueryParameter> =
     | Zone
     | Zone[]
     | { card: CardQuery<T> } // カードが置かれている領域
-    | SetElementCondition<Zone, T>;
+    | ZoneCondition<T>;
 // カードが直前に置かれていた領域とか必要になるかも
 
 // =================================================================

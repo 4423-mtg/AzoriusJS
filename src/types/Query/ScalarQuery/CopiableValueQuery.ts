@@ -1,28 +1,32 @@
-import type { CardType } from "../../Characteristics/CardType.js";
-import type {
-    CardName,
-    ManaCost,
-    NumericalValue,
-    RuleText,
-} from "../../Characteristics/Characteristic.js";
-import type { Color } from "../../Characteristics/Color.js";
-import type { Subtype } from "../../Characteristics/Subtype.js";
-import type { Supertype } from "../../Characteristics/Supertype.js";
-import type {
-    BooleanOperation,
-    ScalarCondition,
-    SetElementCondition,
-} from "../Condition.js";
+import type { BooleanOperation } from "../Condition.js";
 import type { QueryParameter } from "../QueryParameter.js";
-import type { CardNameQuery } from "../SetQuery/CardNameQuery.js";
-import type { CardTypeQuery } from "../SetQuery/CardTypeQuery.js";
-import type { ColorQuery } from "../SetQuery/ColorQuery.js";
+import type {
+    CardNameCondition,
+    CardNameQuery,
+} from "../SetQuery/CardNameQuery.js";
+import type {
+    CardTypeCondition,
+    CardTypeQuery,
+} from "../SetQuery/CardTypeQuery.js";
+import type { ColorCondition, ColorQuery } from "../SetQuery/ColorQuery.js";
 import type { GameObjectQuery } from "../SetQuery/GameObjectQuery.js";
-import type { RuleTextQuery } from "../SetQuery/RuleTextQuery.js";
-import type { SubtypeQuery } from "../SetQuery/SubtypeQuery.js";
-import type { SupertypeQuery } from "../SetQuery/SupertypeQuery.js";
-import type { ManaCostQuery } from "./ManaCostQuery.js";
-import type { NumericalValueQuery } from "./NumericalValueQuery.js";
+import type {
+    RuleTextCondition,
+    RuleTextQuery,
+} from "../SetQuery/RuleTextQuery.js";
+import type {
+    SubtypeCondition,
+    SubtypeQuery,
+} from "../SetQuery/SubtypeQuery.js";
+import type {
+    SupertypeCondition,
+    SupertypeQuery,
+} from "../SetQuery/SupertypeQuery.js";
+import type { ManaCostCondition, ManaCostQuery } from "./ManaCostQuery.js";
+import type {
+    NumericalValueCondition,
+    NumericalValueQuery,
+} from "./NumericalValueQuery.js";
 
 // ===================================================================
 /** コピー可能な値の条件 */
@@ -32,16 +36,16 @@ export type CopiableValueCondition<T extends QueryParameter> = BooleanOperation<
 
 // TODO: 呪文の場合
 export type CopiableValueConditionOperand<T extends QueryParameter> = {
-    name?: SetElementCondition<CardName, T>;
-    manaCost?: ScalarCondition<ManaCost, T>;
-    colorIdentity?: SetElementCondition<Color, T>;
-    cardTypes?: SetElementCondition<CardType, T>;
-    subtypes?: SetElementCondition<Subtype, T>;
-    supertypes?: SetElementCondition<Supertype, T>;
-    text?: SetElementCondition<RuleText, T>;
-    power?: ScalarCondition<NumericalValue, T>;
-    toughness?: ScalarCondition<NumericalValue, T>;
-    loyalty?: ScalarCondition<NumericalValue, T>;
+    name?: CardNameCondition<T>;
+    manaCost?: ManaCostCondition<T>;
+    colorIdentity?: ColorCondition<T>;
+    cardTypes?: CardTypeCondition<T>;
+    subtypes?: SubtypeCondition<T>;
+    supertypes?: SupertypeCondition<T>;
+    text?: RuleTextCondition<T>;
+    power?: NumericalValueCondition<T>;
+    toughness?: NumericalValueCondition<T>;
+    loyalty?: NumericalValueCondition<T>;
 };
 
 // ===================================================================

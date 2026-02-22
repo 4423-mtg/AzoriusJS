@@ -1,44 +1,37 @@
-import type { CardType } from "../../Characteristics/CardType.js";
-import type {
-    CardName,
-    Characteristics,
-    ManaCost,
-    NumericalValue,
-    RuleText,
-} from "../../Characteristics/Characteristic.js";
-import type { Color } from "../../Characteristics/Color.js";
-import type { Subtype } from "../../Characteristics/Subtype.js";
-import type { Supertype } from "../../Characteristics/Supertype.js";
-import type { Ability } from "../../GameObject/Ability.js";
-import type {
-    BooleanOperation,
-    Condition,
-    ScalarCondition,
-    SetElementCondition,
-} from "../Condition.js";
+import type { Characteristics } from "../../Characteristics/Characteristic.js";
+import type { BooleanOperation } from "../Condition.js";
 import type { QueryParameter } from "../QueryParameter.js";
+import type { AbilityCondition } from "../SetQuery/AbilityQuery.js";
+import type { CardNameCondition } from "../SetQuery/CardNameQuery.js";
 import type { CardQuery } from "../SetQuery/CardQuery.js";
+import type { CardTypeCondition } from "../SetQuery/CardTypeQuery.js";
+import type { ColorCondition } from "../SetQuery/ColorQuery.js";
+import type { RuleTextCondition } from "../SetQuery/RuleTextQuery.js";
+import type { SubtypeCondition } from "../SetQuery/SubtypeQuery.js";
+import type { SupertypeCondition } from "../SetQuery/SupertypeQuery.js";
+import type { ManaCostCondition } from "./ManaCostQuery.js";
+import type { NumericalValueCondition } from "./NumericalValueQuery.js";
 
 // ===================================================================
 /** 特性の条件 */
-export type CharacteristicCondition<T extends QueryParameter> =
+export type CharacteristicsCondition<T extends QueryParameter> =
     BooleanOperation<CharacteristicsConditionOperand<T>>;
 
 export type CharacteristicsConditionOperand<T extends QueryParameter> = {
-    name?: SetElementCondition<CardName, T>;
-    manaCost?: ScalarCondition<ManaCost, T>;
-    color?: SetElementCondition<Color, T>;
-    cardType?: SetElementCondition<CardType, T>;
-    subtype?: SetElementCondition<Subtype, T>;
-    supertype?: SetElementCondition<Supertype, T>;
-    text?: SetElementCondition<RuleText, T>; // FIXME:
-    ability?: SetElementCondition<Ability, T>; // FIXME:
-    power?: ScalarCondition<NumericalValue, T>;
-    toughness?: ScalarCondition<NumericalValue, T>;
-    loyalty?: ScalarCondition<NumericalValue, T>;
-    defense?: ScalarCondition<NumericalValue, T>;
-    handModifier?: ScalarCondition<NumericalValue, T>;
-    lifeModifier?: ScalarCondition<NumericalValue, T>;
+    name?: CardNameCondition<T>;
+    manaCost?: ManaCostCondition<T>;
+    color?: ColorCondition<T>;
+    cardType?: CardTypeCondition<T>;
+    subtype?: SubtypeCondition<T>;
+    supertype?: SupertypeCondition<T>;
+    text?: RuleTextCondition<T>; // FIXME:
+    ability?: AbilityCondition<T>; // FIXME:
+    power?: NumericalValueCondition<T>;
+    toughness?: NumericalValueCondition<T>;
+    loyalty?: NumericalValueCondition<T>;
+    defense?: NumericalValueCondition<T>;
+    handModifier?: NumericalValueCondition<T>;
+    lifeModifier?: NumericalValueCondition<T>;
 };
 
 // ===================================================================
@@ -49,7 +42,7 @@ export type CharacteristicQuery<T extends QueryParameter> =
 export type CharacteristicsQueryOperand<T extends QueryParameter> =
     | Characteristics
     | { card: CardQuery<T> } // FIXME: oneOf? merge?
-    | Condition<Characteristics, T>;
+    | CharacteristicsCondition<T>;
 
 // ===================================================================
 export function getQueryParameterOfCharacteristicsConditionOperand(
