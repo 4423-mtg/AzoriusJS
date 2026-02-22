@@ -1,6 +1,11 @@
 import type { Characteristics } from "../../Characteristics/Characteristic.js";
 import type { ScalarCondition } from "../Condition.js";
 import type { QueryParameter } from "../QueryParameter.js";
+import type { SetOperation } from "../SetQuery.js";
+
+export type FaceQuery<T extends QueryParameter> = SetOperation<
+    FaceQueryOperand<T>
+>;
 
 export type FaceConditionOperand<T extends QueryParameter> = {};
 export type FaceQueryOperand<T extends QueryParameter> = {

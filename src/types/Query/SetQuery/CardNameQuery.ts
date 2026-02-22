@@ -1,18 +1,22 @@
 import type { CardName } from "../../Characteristics/Characteristic.js";
-import type { Card } from "../../GameObject/Card/Card.js";
 import type { SetElementCondition } from "../Condition.js";
 import type { QueryParameter } from "../QueryParameter.js";
-import type { SetQuery } from "../SetQuery.js";
+import type { SetOperation } from "../SetQuery.js";
+import type { CardQuery } from "./CardQuery.js";
+
+export type CardNameQuery<T extends QueryParameter> = SetOperation<
+    CardNameQueryOperand<T>
+>;
 
 export type CardNameConditionOperand<T extends QueryParameter> = {
     type: "oneOf" | "allOf" | "equal";
-    names: SetQuery<CardName, T>;
+    names: CardNameQuery<T>;
 };
 export type CardNameQueryOperand<T extends QueryParameter> =
     | CardName
     | CardName[]
     | {
-          card: SetQuery<Card, T>;
+          card: CardQuery<T>;
       }
     | SetElementCondition<CardName, T>
     | { argument: string };

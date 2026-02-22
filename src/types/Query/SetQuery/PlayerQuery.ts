@@ -3,24 +3,27 @@ import type { Player } from "../../GameObject/Player.js";
 import type { PlayerInfo } from "../../GameState/Match.js";
 import type { SetElementCondition } from "../Condition.js";
 import type { QueryParameter } from "../QueryParameter.js";
-import type { SetQuery } from "../SetQuery.js";
-// =========================================================
-// MARK: Player
-// =================================================================
+import type { SetOperation } from "../SetQuery.js";
+import type { GameObjectQuery } from "./GameObjectQuery.js";
+
+export type PlayerQuery<T extends QueryParameter> = SetOperation<
+    PlayerQueryOperand<T>
+>;
+
 export type PlayerConditionOperand<T extends QueryParameter> =
     // オーナー、コントローラー
     | {
           type: "owner" | "controller";
-          object: SetQuery<GameObject, T>;
+          object: GameObjectQuery<T>;
       }
     // 対戦相手、チームメイト、ターン順で次、ターン順で前
     | {
           type: "opponent" | "teamMate" | "next" | "previous";
-          player: SetQuery<Player, T>;
+          player: PlayerQuery<T>;
       }
     | { type: "isMonarch" | "startingPlayer" } // 統治者、開始プレイヤー
     | { info: PlayerInfo } // TODO: プレイヤーID？
-    | { type: "oneOf" | "allOf" | "equal"; players: SetQuery<Player, T> };
+    | { type: "oneOf" | "allOf" | "equal"; players: PlayerQuery<T> };
 
 export type PlayerQueryOperand<T extends QueryParameter> =
     | Player

@@ -1,9 +1,8 @@
 import type { ManaCost } from "../../Characteristics/Characteristic.js";
 import type { ManaSymbol } from "../../Characteristics/Symbol.js";
-import type { Card } from "../../GameObject/Card/Card.js";
 import type { QueryParameter } from "../QueryParameter.js";
 import type { ScalarQuery } from "../ScalarQuery.js";
-import type { SetQuery } from "../SetQuery.js";
+import type { CardQuery } from "../SetQuery/CardQuery.js";
 
 /** マナコストの条件 */
 export type ManaCostConditionOperand<T extends QueryParameter> = ScalarQuery<
@@ -14,7 +13,7 @@ export type ManaCostConditionOperand<T extends QueryParameter> = ScalarQuery<
 /** マナコストのクエリ */
 export type ManaCostQueryOperand<T extends QueryParameter> =
     | ManaSymbol[]
-    | { card: SetQuery<Card, T> };
+    | { card: CardQuery<T> };
 //
 
 export function getQueryParameterOfManaCostConditionOperand(

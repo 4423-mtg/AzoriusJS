@@ -1,20 +1,24 @@
 import type { CardType } from "../../Characteristics/CardType.js";
-import type { Card } from "../../GameObject/Card/Card.js";
 import type { SetElementCondition } from "../Condition.js";
 import type { QueryParameter } from "../QueryParameter.js";
-import type { SetQuery } from "../SetQuery.js";
+import type { SetOperation } from "../SetQuery.js";
+import type { CardQuery } from "./CardQuery.js";
+
+export type CardTypeQuery<T extends QueryParameter> = SetOperation<
+    CardTypeQueryOperand<T>
+>;
 
 /** カードタイプの条件 */
 export type CardTypeConditionOperand<T extends QueryParameter> = {
     type: "oneOf" | "allOf" | "equal";
-    cardType: SetQuery<CardType, T>;
+    cardType: CardTypeQuery<T>;
 };
 
 /** カードタイプのクエリ */
 export type CardTypeQueryOperand<T extends QueryParameter> =
     | CardType
     | CardType[]
-    | { card: SetQuery<Card, T> }
+    | { card: CardQuery<T> }
     | SetElementCondition<CardType, T>
     | { argument: string };
 

@@ -11,6 +11,8 @@
     - ~~Queryも見直す~~ ☑️
   - 文章変更効果
 - TODO/FIXMEを取る
+- isScalarQueryでscalarTypeを区別する必要はないのではないか？
+  - elementType, SetQueryを消し、CardQuery等が直接SetOperationを参照するようにする
 
 - その他
   - Spell.ts

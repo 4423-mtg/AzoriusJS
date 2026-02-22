@@ -1,10 +1,9 @@
 import type { NumericalValue } from "../../Characteristics/Characteristic.js";
-import type { Color } from "../../Characteristics/Color.js";
-import type { Card } from "../../GameObject/Card/Card.js";
-import type { GameObject } from "../../GameObject/GameObject.js";
 import type { QueryParameter } from "../QueryParameter.js";
 import type { ScalarQuery } from "../ScalarQuery.js";
-import type { SetQuery } from "../SetQuery.js";
+import type { CardQuery } from "../SetQuery/CardQuery.js";
+import type { ColorQuery } from "../SetQuery/ColorQuery.js";
+import type { GameObjectQuery } from "../SetQuery/GameObjectQuery.js";
 import type { CounterCondition } from "./CounterOnObjectQuery.js";
 
 /** 数に対して適用する条件 */
@@ -33,19 +32,19 @@ export type NumericalValueReference<T extends QueryParameter> =
               | "defense"
               | "handModifier"
               | "lifeModifier";
-          card: SetQuery<Card, T>;
+          card: CardQuery<T>;
       }
     | {
           valueType: "devotion";
-          card: SetQuery<Card, T>;
-          colors: SetQuery<Color, T>;
+          card: CardQuery<T>;
+          colors: ColorQuery<T>;
       }
     // オブジェクトの個数
-    | { valueType: "numberOfObject"; objects: SetQuery<GameObject, T> }
+    | { valueType: "numberOfObject"; objects: GameObjectQuery<T> }
     // カウンターの数
     | {
           valueType: "numberOfCounter";
-          objects: SetQuery<Card, T>;
+          objects: CardQuery<T>;
           kindOfCounter?: CounterCondition<T>;
       }
     // 履歴 このターンに〇〇した数など TODO:

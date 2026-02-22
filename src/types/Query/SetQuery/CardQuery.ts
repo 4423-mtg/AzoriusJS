@@ -10,6 +10,11 @@ import type { QueryParameter } from "../QueryParameter.js";
 import type { CounterQuery } from "../ScalarQuery/CounterOnObjectQuery.js";
 import type { MarkerQuery } from "../ScalarQuery/MarkerQuery.js";
 import type { StickerQuery } from "../ScalarQuery/StickerQuery.js";
+import type { SetOperation } from "../SetQuery.js";
+
+export type CardQuery<T extends QueryParameter> = SetOperation<
+    CardQueryOperand<T>
+>;
 
 // FIXME: 継続的効果は一般に GameObject 全般に効果を及ぼすが、
 // 特性を変更する効果は Card にのみ影響するので、 CardQuery を指定したい場合が有る

@@ -10,14 +10,13 @@ import type { Color } from "../../Characteristics/Color.js";
 import type { Subtype } from "../../Characteristics/Subtype.js";
 import type { Supertype } from "../../Characteristics/Supertype.js";
 import type { Ability } from "../../GameObject/Ability.js";
-import type { Card } from "../../GameObject/Card/Card.js";
 import type {
     Condition,
     ScalarCondition,
     SetElementCondition,
 } from "../Condition.js";
 import type { QueryParameter } from "../QueryParameter.js";
-import type { SetQuery } from "../SetQuery.js";
+import type { CardQuery } from "../SetQuery/CardQuery.js";
 
 /** 特性の条件 */
 export type CharacteristicsConditionOperand<T extends QueryParameter> = {
@@ -40,7 +39,7 @@ export type CharacteristicsConditionOperand<T extends QueryParameter> = {
 /** 特性のクエリ */
 export type CharacteristicsQueryOperand<T extends QueryParameter> =
     | Characteristics
-    | { card: SetQuery<Card, T> } // FIXME: oneOf? merge?
+    | { card: CardQuery<T> } // FIXME: oneOf? merge?
     | Condition<Characteristics, T>;
 
 // ===================================================================

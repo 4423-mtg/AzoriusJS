@@ -2,19 +2,24 @@ import type { Subtype } from "../../Characteristics/Subtype.js";
 import type { Card } from "../../GameObject/Card/Card.js";
 import type { SetElementCondition } from "../Condition.js";
 import type { QueryParameter } from "../QueryParameter.js";
-import type { SetQuery } from "../SetQuery.js";
+import type { SetOperation } from "../SetQuery.js";
+import type { CardQuery } from "./CardQuery.js";
+
+export type SubtypeQuery<T extends QueryParameter> = SetOperation<
+    SubtypeQueryOperand<T>
+>;
 
 /** サブタイプの条件 */
 export type SubtypeConditionOperand<T extends QueryParameter> = {
     type: "oneOf" | "allOf" | "equal";
-    subtype: SetQuery<Subtype, T>;
+    subtype: SubtypeQuery<T>;
 };
 
 /** サブタイプのクエリ */
 export type SubtypeQueryOperand<T extends QueryParameter> =
     | Subtype
     | Subtype[]
-    | { card: SetQuery<Card, T> }
+    | { card: CardQuery<T> }
     | SetElementCondition<Subtype, T>
     | { argument: string };
 

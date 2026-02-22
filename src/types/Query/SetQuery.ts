@@ -77,6 +77,7 @@ import {
     IntersectionOfQueryParameters,
     type QueryParameter,
 } from "./QueryParameter.js";
+import type { FaceQueryOperand } from "./SetQuery/FaceQuery.js";
 
 // =================================================================
 // MARK: SetElementType
@@ -149,27 +150,27 @@ export function isSetElementType(arg: unknown): arg is SetElementType {
 // =================================================================
 
 /** 集合のクエリ */
-export type SetQuery<T extends SetElementType, U extends QueryParameter> = {
-    elementType: SetElementTypeId<T>;
-    query: SetOperation<SetQueryOperand<T, U>>;
-};
+// export type SetQuery<T extends SetElementType, U extends QueryParameter> = {
+//     elementType: SetElementTypeId<T>;
+//     query: SetOperation<SetQueryOperand<T, U>>;
+// };
 
-export function getQueryParameterOfSetQuery(
-    setQuery: SetQuery<SetElementType, QueryParameter>,
-): QueryParameter {
-    return getQueryParameterOfSetOperation(setQuery.query);
-}
-export function isSetQuery(
-    arg: unknown,
-): arg is SetQuery<SetElementType, QueryParameter> {
-    return (
-        isObject(arg) &&
-        "elementType" in arg &&
-        isSetElementTypeId(arg.elementType) &&
-        "query" in arg &&
-        isSetOperation(arg.query)
-    );
-}
+// export function getQueryParameterOfSetQuery(
+//     setQuery: SetQuery<SetElementType, QueryParameter>,
+// ): QueryParameter {
+//     return getQueryParameterOfSetOperation(setQuery.query);
+// }
+// export function isSetQuery(
+//     arg: unknown,
+// ): arg is SetQuery<SetElementType, QueryParameter> {
+//     return (
+//         isObject(arg) &&
+//         "elementType" in arg &&
+//         isSetElementTypeId(arg.elementType) &&
+//         "query" in arg &&
+//         isSetOperation(arg.query)
+//     );
+// }
 
 // =================================================================
 // MARK: SetOperation
@@ -200,6 +201,8 @@ export type SetQueryOperand<
     ? AbilityQueryOperand<U>
     : T extends RuleText
     ? RuleTextQueryOperand<U>
+    : T extends Face
+    ? FaceQueryOperand<U>
     : never;
 
 export function getQueryParameterOfSetQueryOperand(

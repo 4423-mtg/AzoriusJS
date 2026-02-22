@@ -23,7 +23,6 @@ import {
     getQueryParameterOfSetQuery,
     isSetQuery,
     type SetElementType,
-    type SetQuery,
 } from "./SetQuery.js";
 
 // 種類別（レイヤー）に関してはこれでOK。
@@ -136,7 +135,7 @@ export function IntersectionOfQueryParameters(
 /** クエリのパラメータを取得する。 */
 export function getQueryParameter(
     arg:
-        | SetQuery<SetElementType, QueryParameter>
+        | SetQuery<SetElementType, QueryParameter> // FIXME:
         | ScalarQuery<ScalarType, QueryParameter>
         | Condition<SetElementType, QueryParameter>,
 ): QueryParameter {
