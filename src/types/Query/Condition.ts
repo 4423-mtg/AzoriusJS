@@ -140,7 +140,7 @@ export function isConditionTargetType(
 }
 
 // ========================================================================
-// MARK: Condition
+// MARK: BooleanQueryOperand
 // ========================================================================
 /** 条件のオペランド */
 export type BooleanQueryOperand<
@@ -183,6 +183,15 @@ export type BooleanQueryOperand<
     ? StatusConditionOperand<U>
     : never;
 
+export function isBooleanQueryOperand(
+    arg: unknown,
+): arg is BooleanQueryOperand<ConditionTargetType, QueryParameter> {
+    return false;
+}
+
+// ========================================================================
+// MARK: BooleanOperation
+// ========================================================================
 /** 条件演算 */
 type _Not<T extends BooleanQueryOperand<ConditionTargetType, QueryParameter>> =
     { operation: "not"; operand: T };
@@ -195,7 +204,6 @@ type _Or<T extends BooleanQueryOperand<ConditionTargetType, QueryParameter>> = {
 export type BooleanOperation<
     T extends BooleanQueryOperand<ConditionTargetType, QueryParameter>,
 > = T | _Not<T> | _And<T> | _Or<T>;
-
 // A and (B and C) = A and B and C
 // A and (B or C) = (A and B) or (A and C)
 // A and (not B)
@@ -212,12 +220,32 @@ export type BooleanOperation<
 // A and (B or ((not C) and D))
 // = (A and B) or (A and (not C) and D)
 
-export function getQueryParameterOfCondition(
-    arg: Condition<ConditionTargetType, QueryParameter>,
-): QueryParameter {
-    return getQueryParameterOfBooleanOperation(arg.condition);
+function isNot(
+    arg: unknown,
+): arg is _Not<BooleanQueryOperand<ConditionTargetType, QueryParameter>> {
+    return false;
+}
+function isAnd(
+    arg: unknown,
+): arg is _And<BooleanQueryOperand<ConditionTargetType, QueryParameter>> {
+    return false;
+}
+function isOr(
+    arg: unknown,
+): arg is _Or<BooleanQueryOperand<ConditionTargetType, QueryParameter>> {
+    return false;
+}
+export function isBooleanOperation(
+    arg: unknown,
+): arg is BooleanOperation<
+    BooleanQueryOperand<ConditionTargetType, QueryParameter>
+> {
+    return false;
 }
 
+// =================================================================
+// MARK: getQueryParameter
+// =================================================================
 /** BooleanOperationのパラメータ */
 export function getQueryParameterOfBooleanOperation(
     arg: BooleanOperation<
@@ -304,109 +332,4 @@ export function getQueryParameterOfBooleanQueryOperand(
     } else {
         throw new Error(arg);
     }
-}
-
-// MARK: Scalar
-/** 条件のオペランド */
-export type ScalarConditionOperand<
-    T extends ScalarType,
-    U extends QueryParameter,
-> = T extends Characteristics
-    ? CharacteristicsConditionOperand<U>
-    : T extends CopiableValue
-    ? CopiableValueConditionOperand<U>
-    : T extends ManaCost
-    ? ManaCostConditionOperand<U>
-    : T extends NumericalValue
-    ? NumericalValueConditionOperand<U>
-    : T extends Status
-    ? StatusConditionOperand<U>
-    : never;
-
-// =================================================================
-// MARK: SetElement
-// =================================================================
-/** 条件指定のオペランド */
-export type SetElementConditionOperand<
-    T extends SetElementType,
-    U extends QueryParameter,
-> = T extends GameObject
-    ? GameObjectConditionOperand<U>
-    : T extends Card
-    ? CardConditionOperand<U>
-    : T extends Player
-    ? PlayerConditionOperand<U>
-    : T extends CardName
-    ? CardNameConditionOperand<U>
-    : T extends CardType
-    ? CardTypeConditionOperand<U>
-    : T extends Subtype
-    ? SubtypeConditionOperand<U>
-    : T extends Supertype
-    ? SupertypeConditionOperand<U>
-    : T extends Color
-    ? ColorConditionOperand<U>
-    : T extends Zone
-    ? ZoneConditionOperand<U>
-    : T extends Ability
-    ? AbilityConditionOperand<U>
-    : T extends RuleText
-    ? RuleTextConditionOperand<U>
-    : never;
-
-// =================================================================
-// MARK: 型ガード
-// =================================================================
-export function isCondition(
-    arg: unknown,
-): arg is Condition<ConditionTargetType, QueryParameter> {
-    return false;
-}
-export function isBooleanQueryOperand(
-    arg: unknown,
-): arg is BooleanQueryOperand<ConditionTargetType, QueryParameter> {
-    return false;
-}
-function isNot(
-    arg: unknown,
-): arg is _Not<BooleanQueryOperand<ConditionTargetType, QueryParameter>> {
-    return false;
-}
-function isAnd(
-    arg: unknown,
-): arg is _And<BooleanQueryOperand<ConditionTargetType, QueryParameter>> {
-    return false;
-}
-function isOr(
-    arg: unknown,
-): arg is _Or<BooleanQueryOperand<ConditionTargetType, QueryParameter>> {
-    return false;
-}
-export function isBooleanOperation(
-    arg: unknown,
-): arg is BooleanOperation<
-    BooleanQueryOperand<ConditionTargetType, QueryParameter>
-> {
-    return false;
-}
-export function isScalarCondition(
-    arg: unknown,
-): arg is ScalarCondition<ScalarType, QueryParameter> {
-    return false;
-}
-export function isScalarConditionOperand(
-    arg: unknown,
-): arg is ScalarConditionOperand<ScalarType, QueryParameter> {
-    return false;
-}
-export function isSetElementCondition(
-    arg: unknown,
-): arg is SetElementCondition<SetElementType, QueryParameter> {
-    return false;
-}
-
-export function isSetElementConditionOperand(
-    arg: unknown,
-): arg is SetElementConditionOperand<SetElementType, QueryParameter> {
-    return false;
 }

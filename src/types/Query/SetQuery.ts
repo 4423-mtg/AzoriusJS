@@ -279,6 +279,7 @@ function getQueryParameterOfDifference(
 
 // =================================================================
 // MARK: SetOperation
+// =================================================================
 /** 集合演算 */
 export type SetOperation<
     T extends SetQueryOperand<SetElementType, QueryParameter>,
