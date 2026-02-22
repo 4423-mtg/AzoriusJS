@@ -153,37 +153,22 @@ export function isSetElementType(arg: unknown): arg is SetElementType {
 // MARK: SetQueryOperand
 // =================================================================
 /** 集合のクエリの１要素 */
-export type SetQueryOperand<
-    T extends SetElementType,
-    U extends QueryParameter,
-> = T extends Card
-    ? CardQueryOperand<U>
-    : T extends Player
-    ? PlayerQueryOperand<U>
-    : T extends CardName
-    ? CardNameQueryOperand<U>
-    : T extends CardType // FIXME: CardTypeはstringなせいでCardNameに引っかかっている
-    ? CardTypeQueryOperand<U>
-    : T extends Subtype
-    ? SubtypeQueryOperand<U>
-    : T extends Supertype
-    ? SupertypeQueryOperand<U>
-    : T extends Color
-    ? ColorQueryOperand<U>
-    : T extends Zone
-    ? ZoneQueryOperand<U>
-    : T extends Ability
-    ? AbilityQueryOperand<U>
-    : T extends RuleText
-    ? RuleTextQueryOperand<U>
-    : T extends Face
-    ? FaceQueryOperand<U>
-    : T extends GameObject // GameObjectは親型なので後で評価する
-    ? GameObjectQueryOperand<U>
-    : never;
+export type SetQueryOperand<T extends QueryParameter> =
+    | CardQueryOperand<T>
+    | PlayerQueryOperand<T>
+    | CardNameQueryOperand<T>
+    | CardTypeQueryOperand<T>
+    | SubtypeQueryOperand<T>
+    | SupertypeQueryOperand<T>
+    | ColorQueryOperand<T>
+    | ZoneQueryOperand<T>
+    | AbilityQueryOperand<T>
+    | RuleTextQueryOperand<T>
+    | FaceQueryOperand<T>
+    | GameObjectQueryOperand<T>;
 
 export function getQueryParameterOfSetQueryOperand(
-    operand: SetQueryOperand<SetElementType, QueryParameter>,
+    operand: SetQueryOperand<QueryParameter>,
 ): QueryParameter {
     if (isGameObjectQueryOperand(operand)) {
         return getQueryParameterOfGameObjectQueryOperand(operand);
@@ -217,7 +202,7 @@ export function getQueryParameterOfSetQueryOperand(
 // MARK: Intersection
 /** 共通部分 */
 export type _Intersection<
-    T extends SetQueryOperand<SetElementType, QueryParameter>, // QueryParameterは指定可能にすべき？
+    T extends SetQueryOperand<QueryParameter>, // QueryParameterは指定可能にすべき？
 > = {
     operation: "intersection";
     operand: T[];
@@ -226,9 +211,7 @@ export type _Intersection<
 // A & (B + C) = (A & B) + (A & C) ☑️
 // A & (B - C) = (A & B) - C
 function getQueryParameterOfIntersection(
-    intersection: _Intersection<
-        SetQueryOperand<SetElementType, QueryParameter>
-    >,
+    intersection: _Intersection<SetQueryOperand<QueryParameter>>,
 ): QueryParameter {
     return IntersectionOfQueryParameters(
         intersection.operand.map((operand) =>
@@ -239,9 +222,7 @@ function getQueryParameterOfIntersection(
 
 // MARK: Difference
 /** 差集合 */
-export type _Difference<
-    T extends SetQueryOperand<SetElementType, QueryParameter>,
-> = {
+export type _Difference<T extends SetQueryOperand<QueryParameter>> = {
     operation: "difference";
     leftOperand: T | _Intersection<T>;
     rightOperand: T | _Intersection<T> | (T | _Intersection<T>)[]; // FIXME: leftとrightの関係
@@ -253,7 +234,7 @@ export type _Difference<
 // (A & B) - C = (A - C) & (B - C)
 // (A - B) - C = A - B - C ☑️
 function getQueryParameterOfDifference(
-    difference: _Difference<SetQueryOperand<SetElementType, QueryParameter>>,
+    difference: _Difference<SetQueryOperand<QueryParameter>>,
 ): QueryParameter {
     const qp_left = isIntersection(difference.leftOperand)
         ? getQueryParameterOfIntersection(difference.leftOperand)
@@ -282,7 +263,7 @@ function getQueryParameterOfDifference(
 // =================================================================
 /** 集合演算 */
 export type SetOperation<
-    T extends SetQueryOperand<SetElementType, QueryParameter>,
+    T extends SetQueryOperand<QueryParameter>, // FIXME: SetElementTypeを使っていない
 > =
     | T
     | _Intersection<T>
@@ -290,7 +271,7 @@ export type SetOperation<
     | (T | _Intersection<T> | _Difference<T>)[]; // unionとして解釈する
 
 export function getQueryParameterOfSetOperation(
-    operation: SetOperation<SetQueryOperand<SetElementType, QueryParameter>>,
+    operation: SetOperation<SetQueryOperand<QueryParameter>>,
 ): QueryParameter {
     if (isSetQueryOperand(operation)) {
         return getQueryParameterOfSetQueryOperand(operation);
@@ -315,13 +296,13 @@ export function getQueryParameterOfSetOperation(
 
 export function isSetQueryOperand(
     arg: unknown,
-): arg is SetQueryOperand<SetElementType, QueryParameter> {
+): arg is SetQueryOperand<QueryParameter> {
     return false;
 }
 
 function isIntersection(
     arg: unknown,
-): arg is _Intersection<SetQueryOperand<SetElementType, QueryParameter>> {
+): arg is _Intersection<SetQueryOperand<QueryParameter>> {
     return (
         isObject(arg) &&
         "operation" in arg &&
@@ -333,13 +314,13 @@ function isIntersection(
 
 function isDifference(
     arg: unknown,
-): arg is _Difference<SetQueryOperand<SetElementType, QueryParameter>> {
+): arg is _Difference<SetQueryOperand<QueryParameter>> {
     return false;
 }
 
 export function isSetOperation(
     arg: unknown,
-): arg is SetOperation<SetQueryOperand<SetElementType, QueryParameter>> {
+): arg is SetOperation<SetQueryOperand<QueryParameter>> {
     return false;
 }
 

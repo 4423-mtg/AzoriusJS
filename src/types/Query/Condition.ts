@@ -1,20 +1,3 @@
-import type { CardType } from "../Characteristics/CardType.js";
-import type {
-    CardName,
-    Characteristics,
-    CopiableValue,
-    ManaCost,
-    NumericalValue,
-    RuleText,
-} from "../Characteristics/Characteristic.js";
-import type { Color } from "../Characteristics/Color.js";
-import type { Subtype } from "../Characteristics/Subtype.js";
-import type { Supertype } from "../Characteristics/Supertype.js";
-import type { Ability } from "../GameObject/Ability.js";
-import type { Card, Face, Status } from "../GameObject/Card/Card.js";
-import type { GameObject } from "../GameObject/GameObject.js";
-import type { Player } from "../GameObject/Player.js";
-import type { Zone } from "../GameState/Zone.js";
 import {
     IntersectionOfQueryParameters,
     type QueryParameter,
@@ -143,49 +126,30 @@ export function isConditionTargetType(
 // MARK: BooleanQueryOperand
 // ========================================================================
 /** 条件のオペランド */
-export type BooleanQueryOperand<
-    T extends ConditionTargetType,
-    U extends QueryParameter,
-> = T extends Ability // SetElement
-    ? AbilityConditionOperand<U>
-    : T extends CardName
-    ? CardNameConditionOperand<U>
-    : T extends Card
-    ? CardConditionOperand<U>
-    : T extends CardType
-    ? CardTypeConditionOperand<U>
-    : T extends Color
-    ? ColorConditionOperand<U>
-    : T extends Face
-    ? FaceConditionOperand<U>
-    : T extends Player
-    ? PlayerConditionOperand<U>
-    : T extends RuleText
-    ? RuleTextConditionOperand<U>
-    : T extends Subtype
-    ? SubtypeConditionOperand<U>
-    : T extends Supertype
-    ? SupertypeConditionOperand<U>
-    : T extends Zone
-    ? ZoneConditionOperand<U>
-    : T extends GameObject
-    ? GameObjectConditionOperand<U>
-    : // Scalar
-    T extends NumericalValue
-    ? NumericalValueConditionOperand<U>
-    : T extends ManaCost
-    ? ManaCostConditionOperand<U>
-    : T extends Characteristics
-    ? CharacteristicsConditionOperand<U>
-    : T extends CopiableValue
-    ? CopiableValueConditionOperand<U>
-    : T extends Status
-    ? StatusConditionOperand<U>
-    : never;
+export type BooleanQueryOperand<T extends QueryParameter> =
+    // SetElement
+    | AbilityConditionOperand<T>
+    | CardNameConditionOperand<T>
+    | CardConditionOperand<T>
+    | CardTypeConditionOperand<T>
+    | ColorConditionOperand<T>
+    | FaceConditionOperand<T>
+    | PlayerConditionOperand<T>
+    | RuleTextConditionOperand<T>
+    | SubtypeConditionOperand<T>
+    | SupertypeConditionOperand<T>
+    | ZoneConditionOperand<T>
+    | GameObjectConditionOperand<T>
+    // Scalar
+    | NumericalValueConditionOperand<T>
+    | ManaCostConditionOperand<T>
+    | CharacteristicsConditionOperand<T>
+    | CopiableValueConditionOperand<T>
+    | StatusConditionOperand<T>;
 
 export function isBooleanQueryOperand(
     arg: unknown,
-): arg is BooleanQueryOperand<ConditionTargetType, QueryParameter> {
+): arg is BooleanQueryOperand<QueryParameter> {
     return false;
 }
 
@@ -193,17 +157,20 @@ export function isBooleanQueryOperand(
 // MARK: BooleanOperation
 // ========================================================================
 /** 条件演算 */
-type _Not<T extends BooleanQueryOperand<ConditionTargetType, QueryParameter>> =
-    { operation: "not"; operand: T };
-type _And<T extends BooleanQueryOperand<ConditionTargetType, QueryParameter>> =
-    (T | _Not<T>)[];
-type _Or<T extends BooleanQueryOperand<ConditionTargetType, QueryParameter>> = {
+type _Not<T extends BooleanQueryOperand<QueryParameter>> = {
+    operation: "not";
+    operand: T;
+};
+type _And<T extends BooleanQueryOperand<QueryParameter>> = (T | _Not<T>)[];
+type _Or<T extends BooleanQueryOperand<QueryParameter>> = {
     operaion: "or";
     operand: (T | _And<T> | _Not<T>)[];
 };
-export type BooleanOperation<
-    T extends BooleanQueryOperand<ConditionTargetType, QueryParameter>,
-> = T | _Not<T> | _And<T> | _Or<T>;
+export type BooleanOperation<T extends BooleanQueryOperand<QueryParameter>> =
+    | T
+    | _Not<T>
+    | _And<T>
+    | _Or<T>;
 // A and (B and C) = A and B and C
 // A and (B or C) = (A and B) or (A and C)
 // A and (not B)
@@ -220,26 +187,18 @@ export type BooleanOperation<
 // A and (B or ((not C) and D))
 // = (A and B) or (A and (not C) and D)
 
-function isNot(
-    arg: unknown,
-): arg is _Not<BooleanQueryOperand<ConditionTargetType, QueryParameter>> {
+function isNot(arg: unknown): arg is _Not<BooleanQueryOperand<QueryParameter>> {
     return false;
 }
-function isAnd(
-    arg: unknown,
-): arg is _And<BooleanQueryOperand<ConditionTargetType, QueryParameter>> {
+function isAnd(arg: unknown): arg is _And<BooleanQueryOperand<QueryParameter>> {
     return false;
 }
-function isOr(
-    arg: unknown,
-): arg is _Or<BooleanQueryOperand<ConditionTargetType, QueryParameter>> {
+function isOr(arg: unknown): arg is _Or<BooleanQueryOperand<QueryParameter>> {
     return false;
 }
 export function isBooleanOperation(
     arg: unknown,
-): arg is BooleanOperation<
-    BooleanQueryOperand<ConditionTargetType, QueryParameter>
-> {
+): arg is BooleanOperation<BooleanQueryOperand<QueryParameter>> {
     return false;
 }
 
@@ -248,9 +207,7 @@ export function isBooleanOperation(
 // =================================================================
 /** BooleanOperationのパラメータ */
 export function getQueryParameterOfBooleanOperation(
-    arg: BooleanOperation<
-        BooleanQueryOperand<ConditionTargetType, QueryParameter>
-    >,
+    arg: BooleanOperation<BooleanQueryOperand<QueryParameter>>,
 ): QueryParameter {
     if (isBooleanQueryOperand(arg)) {
         return getQueryParameterOfBooleanQueryOperand(arg);
@@ -265,12 +222,12 @@ export function getQueryParameterOfBooleanOperation(
     }
 }
 function getQueryParameterOfNot(
-    arg: _Not<BooleanQueryOperand<ConditionTargetType, QueryParameter>>,
+    arg: _Not<BooleanQueryOperand<QueryParameter>>,
 ): QueryParameter {
     return getQueryParameterOfBooleanQueryOperand(arg.operand);
 }
 function getQueryParameterOfAnd(
-    arg: _And<BooleanQueryOperand<ConditionTargetType, QueryParameter>>,
+    arg: _And<BooleanQueryOperand<QueryParameter>>,
 ): QueryParameter {
     return IntersectionOfQueryParameters(
         arg.map((e) =>
@@ -281,7 +238,7 @@ function getQueryParameterOfAnd(
     );
 }
 function getQueryParameterOfOr(
-    arg: _Or<BooleanQueryOperand<ConditionTargetType, QueryParameter>>,
+    arg: _Or<BooleanQueryOperand<QueryParameter>>,
 ): QueryParameter {
     return IntersectionOfQueryParameters(
         arg.operand.map((e) =>
@@ -295,7 +252,7 @@ function getQueryParameterOfOr(
 }
 
 export function getQueryParameterOfBooleanQueryOperand(
-    arg: BooleanQueryOperand<ConditionTargetType, QueryParameter>,
+    arg: BooleanQueryOperand<QueryParameter>,
 ): QueryParameter {
     if (isGameObjectConditionOperand(arg)) {
         return getQueryParameterOfGameObjectConditionOperand(arg);

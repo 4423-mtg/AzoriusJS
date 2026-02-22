@@ -80,28 +80,20 @@ export function isScalarType(arg: unknown): arg is ScalarType {
 // =================================================================
 // MARK: ScalarQueryOperand
 // =================================================================
-/** クエリのオペランド */
-export type ScalarQueryOperand<
-    T extends ScalarType,
-    U extends QueryParameter,
-> = T extends Characteristics
-    ? CharacteristicsQueryOperand<U>
-    : T extends CopiableValue
-    ? CopiableValueQueryOperand<U>
-    : T extends ManaCost
-    ? ManaCostQueryOperand<U>
-    : T extends NumericalValue
-    ? NumericalValueQueryOperand<U>
-    : T extends Status
-    ? StatusQueryOperand<U>
-    : never;
+/** クエリのオペランド */ // 不要？
+export type ScalarQueryOperand<T extends QueryParameter> =
+    | CharacteristicsQueryOperand<T>
+    | CopiableValueQueryOperand<T>
+    | ManaCostQueryOperand<T>
+    | NumericalValueQueryOperand<T>
+    | StatusQueryOperand<T>;
 
 // =================================================================
 /** 型ガード */
 export function isScalarQueryOperand<T extends ScalarTypeId>(
     arg: unknown,
     typeId: T | undefined,
-): arg is ScalarQueryOperand<ScalarType<T>, QueryParameter> {
+): arg is ScalarQueryOperand<QueryParameter> {
     if (typeId === undefined) {
         return (
             isCharacteristicsQueryOperand(arg) ||
@@ -127,7 +119,7 @@ export function isScalarQueryOperand<T extends ScalarTypeId>(
 
 /** クエリのパラメータ */
 export function getQueryParameterOfScalarQueryOperand(
-    arg: ScalarQueryOperand<ScalarType, QueryParameter>,
+    arg: ScalarQueryOperand<QueryParameter>,
 ): QueryParameter {
     if (isCharacteristicsQueryOperand(arg)) {
         return getQueryParameterOfCharacteristicsQueryOperand(arg);
