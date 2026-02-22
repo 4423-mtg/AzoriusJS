@@ -5,6 +5,7 @@ import type { ColorQuery } from "../SetQuery/ColorQuery.js";
 import type { GameObjectQuery } from "../SetQuery/GameObjectQuery.js";
 import type { CounterCondition } from "./CounterOnObjectQuery.js";
 import type { BooleanOperation } from "../Condition.js";
+import type { PlayerQuery } from "../SetQuery/PlayerQuery.js";
 
 // =================================================================
 /** 数に対して適用する条件 */
@@ -21,8 +22,9 @@ export type NumericalValueConditionOperand<T extends QueryParameter> =
 /**  */
 
 // =================================================================
+/** クエリ */
 export type NumericalValueQuery<T extends QueryParameter> =
-    NumericalValueQueryOperand<T>;
+    NumericalOperation<T>;
 
 export type NumericalValueReference<T extends QueryParameter> =
     // TODO: GameObject (Spellなど) 対象の数など
@@ -53,25 +55,21 @@ export type NumericalValueReference<T extends QueryParameter> =
     // カウンターの数
     | {
           valueType: "numberOfCounter";
-          objects: CardQuery<T>;
+          objects: CardQuery<T> | PlayerQuery<T>;
           kindOfCounter?: CounterCondition<T>;
+      }
+    // ライフ
+    | {
+          valueType: "life";
+          player: PlayerQuery<T>;
       }
     // 履歴 このターンに〇〇した数など TODO:
     | { valueType: "stormCount" };
+
 export type NumericalValueQueryOperand<T extends QueryParameter> =
     | NumericalValueReference<T>
     // 引数
-    | { argument: string }
-    // 何かの合計値
-    | {
-          valueType: "total";
-          values: NumericalValueQuery<T>[];
-      }
-    | {
-          valueType: "difference";
-          value1: NumericalValueQuery<T>;
-          value2: NumericalValueQuery<T>;
-      };
+    | { argument: string };
 
 // =================================================================
 export function getQueryParameterOfNumericalValueQueryOperand(
@@ -85,6 +83,42 @@ export function getQueryParameterOfNumericalValueConditionOperand(
 ): QueryParameter {
     return {}; // TODO:
 }
+
+// =================================================================
+// MARK: NumericalOperation
+// =================================================================
+// 加減の切り上げ切り捨て、切り上げ切り捨ての加減は2段までサポートする
+export type NumericalOperation<T extends QueryParameter> =
+    | NumericalValueQueryOperand<T>
+    | {
+          plus: (
+              | NumericalValueQueryOperand<T>
+              | {
+                    operation: "roundDown" | "roundUp";
+                    value: NumericalValueQueryOperand<T>;
+                }
+          )[];
+          minus: (
+              | NumericalValueQueryOperand<T>
+              | {
+                    operation: "roundDown" | "roundUp";
+                    value: NumericalValueQueryOperand<T>;
+                }
+          )[];
+      }
+    | {
+          operation: "roundDown" | "roundUp"; // 半分（切り捨て・切り上げ）
+          value:
+              | NumericalValueQueryOperand<T>
+              | {
+                    plus: NumericalValueQueryOperand<T>[];
+                    minus: NumericalValueQueryOperand<T>[];
+                };
+      };
+// a + (b + c) = a + b + c
+// a + (b - c) = a + b - c
+// a - (b + c) = a - b - c
+// a - (b - c) = a - b + c
 
 // =================================================================
 // MARK: 型ガード

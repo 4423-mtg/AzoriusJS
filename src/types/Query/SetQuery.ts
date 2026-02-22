@@ -150,34 +150,7 @@ export function isSetElementType(arg: unknown): arg is SetElementType {
 }
 
 // =================================================================
-// MARK: SetQuery
-// =================================================================
-
-/** 集合のクエリ */
-// export type SetQuery<T extends SetElementType, U extends QueryParameter> = {
-//     elementType: SetElementTypeId<T>;
-//     query: SetOperation<SetQueryOperand<T, U>>;
-// };
-
-// export function getQueryParameterOfSetQuery(
-//     setQuery: SetQuery<SetElementType, QueryParameter>,
-// ): QueryParameter {
-//     return getQueryParameterOfSetOperation(setQuery.query);
-// }
-// export function isSetQuery(
-//     arg: unknown,
-// ): arg is SetQuery<SetElementType, QueryParameter> {
-//     return (
-//         isObject(arg) &&
-//         "elementType" in arg &&
-//         isSetElementTypeId(arg.elementType) &&
-//         "query" in arg &&
-//         isSetOperation(arg.query)
-//     );
-// }
-
-// =================================================================
-// MARK: SetOperation
+// MARK: SetQueryOperand
 // =================================================================
 /** 集合のクエリの１要素 */
 export type SetQueryOperand<
@@ -241,6 +214,7 @@ export function getQueryParameterOfSetQueryOperand(
     }
 }
 
+// MARK: Intersection
 /** 共通部分 */
 export type _Intersection<
     T extends SetQueryOperand<SetElementType, QueryParameter>, // QueryParameterは指定可能にすべき？
@@ -263,13 +237,14 @@ function getQueryParameterOfIntersection(
     );
 }
 
+// MARK: Difference
 /** 差集合 */
 export type _Difference<
     T extends SetQueryOperand<SetElementType, QueryParameter>,
 > = {
     operation: "difference";
-    left: T | _Intersection<T>;
-    right: T | _Intersection<T> | (T | _Intersection<T>)[]; // FIXME: leftとrightの関係
+    leftOperand: T | _Intersection<T>;
+    rightOperand: T | _Intersection<T> | (T | _Intersection<T>)[]; // FIXME: leftとrightの関係
 };
 // A - (B + C) = (A - B) & (A - C)
 // A - (B & C) = (A - B) + (A - C) ☑️
@@ -280,14 +255,14 @@ export type _Difference<
 function getQueryParameterOfDifference(
     difference: _Difference<SetQueryOperand<SetElementType, QueryParameter>>,
 ): QueryParameter {
-    const qp_left = isIntersection(difference.left)
-        ? getQueryParameterOfIntersection(difference.left)
-        : getQueryParameterOfSetQueryOperand(difference.left);
-    const qp_right = isSetQueryOperand(difference.right)
-        ? getQueryParameterOfSetQueryOperand(difference.right)
-        : isIntersection(difference.right)
-        ? getQueryParameterOfIntersection(difference.right)
-        : difference.right.map((op) =>
+    const qp_left = isIntersection(difference.leftOperand)
+        ? getQueryParameterOfIntersection(difference.leftOperand)
+        : getQueryParameterOfSetQueryOperand(difference.leftOperand);
+    const qp_right = isSetQueryOperand(difference.rightOperand)
+        ? getQueryParameterOfSetQueryOperand(difference.rightOperand)
+        : isIntersection(difference.rightOperand)
+        ? getQueryParameterOfIntersection(difference.rightOperand)
+        : difference.rightOperand.map((op) =>
               isSetQueryOperand(op)
                   ? getQueryParameterOfSetQueryOperand(op)
                   : getQueryParameterOfIntersection(op),
@@ -302,6 +277,8 @@ function getQueryParameterOfDifference(
 // A + (B & C)
 // A + (B - C)
 
+// =================================================================
+// MARK: SetOperation
 /** 集合演算 */
 export type SetOperation<
     T extends SetQueryOperand<SetElementType, QueryParameter>,

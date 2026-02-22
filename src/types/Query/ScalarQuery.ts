@@ -77,15 +77,9 @@ export function isScalarType(arg: unknown): arg is ScalarType {
     );
 }
 
-// ========================================================================
-// MARK: ScalarQuery
-// ========================================================================
-/** スカラーのクエリ */
-// export type ScalarQuery<T extends ScalarType, U extends QueryParameter> = {
-//     scalarType: ScalarTypeId<T>;
-//     query: ScalarQueryOperand<T, U>;
-// };
-
+// =================================================================
+// MARK: ScalarQueryOperand
+// =================================================================
 /** クエリのオペランド */
 export type ScalarQueryOperand<
     T extends ScalarType,
@@ -102,22 +96,7 @@ export type ScalarQueryOperand<
     ? StatusQueryOperand<U>
     : never;
 
-/** 型ガード */
-// export function isScalarQuery<T extends ScalarTypeId>(
-//     arg: unknown,
-//     typeId: T | undefined,
-// ): arg is ScalarQuery<ScalarType<T>, QueryParameter> {
-//     if (isNonNullObject(arg)) {
-//         return (
-//             "scalarType" in arg &&
-//             (typeId === undefined || arg.scalarType === typeId) &&
-//             "query" in arg &&
-//             isScalarQueryOperand(arg.query, typeId)
-//         );
-//     } else {
-//         return false;
-//     }
-// }
+// =================================================================
 /** 型ガード */
 export function isScalarQueryOperand<T extends ScalarTypeId>(
     arg: unknown,
@@ -146,12 +125,6 @@ export function isScalarQueryOperand<T extends ScalarTypeId>(
     }
 }
 
-/** クエリのパラメータ */
-// export function getQueryParameterOfScalarQuery(
-//     arg: ScalarQuery<ScalarType, QueryParameter>,
-// ): QueryParameter {
-//     return getQueryParameterOfScalarQueryOperand(arg.query);
-// }
 /** クエリのパラメータ */
 export function getQueryParameterOfScalarQueryOperand(
     arg: ScalarQueryOperand<ScalarType, QueryParameter>,
