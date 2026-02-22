@@ -13,6 +13,20 @@ export type CardNameConditionOperand<T extends QueryParameter> = {
     type: "oneOf" | "allOf" | "equal";
     names: CardNameQuery<T>;
 };
+
+export function isCardNameCondition(
+    arg: unknown,
+): arg is CardNameCondition<QueryParameter> {
+    // TODO:
+    return false;
+}
+export function isCardNameConditionOperand(
+    arg: unknown,
+): arg is CardNameConditionOperand<QueryParameter> {
+    // TODO:
+    return false;
+}
+
 // =================================================================
 export type CardNameQuery<T extends QueryParameter> = SetOperation<
     CardNameQueryOperand<T>
@@ -26,6 +40,19 @@ export type CardNameQueryOperand<T extends QueryParameter> =
     | CardNameCondition<T>
     | { argument: string };
 
+export function isCardNameQuery(
+    arg: unknown,
+): arg is CardNameQuery<QueryParameter> {
+    // TODO:
+    return false;
+}
+export function isCardNameQueryOperand(
+    arg: unknown,
+): arg is CardNameQueryOperand<QueryParameter> {
+    // TODO:
+    return false;
+}
+
 // =================================================================
 export function getQueryParameterOfCardNameQueryOperand(
     operand: CardNameQueryOperand<QueryParameter>,
@@ -36,16 +63,4 @@ export function getQueryParameterOfCardNameConditionOperand(
     operand: CardNameConditionOperand<QueryParameter>,
 ): QueryParameter {
     return {}; // TODO:
-}
-export function isCardNameConditionOperand(
-    arg: unknown,
-): arg is CardNameConditionOperand<QueryParameter> {
-    // TODO:
-    return false;
-}
-export function isCardNameQueryOperand(
-    arg: unknown,
-): arg is CardNameQueryOperand<QueryParameter> {
-    // TODO:
-    return false;
 }

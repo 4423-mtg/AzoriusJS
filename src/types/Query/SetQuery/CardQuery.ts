@@ -33,6 +33,19 @@ export type CardConditionOperand<T extends QueryParameter> = {
     manaValue?: NumericalValueCondition<T>; // ここでいいのか？
 }; // {} を除外しなくていいのか？
 
+export function isCardCondition(
+    arg: unknown,
+): arg is CardCondition<QueryParameter> {
+    // TODO:
+    return false;
+}
+export function isCardConditionOperand(
+    arg: unknown,
+): arg is CardConditionOperand<QueryParameter> {
+    // TODO:
+    return false;
+}
+
 // =================================================================
 export type CardQuery<T extends QueryParameter> = SetOperation<
     CardQueryOperand<T>
@@ -42,6 +55,17 @@ export type CardQueryOperand<T extends QueryParameter> =
     | {
           argument: string;
       };
+
+export function isCardQuery(arg: unknown): arg is CardQuery<QueryParameter> {
+    // TODO:
+    return false;
+}
+export function isCardQueryOperand(
+    arg: unknown,
+): arg is CardQueryOperand<QueryParameter> {
+    // TODO:
+    return false;
+}
 
 // =================================================================
 export function getQueryParameterOfCardConditionOperand(
@@ -54,16 +78,4 @@ export function getQueryParameterOfCardQueryOperand(
     operand: CardQueryOperand<QueryParameter>,
 ): QueryParameter {
     return {};
-}
-export function isCardConditionOperand(
-    arg: unknown,
-): arg is CardConditionOperand<QueryParameter> {
-    // TODO:
-    return false;
-}
-export function isCardQueryOperand(
-    arg: unknown,
-): arg is CardQueryOperand<QueryParameter> {
-    // TODO:
-    return false;
 }

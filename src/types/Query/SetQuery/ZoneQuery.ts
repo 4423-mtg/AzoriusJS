@@ -16,6 +16,19 @@ export type ZoneConditionOperand<T extends QueryParameter> = {
     owner?: PlayerCondition<T>;
 };
 
+export function isZoneCondition(
+    arg: unknown,
+): arg is ZoneCondition<QueryParameter> {
+    // TODO:
+    return false;
+}
+export function isZoneConditionOperand(
+    arg: unknown,
+): arg is ZoneConditionOperand<QueryParameter> {
+    // TODO:
+    return false;
+}
+
 // =================================================================
 /** 領域のクエリ */
 export type ZoneQuery<T extends QueryParameter> = SetOperation<
@@ -28,6 +41,17 @@ export type ZoneQueryOperand<T extends QueryParameter> =
     | ZoneCondition<T>;
 // カードが直前に置かれていた領域とか必要になるかも
 
+export function isZoneQuery(arg: unknown): arg is ZoneQuery<QueryParameter> {
+    // TODO:
+    return false;
+}
+export function isZoneQueryOperand(
+    arg: unknown,
+): arg is ZoneQueryOperand<QueryParameter> {
+    // TODO:
+    return false;
+}
+
 // =================================================================
 export function getQueryParameterOfZoneConditionOperand(
     operand: ZoneConditionOperand<QueryParameter>,
@@ -39,16 +63,4 @@ export function getQueryParameterOfZoneQueryOperand(
     operand: ZoneQueryOperand<QueryParameter>,
 ): QueryParameter {
     return {};
-}
-export function isZoneConditionOperand(
-    arg: unknown,
-): arg is ZoneConditionOperand<QueryParameter> {
-    // TODO:
-    return false;
-}
-export function isZoneQueryOperand(
-    arg: unknown,
-): arg is ZoneQueryOperand<QueryParameter> {
-    // TODO:
-    return false;
 }

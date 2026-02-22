@@ -14,11 +14,37 @@ export type StatusConditionOperand<T extends QueryParameter> = {
     isPhasedOut?: boolean;
 };
 
+export function isStatusCondition(
+    arg: unknown,
+): arg is StatusCondition<QueryParameter> {
+    // TODO:
+    return false;
+}
+export function isStatusConditionOperand(
+    arg: unknown,
+): arg is StatusConditionOperand<QueryParameter> {
+    // TODO:
+    return false;
+}
+
 // ===================================================================
 /** 位相のクエリ */
 export type StatusQuery<T extends QueryParameter> = StatusQueryOperand<T>;
 
 export type StatusQueryOperand<T extends QueryParameter> = {};
+
+export function isStatusQuery(
+    arg: unknown,
+): arg is StatusQuery<QueryParameter> {
+    // TODO:
+    return false;
+}
+export function isStatusQueryOperand(
+    arg: unknown,
+): arg is StatusQueryOperand<QueryParameter> {
+    // TODO:
+    return false;
+}
 
 // ===================================================================
 export function getQueryParameterOfStatusConditionOperand(
@@ -30,17 +56,4 @@ export function getQueryParameterOfStatusQueryOperand(
     query: StatusQueryOperand<QueryParameter>,
 ): QueryParameter {
     return {}; // TODO:
-}
-
-export function isStatusConditionOperand(
-    arg: unknown,
-): arg is StatusConditionOperand<QueryParameter> {
-    // TODO:
-    return false;
-}
-export function isStatusQueryOperand(
-    arg: unknown,
-): arg is StatusQueryOperand<QueryParameter> {
-    // TODO:
-    return false;
 }

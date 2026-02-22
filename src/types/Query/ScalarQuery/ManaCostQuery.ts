@@ -12,6 +12,19 @@ export type ManaCostCondition<T extends QueryParameter> = BooleanOperation<
 export type ManaCostConditionOperand<T extends QueryParameter> = {};
 // マナ総量
 
+export function isManaCostCondition(
+    arg: unknown,
+): arg is ManaCostCondition<QueryParameter> {
+    // TODO:
+    return false;
+}
+export function isManaCostConditionOperand(
+    arg: unknown,
+): arg is ManaCostConditionOperand<QueryParameter> {
+    // TODO:
+    return false;
+}
+
 // ===================================================================
 /** マナコストのクエリ */
 export type ManaCostQuery<T extends QueryParameter> = ManaCostQueryOperand<T>;
@@ -19,6 +32,19 @@ export type ManaCostQuery<T extends QueryParameter> = ManaCostQueryOperand<T>;
 export type ManaCostQueryOperand<T extends QueryParameter> =
     | ManaSymbol[]
     | { card: CardQuery<T> };
+
+export function isManaCostQuery(
+    arg: unknown,
+): arg is ManaCostQuery<QueryParameter> {
+    // TODO:
+    return false;
+}
+export function isManaCostQueryOperand(
+    arg: unknown,
+): arg is ManaCostQueryOperand<QueryParameter> {
+    // TODO:
+    return false;
+}
 
 // ===================================================================
 export function getQueryParameterOfManaCostConditionOperand(
@@ -30,17 +56,4 @@ export function getQueryParameterOfManaCostQueryOperand(
     query: ManaCostQueryOperand<QueryParameter>,
 ): QueryParameter {
     return {}; // TODO:
-}
-
-export function isManaCostConditionOperand(
-    arg: unknown,
-): arg is ManaCostConditionOperand<QueryParameter> {
-    // TODO:
-    return false;
-}
-export function isManaCostQueryOperand(
-    arg: unknown,
-): arg is ManaCostQueryOperand<QueryParameter> {
-    // TODO:
-    return false;
 }

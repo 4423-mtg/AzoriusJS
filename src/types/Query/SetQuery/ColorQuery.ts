@@ -14,6 +14,19 @@ export type ColorConditionOperand<T extends QueryParameter> = {
     color: ColorQuery<T>;
 };
 
+export function isColorCondition(
+    arg: unknown,
+): arg is ColorCondition<QueryParameter> {
+    // TODO:
+    return false;
+}
+export function isColorConditionOperand(
+    arg: unknown,
+): arg is ColorConditionOperand<QueryParameter> {
+    // TODO:
+    return false;
+}
+
 // =================================================================
 /** 色のクエリ */
 export type ColorQuery<T extends QueryParameter> = SetOperation<
@@ -26,6 +39,17 @@ export type ColorQueryOperand<T extends QueryParameter> =
     | ColorCondition<T>
     | { argument: string };
 
+export function isColorQuery(arg: unknown): arg is ColorQuery<QueryParameter> {
+    // TODO:
+    return false;
+}
+export function isColorQueryOperand(
+    arg: unknown,
+): arg is ColorQueryOperand<QueryParameter> {
+    // TODO:
+    return false;
+}
+
 // =================================================================
 export function getQueryParameterOfColorQueryOperand(
     operand: ColorQueryOperand<QueryParameter>,
@@ -36,16 +60,4 @@ export function getQueryParameterOfColorConditionOperand(
     operand: ColorConditionOperand<QueryParameter>,
 ): QueryParameter {
     return {}; // TODO:
-}
-export function isColorConditionOperand(
-    arg: unknown,
-): arg is ColorConditionOperand<QueryParameter> {
-    // TODO:
-    return false;
-}
-export function isColorQueryOperand(
-    arg: unknown,
-): arg is ColorQueryOperand<QueryParameter> {
-    // TODO:
-    return false;
 }

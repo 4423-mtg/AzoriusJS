@@ -2,21 +2,9 @@ import {
     createGameObject,
     isGameObject,
     type GameObject,
-    type GameObjectParameters,
 } from "../GameObject.js";
-import type { Player } from "../Player.js";
-import type { GameState } from "../../GameState/GameState.js";
-import {
-    isLayer,
-    type Layer,
-    type LayerCategory,
-} from "../../Characteristics/Layer/Layer.js";
-import type { Instruction } from "../../Instruction/Instruction.js";
-import {
-    createTimestamp,
-    isTimestamp,
-    type Timestamp,
-} from "../../GameState/Timestamp.js";
+import { isLayer } from "../../Characteristics/Layer/Layer.js";
+import { isTimestamp, type Timestamp } from "../../GameState/Timestamp.js";
 import { isStackedAbility, type StackedAbility } from "../StackedAbility.js";
 import { isAbility, type Ability } from "../Ability.js";
 import { isSpell, type Spell } from "../Card/Spell.js";
@@ -34,10 +22,17 @@ import type {
 } from "../../Characteristics/Layer/Layer7.js";
 import type { QueryParameter } from "../../Query/QueryParameter.js";
 import type {
-    CardQuery,
+    GameObjectCondition,
     GameObjectQuery,
+} from "../../Query/SetQuery/GameObjectQuery.js";
+import type {
+    CardCondition,
+    CardQuery,
+} from "../../Query/SetQuery/CardQuery.js";
+import type {
+    PlayerCondition,
     PlayerQuery,
-} from "../../Query/SetQuery.js";
+} from "../../Query/SetQuery/PlayerQuery.js";
 
 // ====================================================================================================
 /** 継続的効果。単一の常在型能力からの継続的効果か、または、単一の呪文や能力の解決によって生成された継続的効果 */
@@ -68,7 +63,13 @@ export type CharacteristicsAlteringEffect<
 export type CharacteristicsAlteringEffectProperty<
     T extends QueryParameter = QueryParameter,
 > = {
-    affected: GameObjectQuery<T> | CardQuery<T> | PlayerQuery<T>;
+    affected:
+        | GameObjectCondition<T>
+        | CardCondition<T>
+        | PlayerCondition<T>
+        | GameObjectQuery<T>
+        | CardQuery<T>
+        | PlayerQuery<T>;
     layer1a: Layer1a<T> | undefined;
     layer1b: Layer1b<T> | undefined;
     layer2: Layer2<T> | undefined;

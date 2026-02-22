@@ -1,13 +1,16 @@
-// MARK: 型定義: 4
+import { type QueryParameter } from "../../Query/QueryParameter.js";
 import {
     isCardTypeQuery,
-    isSubtypeQuery,
-    isSupertypeQuery,
     type CardTypeQuery,
+} from "../../Query/SetQuery/CardTypeQuery.js";
+import {
+    isSubtypeQuery,
     type SubtypeQuery,
+} from "../../Query/SetQuery/SubtypeQuery.js";
+import {
+    isSupertypeQuery,
     type SupertypeQuery,
-} from "../../Query/SetQuery.js";
-import { type QueryParameter } from "../../Query/QueryParameter.js";
+} from "../../Query/SetQuery/SupertypeQuery.js";
 import { landTypes } from "../Subtype.js";
 import { isLayerCommonProperty, type LayerCommonProperty } from "./Layer.js";
 

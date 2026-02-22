@@ -1,29 +1,26 @@
 // MARK: 型定義: 1a
 import type { GameObject } from "../../GameObject/GameObject.js";
 import type { Game } from "../../GameState/Game.js";
-import { type QueryParameter } from "../../Query/QueryParameter.js";
+import type { QueryParameter } from "../../Query/QueryParameter.js";
 import {
-    isScalarQuery,
-    type ScalarQuery,
-    type ScalarQueryOperand,
-} from "../../Query/ScalarQuery.js";
-import type { _q } from "../../Query/ScalarQuery/CopiableValueQuery.js";
-import type { SetQuery } from "../../Query/SetQuery.js";
-import type { Characteristics, CopiableValue } from "../Characteristic.js";
+    isCopiableValueQuery,
+    type CopiableValueQuery,
+} from "../../Query/ScalarQuery/CopiableValueQuery.js";
+import type { Characteristics } from "../Characteristic.js";
 import { isLayerCommonProperty, type LayerCommonProperty } from "./Layer.js";
 
 /** コピー可能な効果の適用 */
 export type Layer1a<T extends QueryParameter = QueryParameter> =
     LayerCommonProperty & {
         type: "1a";
-        copiableValue: ScalarQuery<CopiableValue, T>;
+        copiableValue: CopiableValueQuery<T>;
     };
 export function isLayer1a(arg: unknown): arg is Layer1a {
     return (
         isLayerCommonProperty(arg) &&
         arg.type === "1a" &&
         "copiableValue" in arg &&
-        isScalarQuery(arg.copiableValue, "copiableValue")
+        isCopiableValueQuery(arg.copiableValue)
     );
 }
 function applyLayer1a<T extends QueryParameter>(
@@ -39,14 +36,14 @@ function applyLayer1a<T extends QueryParameter>(
 export type Layer1b<T extends QueryParameter = QueryParameter> =
     LayerCommonProperty & {
         type: "1b";
-        copiableValue: ScalarQuery<CopiableValue, T>;
+        copiableValue: CopiableValueQuery<T>;
     };
 export function isLayer1b(arg: unknown): arg is Layer1b {
     return (
         isLayerCommonProperty(arg) &&
         arg.type === "1b" &&
         "copiableValue" in arg &&
-        isScalarQuery(arg.copiableValue, "copiableValue")
+        isCopiableValueQuery(arg.copiableValue)
     );
 }
 
@@ -57,23 +54,14 @@ const sample: Record<string, Layer1a | Layer1b> = {
     "Quicksilver Gargantuan": {
         type: "1a",
         copiableValue: {
-            scalarType: "copiableValue",
-            query: {
-                original: {
-                    scalarType: "copiableValue",
-                    query: {
-                        object: {
-                            elementType: "gameObject",
-                            query: { argument: "chosen" },
-                        } satisfies SetQuery<GameObject, QueryParameter>,
-                    },
-                } satisfies ScalarQuery<CopiableValue, QueryParameter>,
-                overwrite: {
-                    power: { scalarType: "numericalValue", query: 7 },
-                    toughness: { scalarType: "numericalValue", query: 7 },
-                } satisfies Partial<_q<QueryParameter>>,
+            original: {
+                object: { argument: "chosen" },
             },
-        } satisfies ScalarQuery<CopiableValue, QueryParameter>,
+            overwrite: {
+                power: 7,
+                toughness: 7,
+            },
+        },
         // コピー効果が能力を追加する場合、それは
         // テキストとして追加される？能力として追加される？ => テキスト
     },

@@ -25,6 +25,19 @@ export type AbilityConditionOperand<T extends QueryParameter> =
               | "equip";
       }; // TODO:
 
+export function isAbilityCondition(
+    arg: unknown,
+): arg is AbilityCondition<QueryParameter> {
+    // TODO:
+    return false;
+}
+export function isAbilityConditionOperand(
+    arg: unknown,
+): arg is AbilityConditionOperand<QueryParameter> {
+    // TODO:
+    return false;
+}
+
 // =================================================================
 export type AbilityQuery<T extends QueryParameter> = SetOperation<
     AbilityQueryOperand<T>
@@ -38,6 +51,19 @@ export type AbilityQueryOperand<T extends QueryParameter> =
           condition?: AbilityCondition<T>; // 指定した条件を満たすもの
       };
 
+export function isAbilityQuery(
+    arg: unknown,
+): arg is AbilityQuery<QueryParameter> {
+    // TODO:
+    return false;
+}
+export function isAbilityQueryOperand(
+    arg: unknown,
+): arg is AbilityQueryOperand<QueryParameter> {
+    // TODO:
+    return false;
+}
+
 // =================================================================
 export function getQueryParameterOfAbilityConditionOperand(
     operand: AbilityConditionOperand<QueryParameter>,
@@ -48,16 +74,4 @@ export function getQueryParameterOfAbilityQueryOperand(
     operand: AbilityQueryOperand<QueryParameter>,
 ): QueryParameter {
     return {}; // TODO:
-}
-export function isAbilityConditionOperand(
-    arg: unknown,
-): arg is AbilityConditionOperand<QueryParameter> {
-    // TODO:
-    return false;
-}
-export function isAbilityQueryOperand(
-    arg: unknown,
-): arg is AbilityQueryOperand<QueryParameter> {
-    // TODO:
-    return false;
 }

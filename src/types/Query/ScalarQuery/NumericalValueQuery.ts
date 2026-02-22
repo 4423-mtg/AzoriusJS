@@ -20,6 +20,16 @@ export type NumericalValueConditionOperand<T extends QueryParameter> =
       };
 
 /**  */
+export function isNumericalValueCondition(
+    arg: unknown,
+): arg is NumericalValueCondition<QueryParameter> {
+    return false;
+}
+export function isNumericalValueConditionOperand(
+    arg: unknown,
+): arg is NumericalValueConditionOperand<QueryParameter> {
+    return false;
+}
 
 // =================================================================
 /** クエリ */
@@ -71,6 +81,25 @@ export type NumericalValueQueryOperand<T extends QueryParameter> =
     // 引数
     | { argument: string };
 
+export function isNumericalValueQuery(
+    arg: unknown,
+): arg is NumericalValueQuery<QueryParameter> {
+    // TODO:
+    return false;
+}
+export function isNumericalValueReference(
+    arg: unknown,
+): arg is NumericalValueReference<QueryParameter> {
+    // TODO:
+    return false;
+}
+export function isNumericalValueQueryOperand(
+    arg: unknown,
+): arg is NumericalValueQueryOperand<QueryParameter> {
+    // TODO:
+    return false;
+}
+
 // =================================================================
 export function getQueryParameterOfNumericalValueQueryOperand(
     arg: NumericalValueQueryOperand<QueryParameter>,
@@ -91,14 +120,14 @@ export function getQueryParameterOfNumericalValueConditionOperand(
 export type NumericalOperation<T extends QueryParameter> =
     | NumericalValueQueryOperand<T>
     | {
-          plus: (
+          plus?: (
               | NumericalValueQueryOperand<T>
               | {
                     operation: "roundDown" | "roundUp";
                     value: NumericalValueQueryOperand<T>;
                 }
           )[];
-          minus: (
+          minus?: (
               | NumericalValueQueryOperand<T>
               | {
                     operation: "roundDown" | "roundUp";
@@ -120,23 +149,9 @@ export type NumericalOperation<T extends QueryParameter> =
 // a - (b + c) = a - b - c
 // a - (b - c) = a - b + c
 
-// =================================================================
-// MARK: 型ガード
-export function isNumericalValueConditionOperand(
+export function isNumericalOperation(
     arg: unknown,
-): arg is NumericalValueConditionOperand<QueryParameter> {
-    // TODO:
-    return false;
-}
-export function isNumericalValueReference(
-    arg: unknown,
-): arg is NumericalValueReference<QueryParameter> {
-    // TODO:
-    return false;
-}
-export function isNumericalValueQueryOperand(
-    arg: unknown,
-): arg is NumericalValueQueryOperand<QueryParameter> {
+): arg is NumericalOperation<QueryParameter> {
     // TODO:
     return false;
 }

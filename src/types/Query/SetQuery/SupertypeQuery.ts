@@ -13,6 +13,19 @@ export type SupertypeConditionOperand<T extends QueryParameter> = {
     supertype: SupertypeQuery<T>;
 };
 
+export function isSupertypeCondition(
+    arg: unknown,
+): arg is SupertypeCondition<QueryParameter> {
+    // TODO:
+    return false;
+}
+export function isSupertypeConditionOperand(
+    arg: unknown,
+): arg is SupertypeConditionOperand<QueryParameter> {
+    // TODO:
+    return false;
+}
+
 // =================================================================
 export type SupertypeQuery<T extends QueryParameter> = SetOperation<
     SupertypeQueryOperand<T>
@@ -24,6 +37,19 @@ export type SupertypeQueryOperand<T extends QueryParameter> =
     | SupertypeCondition<T>
     | { argument: string };
 
+export function isSupertypeQuery(
+    arg: unknown,
+): arg is SupertypeQuery<QueryParameter> {
+    // TODO:
+    return false;
+}
+export function isSupertypeQueryOperand(
+    arg: unknown,
+): arg is SupertypeQueryOperand<QueryParameter> {
+    // TODO:
+    return false;
+}
+
 // =================================================================
 export function getQueryParameterOfSupertypeQueryOperand(
     operand: SupertypeQueryOperand<QueryParameter>,
@@ -34,16 +60,4 @@ export function getQueryParameterOfSupertypeConditionOperand(
     operand: SupertypeConditionOperand<QueryParameter>,
 ): QueryParameter {
     return {}; // TODO:
-}
-export function isSupertypeConditionOperand(
-    arg: unknown,
-): arg is SupertypeConditionOperand<QueryParameter> {
-    // TODO:
-    return false;
-}
-export function isSupertypeQueryOperand(
-    arg: unknown,
-): arg is SupertypeQueryOperand<QueryParameter> {
-    // TODO:
-    return false;
 }

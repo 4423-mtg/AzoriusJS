@@ -162,7 +162,7 @@ export type SetQueryOperand<
     ? PlayerQueryOperand<U>
     : T extends CardName
     ? CardNameQueryOperand<U>
-    : T extends CardType
+    : T extends CardType // FIXME: CardTypeはstringなせいでCardNameに引っかかっている
     ? CardTypeQueryOperand<U>
     : T extends Subtype
     ? SubtypeQueryOperand<U>

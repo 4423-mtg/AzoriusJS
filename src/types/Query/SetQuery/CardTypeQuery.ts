@@ -14,6 +14,19 @@ export type CardTypeConditionOperand<T extends QueryParameter> = {
     cardType: CardTypeQuery<T>;
 };
 
+export function isCardTypeCondition(
+    arg: unknown,
+): arg is CardTypeCondition<QueryParameter> {
+    // TODO:
+    return false;
+}
+export function isCardTypeConditionOperand(
+    arg: unknown,
+): arg is CardTypeConditionOperand<QueryParameter> {
+    // TODO:
+    return false;
+}
+
 // =================================================================
 /** カードタイプのクエリ */
 export type CardTypeQuery<T extends QueryParameter> = SetOperation<
@@ -26,6 +39,19 @@ export type CardTypeQueryOperand<T extends QueryParameter> =
     | CardTypeCondition<T>
     | { argument: string };
 
+export function isCardTypeQuery(
+    arg: unknown,
+): arg is CardTypeQuery<QueryParameter> {
+    // TODO:
+    return false;
+}
+export function isCardTypeQueryOperand(
+    arg: unknown,
+): arg is CardTypeQueryOperand<QueryParameter> {
+    // TODO:
+    return false;
+}
+
 // =================================================================
 export function getQueryParameterOfCardTypeQueryOperand(
     query: CardTypeQueryOperand<QueryParameter>,
@@ -36,16 +62,4 @@ export function getQueryParameterOfCardTypeConditionOperand(
     query: CardTypeConditionOperand<QueryParameter>,
 ): QueryParameter {
     return {}; // TODO:
-}
-export function isCardTypeConditionOperand(
-    arg: unknown,
-): arg is CardTypeConditionOperand<QueryParameter> {
-    // TODO:
-    return false;
-}
-export function isCardTypeQueryOperand(
-    arg: unknown,
-): arg is CardTypeQueryOperand<QueryParameter> {
-    // TODO:
-    return false;
 }

@@ -9,6 +9,19 @@ export type FaceCondition<T extends QueryParameter> = BooleanOperation<
 >;
 export type FaceConditionOperand<T extends QueryParameter> = {};
 
+export function isFaceCondition(
+    arg: unknown,
+): arg is FaceCondition<QueryParameter> {
+    // TODO:
+    return false;
+}
+export function isFaceConditionOperand(
+    arg: unknown,
+): arg is FaceConditionOperand<QueryParameter> {
+    // TODO:
+    return false;
+}
+
 // =================================================================
 export type FaceQuery<T extends QueryParameter> = SetOperation<
     FaceQueryOperand<T>
@@ -25,15 +38,7 @@ export type FaceQueryOperand<T extends QueryParameter> = {
     };
 };
 
-// =================================================================
-export function getQueryParameterOfFaceQueryOperand(
-    query: FaceQueryOperand<QueryParameter>,
-): QueryParameter {
-    return {}; // TODO:
-}
-export function isFaceConditionOperand(
-    arg: unknown,
-): arg is FaceConditionOperand<QueryParameter> {
+export function isFaceQuery(arg: unknown): arg is FaceQuery<QueryParameter> {
     // TODO:
     return false;
 }
@@ -42,4 +47,11 @@ export function isFaceQueryOperand(
 ): arg is FaceQueryOperand<QueryParameter> {
     // TODO:
     return false;
+}
+
+// =================================================================
+export function getQueryParameterOfFaceQueryOperand(
+    query: FaceQueryOperand<QueryParameter>,
+): QueryParameter {
+    return {}; // TODO:
 }

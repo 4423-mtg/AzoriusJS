@@ -1,22 +1,29 @@
 // MARK: 型定義: 7a
+import {
+    createCharacteristicsAlteringEffect,
+    type CharacteristicsAlteringEffect,
+} from "../../GameObject/GeneratedEffect/ContinuousEffect.js";
+import { createTimestamp } from "../../GameState/Timestamp.js";
 import { type QueryParameter } from "../../Query/QueryParameter.js";
-import type { ScalarQuery } from "../../Query/ScalarQuery.js";
-import type { NumericalValue } from "../Characteristic.js";
+import {
+    isNumericalValueQuery,
+    type NumericalValueQuery,
+} from "../../Query/ScalarQuery/NumericalValueQuery.js";
 import { isLayerCommonProperty, type LayerCommonProperty } from "./Layer.js";
 
 /** パワー・タフネスを定義する特性定義能力 */
 export type Layer7a<T extends QueryParameter = QueryParameter> =
     LayerCommonProperty & {
         type: "7a";
-        power?: ScalarQuery<NumericalValue, T>;
-        toughness?: ScalarQuery<NumericalValue, T>;
+        power?: NumericalValueQuery<T>;
+        toughness?: NumericalValueQuery<T>;
     };
 export function isLayer7a(arg: unknown): arg is Layer7a {
     return (
         isLayerCommonProperty(arg) &&
         arg.type === "7a" &&
-        (!("power" in arg) || isNumberQuery(arg.power)) &&
-        (!("toughness" in arg) || isNumberQuery(arg.toughness))
+        (!("power" in arg) || isNumericalValueQuery(arg.power)) &&
+        (!("toughness" in arg) || isNumericalValueQuery(arg.toughness))
     );
 }
 
@@ -25,15 +32,15 @@ export function isLayer7a(arg: unknown): arg is Layer7a {
 export type Layer7b<T extends QueryParameter = QueryParameter> =
     LayerCommonProperty & {
         type: "7b";
-        power?: ScalarQuery<NumericalValue, T>;
-        toughness?: ScalarQuery<NumericalValue, T>;
+        power?: NumericalValueQuery<T>;
+        toughness?: NumericalValueQuery<T>;
     };
 export function isLayer7b(arg: unknown): arg is Layer7b {
     return (
         isLayerCommonProperty(arg) &&
         arg.type === "7b" &&
-        (!("power" in arg) || isNumberQuery(arg.power)) &&
-        (!("toughness" in arg) || isNumberQuery(arg.toughness))
+        (!("power" in arg) || isNumericalValueQuery(arg.power)) &&
+        (!("toughness" in arg) || isNumericalValueQuery(arg.toughness))
     );
 }
 
@@ -42,17 +49,17 @@ export function isLayer7b(arg: unknown): arg is Layer7b {
 export type Layer7c<T extends QueryParameter = QueryParameter> =
     LayerCommonProperty & {
         type: "7c";
-        power: ScalarQuery<NumericalValue, T>;
-        toughness: ScalarQuery<NumericalValue, T>;
+        power: NumericalValueQuery<T>;
+        toughness: NumericalValueQuery<T>;
     };
 export function isLayer7c(arg: unknown): arg is Layer7c {
     return (
         isLayerCommonProperty(arg) &&
         arg.type === "7c" &&
         "power" in arg &&
-        isNumberQuery(arg.power) &&
+        isNumericalValueQuery(arg.power) &&
         "toughness" in arg &&
-        isNumberQuery(arg.toughness)
+        isNumericalValueQuery(arg.toughness)
     );
 }
 
@@ -69,38 +76,34 @@ export function isLayer7d(arg: unknown): arg is Layer7d {
 // =======================================================
 type param = { target: { type: "card" }; this: { type: "card" } };
 
-const sample: Record<
-    string,
-    Layer7a<param> | Layer7b<param> | Layer7c<param> | Layer7d<param>
-> = {
+const _: CharacteristicsAlteringEffect[] = [
     // タルモゴイフ
-    Tarmogoyf: {
-        type: "7a",
-        // affected: { argument: "this" },
-        power: {
-            valueType: "numberOfCardTypes",
-            card: { zone: { type: "Graveyard" } },
+    createCharacteristicsAlteringEffect({
+        timestamp: createTimestamp(),
+        generatedBy: "タルモゴイフ/Tarmogoyf",
+        affected: { argument: "source" },
+        layer7a: {
+            type: "7a",
+            power: {
+                valueType: "numberOfCardTypes",
+                card: { zone: { type: "Graveyard" } },
+            },
         },
-        toughness: {
-            valueType: "total",
-            values: [
-                {
-                    valueType: "numberOfCardTypes",
-                    card: { zone: { type: "Graveyard" } },
-                },
-                1,
-            ],
-        },
-    },
+    }),
     // 憤激解放/Unleash Fury
     // 対象のクリーチャーのパワーを2倍にする
-    "Unleash Fury": {
-        type: "7c",
-        // affected: { argument: "target" },
-        power: {
-            valueType: "power",
-            card: { argument: "target" },
+    createCharacteristicsAlteringEffect({
+        timestamp: createTimestamp(),
+        generatedBy: "憤激解放/Unleash Fury",
+        affected: { argument: "target" },
+        layer7c: {
+            type: "7c",
+            // affected: { argument: "target" },
+            power: {
+                valueType: "power",
+                card: { argument: "target" },
+            },
+            toughness: 0,
         },
-        toughness: 0,
-    },
-};
+    }),
+];

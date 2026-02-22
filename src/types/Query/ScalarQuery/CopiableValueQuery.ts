@@ -48,6 +48,17 @@ export type CopiableValueConditionOperand<T extends QueryParameter> = {
     loyalty?: NumericalValueCondition<T>;
 };
 
+export function isCopiableValueCondition(
+    arg: unknown,
+): arg is CopiableValueCondition<QueryParameter> {
+    return false;
+}
+export function isCopiableValueConditionOperand(
+    arg: unknown,
+): arg is CopiableValueConditionOperand<QueryParameter> {
+    return false;
+}
+
 // ===================================================================
 /** コピー可能な値のクエリ */
 export type CopiableValueQuery<T extends QueryParameter> =
@@ -82,6 +93,17 @@ export type CopiableValueQueryOperand<T extends QueryParameter> =
           exclude?: Partial<_q<T>>;
       };
 
+export function isCopiableValueQuery(
+    arg: unknown,
+): arg is CopiableValueQuery<QueryParameter> {
+    return false;
+}
+export function isCopiableValueQueryOperand(
+    arg: unknown,
+): arg is CopiableValueQueryOperand<QueryParameter> {
+    return false;
+}
+
 // ===================================================================
 export function getQueryParameterOfCopiableValueConditionOperand(
     query: CopiableValueConditionOperand<QueryParameter>,
@@ -92,15 +114,4 @@ export function getQueryParameterOfCopiableValueQueryOperand(
     query: CopiableValueQueryOperand<QueryParameter>,
 ): QueryParameter {
     return {}; // TODO:
-}
-
-export function isCopiableValueConditionOperand(
-    arg: unknown,
-): arg is CopiableValueConditionOperand<QueryParameter> {
-    return false;
-}
-export function isCopiableValueQueryOperand(
-    arg: unknown,
-): arg is CopiableValueQueryOperand<QueryParameter> {
-    return false;
 }

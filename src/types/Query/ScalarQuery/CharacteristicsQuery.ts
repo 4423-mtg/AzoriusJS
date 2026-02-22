@@ -34,15 +34,41 @@ export type CharacteristicsConditionOperand<T extends QueryParameter> = {
     lifeModifier?: NumericalValueCondition<T>;
 };
 
+export function isCharacteristicsCondition(
+    arg: unknown,
+): arg is CharacteristicsCondition<QueryParameter> {
+    // TODO:
+    return false;
+}
+export function isCharacteristicsConditionOperand(
+    arg: unknown,
+): arg is CharacteristicsConditionOperand<QueryParameter> {
+    // TODO:
+    return false;
+}
+
 // ===================================================================
 /** 特性のクエリ */
-export type CharacteristicQuery<T extends QueryParameter> =
+export type CharacteristicsQuery<T extends QueryParameter> =
     CharacteristicsQueryOperand<T>;
 
 export type CharacteristicsQueryOperand<T extends QueryParameter> =
     | Characteristics
     | { card: CardQuery<T> } // FIXME: oneOf? merge?
     | CharacteristicsCondition<T>;
+
+export function isCharacteristicsQuery(
+    arg: unknown,
+): arg is CharacteristicsQuery<QueryParameter> {
+    // TODO:
+    return false;
+}
+export function isCharacteristicsQueryOperand(
+    arg: unknown,
+): arg is CharacteristicsQueryOperand<QueryParameter> {
+    // TODO:
+    return false;
+}
 
 // ===================================================================
 export function getQueryParameterOfCharacteristicsConditionOperand(
@@ -55,17 +81,4 @@ export function getQueryParameterOfCharacteristicsQueryOperand(
     query: CharacteristicsQueryOperand<QueryParameter>,
 ): QueryParameter {
     return {}; // TODO:
-}
-
-export function isCharacteristicsConditionOperand(
-    arg: unknown,
-): arg is CharacteristicsConditionOperand<QueryParameter> {
-    // TODO:
-    return false;
-}
-export function isCharacteristicsQueryOperand(
-    arg: unknown,
-): arg is CharacteristicsQueryOperand<QueryParameter> {
-    // TODO:
-    return false;
 }

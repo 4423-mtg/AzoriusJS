@@ -1,4 +1,4 @@
-import { isSetElementCondition, type BooleanOperation } from "../Condition.js";
+import { type BooleanOperation } from "../Condition.js";
 import type { QueryParameter } from "../QueryParameter.js";
 import { type SetOperation } from "../SetQuery.js";
 import {
@@ -14,6 +14,19 @@ export type GameObjectConditionOperand<T extends QueryParameter> = {
     zone: ZoneCondition<T>;
 };
 
+export function isGameObjectCondition(
+    arg: unknown,
+): arg is GameObjectCondition<QueryParameter> {
+    // TODO:
+    return false;
+}
+export function isGameObjectConditionOperand(
+    arg: unknown,
+): arg is GameObjectConditionOperand<QueryParameter> {
+    // TODO:
+    return false;
+}
+
 // =================================================================
 export type GameObjectQuery<T extends QueryParameter> = SetOperation<
     GameObjectQueryOperand<T>
@@ -23,6 +36,19 @@ export type GameObjectQueryOperand<T extends QueryParameter> =
     | {
           argument: string;
       };
+
+export function isGameObjectQuery(
+    arg: unknown,
+): arg is GameObjectQuery<QueryParameter> {
+    // TODO:
+    return false;
+}
+export function isGameObjectQueryOperand(
+    arg: unknown,
+): arg is GameObjectQueryOperand<QueryParameter> {
+    // TODO:
+    return false;
+}
 
 // =================================================================
 export function getQueryParameterOfGameObjectConditionOperand(
@@ -42,17 +68,4 @@ export function getQueryParameterOfGameObjectQueryOperand(
             [operand.argument]: { type: "gameObject" },
         };
     }
-}
-// GameObjectQuery -> SetOperation -> GameObjectCondition | {argument: string}
-export function isGameObjectConditionOperand(
-    arg: unknown,
-): arg is GameObjectConditionOperand<QueryParameter> {
-    // TODO:
-    return false;
-}
-export function isGameObjectQueryOperand(
-    arg: unknown,
-): arg is GameObjectQueryOperand<QueryParameter> {
-    // TODO:
-    return false;
 }

@@ -15,6 +15,19 @@ export type SubtypeConditionOperand<T extends QueryParameter> = {
     subtype: SubtypeQuery<T>;
 };
 
+export function isSubtypeCondition(
+    arg: unknown,
+): arg is SubtypeCondition<QueryParameter> {
+    // TODO:
+    return false;
+}
+export function isSubtypeConditionOperand(
+    arg: unknown,
+): arg is SubtypeConditionOperand<QueryParameter> {
+    // TODO:
+    return false;
+}
+
 // =================================================================
 /** サブタイプのクエリ */
 export type SubtypeQuery<T extends QueryParameter> = SetOperation<
@@ -27,6 +40,19 @@ export type SubtypeQueryOperand<T extends QueryParameter> =
     | SubtypeCondition<T>
     | { argument: string };
 
+export function isSubtypeQuery(
+    arg: unknown,
+): arg is SubtypeQuery<QueryParameter> {
+    // TODO:
+    return false;
+}
+export function isSubtypeQueryOperand(
+    arg: unknown,
+): arg is SubtypeQueryOperand<QueryParameter> {
+    // TODO:
+    return false;
+}
+
 // =================================================================
 export function getQueryParameterOfSubtypeQueryOperand(
     operand: SubtypeQueryOperand<QueryParameter>,
@@ -37,16 +63,4 @@ export function getQueryParameterOfSubtypeConditionOperand(
     operand: SubtypeConditionOperand<QueryParameter>,
 ): QueryParameter {
     return {}; // TODO:
-}
-export function isSubtypeConditionOperand(
-    arg: unknown,
-): arg is SubtypeConditionOperand<QueryParameter> {
-    // TODO:
-    return false;
-}
-export function isSubtypeQueryOperand(
-    arg: unknown,
-): arg is SubtypeQueryOperand<QueryParameter> {
-    // TODO:
-    return false;
 }
