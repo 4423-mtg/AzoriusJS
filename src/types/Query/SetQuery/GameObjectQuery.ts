@@ -2,33 +2,36 @@ import type { GameObject } from "../../GameObject/GameObject.js";
 import type { Zone } from "../../GameState/Zone.js";
 import {
     isSetElementCondition,
+    type BooleanOperation,
     type SetElementCondition,
 } from "../Condition.js";
 import type { QueryParameter } from "../QueryParameter.js";
-import { getQueryParameterOfSetQuery, type SetOperation } from "../SetQuery.js";
+import { type SetOperation } from "../SetQuery.js";
 import { getQueryParameterOfZoneQueryOperand } from "./ZoneQuery.js";
 
 // =================================================================
-// MARK: GameObject
-// =================================================================
-export type GameObjectQuery<T extends QueryParameter> = SetOperation<
-    GameObjectQueryOperand<T>
+export type GameObjectCondition<T extends QueryParameter> = BooleanOperation<
+    GameObjectConditionOperand<T>
 >;
-
 export type GameObjectConditionOperand<T extends QueryParameter> = {
     zone: SetElementCondition<Zone, T>;
 };
 
+// =================================================================
+export type GameObjectQuery<T extends QueryParameter> = SetOperation<
+    GameObjectQueryOperand<T>
+>;
 export type GameObjectQueryOperand<T extends QueryParameter> =
     | SetElementCondition<GameObject, T>
     | {
           argument: string;
       };
 
+// =================================================================
 export function getQueryParameterOfGameObjectConditionOperand(
     operand: GameObjectConditionOperand<QueryParameter>,
 ): QueryParameter {
-    return getQueryParameterOfSetQuery(operand.zone);
+    return getQueryParameterOfSetElementCondition(operand.zone);
 }
 
 export function getQueryParameterOfGameObjectQueryOperand(

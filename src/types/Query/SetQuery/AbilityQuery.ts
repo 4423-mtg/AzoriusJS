@@ -1,12 +1,14 @@
 import type { Ability } from "../../GameObject/Ability.js";
-import type { SetElementCondition } from "../Condition.js";
+import type { BooleanOperation, SetElementCondition } from "../Condition.js";
 import type { QueryParameter } from "../QueryParameter.js";
 import type { SetOperation } from "../SetQuery.js";
 import type { CardQuery } from "./CardQuery.js";
 
-export type AbilityQuery<T extends QueryParameter> = SetOperation<
-    AbilityQueryOperand<T>
+// =================================================================
+export type AbilityCondition<T extends QueryParameter> = BooleanOperation<
+    AbilityConditionOperand<T>
 >;
+
 export type AbilityConditionOperand<T extends QueryParameter> =
     | {
           type: "oneOf" | "allOf" | "equal";
@@ -22,6 +24,11 @@ export type AbilityConditionOperand<T extends QueryParameter> =
               | "affinity"
               | "equip";
       }; // TODO:
+
+// =================================================================
+export type AbilityQuery<T extends QueryParameter> = SetOperation<
+    AbilityQueryOperand<T>
+>;
 export type AbilityQueryOperand<T extends QueryParameter> =
     | Ability
     | Ability[]
@@ -31,6 +38,7 @@ export type AbilityQueryOperand<T extends QueryParameter> =
           condition?: SetElementCondition<Ability, T>; // 指定した条件を満たすもの
       };
 
+// =================================================================
 export function getQueryParameterOfAbilityConditionOperand(
     operand: AbilityConditionOperand<QueryParameter>,
 ): QueryParameter {

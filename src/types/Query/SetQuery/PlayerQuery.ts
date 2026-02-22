@@ -1,15 +1,14 @@
-import type { GameObject } from "../../GameObject/GameObject.js";
 import type { Player } from "../../GameObject/Player.js";
 import type { PlayerInfo } from "../../GameState/Match.js";
-import type { SetElementCondition } from "../Condition.js";
+import type { BooleanOperation, SetElementCondition } from "../Condition.js";
 import type { QueryParameter } from "../QueryParameter.js";
 import type { SetOperation } from "../SetQuery.js";
 import type { GameObjectQuery } from "./GameObjectQuery.js";
 
-export type PlayerQuery<T extends QueryParameter> = SetOperation<
-    PlayerQueryOperand<T>
+// =================================================================
+export type PlayerCondition<T extends QueryParameter> = BooleanOperation<
+    PlayerConditionOperand<T>
 >;
-
 export type PlayerConditionOperand<T extends QueryParameter> =
     // オーナー、コントローラー
     | {
@@ -24,6 +23,10 @@ export type PlayerConditionOperand<T extends QueryParameter> =
     | { type: "isMonarch" | "startingPlayer" } // 統治者、開始プレイヤー
     | { info: PlayerInfo } // TODO: プレイヤーID？
     | { type: "oneOf" | "allOf" | "equal"; players: PlayerQuery<T> };
+// =================================================================
+export type PlayerQuery<T extends QueryParameter> = SetOperation<
+    PlayerQueryOperand<T>
+>;
 
 export type PlayerQueryOperand<T extends QueryParameter> =
     | Player
@@ -31,6 +34,7 @@ export type PlayerQueryOperand<T extends QueryParameter> =
     | SetElementCondition<Player, T>
     | { argument: string };
 
+// =================================================================
 export function getQueryParameterOfPlayerConditionOperand(
     operand: PlayerConditionOperand<QueryParameter>,
 ): QueryParameter {

@@ -1,17 +1,22 @@
 import type { CardName } from "../../Characteristics/Characteristic.js";
-import type { SetElementCondition } from "../Condition.js";
+import type { BooleanOperation, SetElementCondition } from "../Condition.js";
 import type { QueryParameter } from "../QueryParameter.js";
 import type { SetOperation } from "../SetQuery.js";
 import type { CardQuery } from "./CardQuery.js";
 
-export type CardNameQuery<T extends QueryParameter> = SetOperation<
-    CardNameQueryOperand<T>
+// =================================================================
+export type CardNameCondition<T extends QueryParameter> = BooleanOperation<
+    CardNameConditionOperand<T>
 >;
 
 export type CardNameConditionOperand<T extends QueryParameter> = {
     type: "oneOf" | "allOf" | "equal";
     names: CardNameQuery<T>;
 };
+// =================================================================
+export type CardNameQuery<T extends QueryParameter> = SetOperation<
+    CardNameQueryOperand<T>
+>;
 export type CardNameQueryOperand<T extends QueryParameter> =
     | CardName
     | CardName[]
@@ -21,6 +26,7 @@ export type CardNameQueryOperand<T extends QueryParameter> =
     | SetElementCondition<CardName, T>
     | { argument: string };
 
+// =================================================================
 export function getQueryParameterOfCardNameQueryOperand(
     operand: CardNameQueryOperand<QueryParameter>,
 ): QueryParameter {

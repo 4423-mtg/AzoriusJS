@@ -5,15 +5,20 @@ import type {
 import type { Card, Face, Status } from "../../GameObject/Card/Card.js";
 import type { GameObject } from "../../GameObject/GameObject.js";
 import type { Player } from "../../GameObject/Player.js";
-import type { Condition, SetElementCondition } from "../Condition.js";
+import type {
+    BooleanOperation,
+    Condition,
+    SetElementCondition,
+} from "../Condition.js";
 import type { QueryParameter } from "../QueryParameter.js";
 import type { CounterQuery } from "../ScalarQuery/CounterOnObjectQuery.js";
 import type { MarkerQuery } from "../ScalarQuery/MarkerQuery.js";
 import type { StickerQuery } from "../ScalarQuery/StickerQuery.js";
 import type { SetOperation } from "../SetQuery.js";
 
-export type CardQuery<T extends QueryParameter> = SetOperation<
-    CardQueryOperand<T>
+// =================================================================
+export type CardCondition<T extends QueryParameter> = BooleanOperation<
+    CardConditionOperand<T>
 >;
 
 // FIXME: 継続的効果は一般に GameObject 全般に効果を及ぼすが、
@@ -33,11 +38,17 @@ export type CardConditionOperand<T extends QueryParameter> = {
     manaValue?: Condition<NumericalValue, T>; // ここでいいのか？
 }; // {} を除外しなくていいのか？
 
+// =================================================================
+export type CardQuery<T extends QueryParameter> = SetOperation<
+    CardQueryOperand<T>
+>;
 export type CardQueryOperand<T extends QueryParameter> =
     | (SetElementCondition<GameObject, T> & SetElementCondition<Card, T>)
     | {
           argument: string;
       };
+
+// =================================================================
 export function getQueryParameterOfCardConditionOperand(
     operand: CardConditionOperand<QueryParameter>,
 ): QueryParameter {

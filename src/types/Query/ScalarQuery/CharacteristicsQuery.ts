@@ -11,6 +11,7 @@ import type { Subtype } from "../../Characteristics/Subtype.js";
 import type { Supertype } from "../../Characteristics/Supertype.js";
 import type { Ability } from "../../GameObject/Ability.js";
 import type {
+    BooleanOperation,
     Condition,
     ScalarCondition,
     SetElementCondition,
@@ -18,7 +19,11 @@ import type {
 import type { QueryParameter } from "../QueryParameter.js";
 import type { CardQuery } from "../SetQuery/CardQuery.js";
 
+// ===================================================================
 /** 特性の条件 */
+export type CharacteristicCondition<T extends QueryParameter> =
+    BooleanOperation<CharacteristicsConditionOperand<T>>;
+
 export type CharacteristicsConditionOperand<T extends QueryParameter> = {
     name?: SetElementCondition<CardName, T>;
     manaCost?: ScalarCondition<ManaCost, T>;
@@ -36,7 +41,11 @@ export type CharacteristicsConditionOperand<T extends QueryParameter> = {
     lifeModifier?: ScalarCondition<NumericalValue, T>;
 };
 
+// ===================================================================
 /** 特性のクエリ */
+export type CharacteristicQuery<T extends QueryParameter> =
+    CharacteristicsQueryOperand<T>;
+
 export type CharacteristicsQueryOperand<T extends QueryParameter> =
     | Characteristics
     | { card: CardQuery<T> } // FIXME: oneOf? merge?

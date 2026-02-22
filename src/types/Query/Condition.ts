@@ -11,7 +11,7 @@ import type { Color } from "../Characteristics/Color.js";
 import type { Subtype } from "../Characteristics/Subtype.js";
 import type { Supertype } from "../Characteristics/Supertype.js";
 import type { Ability } from "../GameObject/Ability.js";
-import type { Card, Status } from "../GameObject/Card/Card.js";
+import type { Card, Face, Status } from "../GameObject/Card/Card.js";
 import type { GameObject } from "../GameObject/GameObject.js";
 import type { Player } from "../GameObject/Player.js";
 import type { Zone } from "../GameState/Zone.js";
@@ -111,6 +111,7 @@ import {
     isZoneConditionOperand,
     type ZoneConditionOperand,
 } from "./SetQuery/ZoneQuery.js";
+import type { FaceConditionOperand } from "./SetQuery/FaceQuery.js";
 
 // ========================================================================
 // MARK: ConditionTargetType
@@ -151,29 +152,32 @@ export type Condition<
 export type BooleanQueryOperand<
     T extends ConditionTargetType,
     U extends QueryParameter,
-> = T extends GameObject
-    ? GameObjectConditionOperand<U>
-    : T extends Card
-    ? CardConditionOperand<U>
-    : T extends Player
-    ? PlayerConditionOperand<U>
+> = T extends Ability // SetElement
+    ? AbilityConditionOperand<U>
     : T extends CardName
     ? CardNameConditionOperand<U>
+    : T extends Card
+    ? CardConditionOperand<U>
     : T extends CardType
     ? CardTypeConditionOperand<U>
+    : T extends Color
+    ? ColorConditionOperand<U>
+    : T extends Face
+    ? FaceConditionOperand<U>
+    : T extends Player
+    ? PlayerConditionOperand<U>
+    : T extends RuleText
+    ? RuleTextConditionOperand<U>
     : T extends Subtype
     ? SubtypeConditionOperand<U>
     : T extends Supertype
     ? SupertypeConditionOperand<U>
-    : T extends Color
-    ? ColorConditionOperand<U>
     : T extends Zone
     ? ZoneConditionOperand<U>
-    : T extends Ability
-    ? AbilityConditionOperand<U>
-    : T extends RuleText
-    ? RuleTextConditionOperand<U>
-    : T extends NumericalValue
+    : T extends GameObject
+    ? GameObjectConditionOperand<U>
+    : // Scalar
+    T extends NumericalValue
     ? NumericalValueConditionOperand<U>
     : T extends ManaCost
     ? ManaCostConditionOperand<U>

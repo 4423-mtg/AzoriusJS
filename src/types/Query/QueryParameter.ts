@@ -15,15 +15,9 @@ import {
 } from "./Condition.js";
 import {
     getQueryParameterOfScalarQuery,
-    isScalarQuery,
-    type ScalarQuery,
     type ScalarType,
 } from "./ScalarQuery.js";
-import {
-    getQueryParameterOfSetQuery,
-    isSetQuery,
-    type SetElementType,
-} from "./SetQuery.js";
+import { type SetElementType } from "./SetQuery.js";
 
 // 種類別（レイヤー）に関してはこれでOK。
 // 手続き変更効果・処理禁止効果・置換効果・追加ターン効果についてはどう？
@@ -136,7 +130,7 @@ export function IntersectionOfQueryParameters(
 export function getQueryParameter(
     arg:
         | SetQuery<SetElementType, QueryParameter> // FIXME:
-        | ScalarQuery<ScalarType, QueryParameter>
+        | ScalarQuery<ScalarType, QueryParameter> // FIXME:
         | Condition<SetElementType, QueryParameter>,
 ): QueryParameter {
     if (isSetQuery(arg)) {

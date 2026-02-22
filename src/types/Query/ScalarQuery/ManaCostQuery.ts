@@ -1,21 +1,26 @@
-import type { ManaCost } from "../../Characteristics/Characteristic.js";
 import type { ManaSymbol } from "../../Characteristics/Symbol.js";
+import type { BooleanOperation } from "../Condition.js";
 import type { QueryParameter } from "../QueryParameter.js";
-import type { ScalarQuery } from "../ScalarQuery.js";
 import type { CardQuery } from "../SetQuery/CardQuery.js";
 
+// ===================================================================
 /** マナコストの条件 */
-export type ManaCostConditionOperand<T extends QueryParameter> = ScalarQuery<
-    ManaCost,
-    T
+export type ManaCostCondition<T extends QueryParameter> = BooleanOperation<
+    ManaCostConditionOperand<T>
 >;
 
+export type ManaCostConditionOperand<T extends QueryParameter> = {};
+// マナ総量
+
+// ===================================================================
 /** マナコストのクエリ */
+export type ManaCostQuery<T extends QueryParameter> = ManaCostQueryOperand<T>;
+
 export type ManaCostQueryOperand<T extends QueryParameter> =
     | ManaSymbol[]
     | { card: CardQuery<T> };
-//
 
+// ===================================================================
 export function getQueryParameterOfManaCostConditionOperand(
     query: ManaCostConditionOperand<QueryParameter>,
 ): QueryParameter {

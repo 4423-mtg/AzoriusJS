@@ -77,7 +77,11 @@ import {
     IntersectionOfQueryParameters,
     type QueryParameter,
 } from "./QueryParameter.js";
-import type { FaceQueryOperand } from "./SetQuery/FaceQuery.js";
+import {
+    getQueryParameterOfFaceQueryOperand,
+    isFaceQueryOperand,
+    type FaceQueryOperand,
+} from "./SetQuery/FaceQuery.js";
 
 // =================================================================
 // MARK: SetElementType
@@ -179,9 +183,7 @@ export function isSetElementType(arg: unknown): arg is SetElementType {
 export type SetQueryOperand<
     T extends SetElementType,
     U extends QueryParameter,
-> = T extends GameObject
-    ? GameObjectQueryOperand<U>
-    : T extends Card
+> = T extends Card
     ? CardQueryOperand<U>
     : T extends Player
     ? PlayerQueryOperand<U>
@@ -203,6 +205,8 @@ export type SetQueryOperand<
     ? RuleTextQueryOperand<U>
     : T extends Face
     ? FaceQueryOperand<U>
+    : T extends GameObject // GameObjectは親型なので後で評価する
+    ? GameObjectQueryOperand<U>
     : never;
 
 export function getQueryParameterOfSetQueryOperand(
@@ -230,6 +234,8 @@ export function getQueryParameterOfSetQueryOperand(
         return getQueryParameterOfAbilityQueryOperand(operand);
     } else if (isRuleTextQueryOperand(operand)) {
         return getQueryParameterOfRuleTextQueryOperand(operand);
+    } else if (isFaceQueryOperand(operand)) {
+        return getQueryParameterOfFaceQueryOperand(operand);
     } else {
         throw new Error(operand);
     }

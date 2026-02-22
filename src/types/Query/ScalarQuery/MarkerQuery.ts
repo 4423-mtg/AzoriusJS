@@ -1,10 +1,19 @@
-import type { Marker } from "../../GameObject/Marker.js";
 import type { BooleanOperation } from "../Condition.js";
 import type { QueryParameter } from "../QueryParameter.js";
 
-// MARK: Marker
-export type MarkerCondition<T extends QueryParameter> = BooleanOperation<{}>;
-export type MarkerQuery<T extends QueryParameter> = BooleanOperation<Marker[]>;
+// ===================================================================
+export type MarkerCondition<T extends QueryParameter> = BooleanOperation<
+    MarkerConditionOperand<T>
+>;
+
+export type MarkerConditionOperand<T extends QueryParameter> = {};
+
+// ===================================================================
+export type MarkerQuery<T extends QueryParameter> = MarkerQueryOperand<T>;
+
+export type MarkerQueryOperand<T extends QueryParameter> = {};
+
+// ===================================================================
 export function getQueryParameterOfMarkerQuery(
     query: MarkerQuery<QueryParameter>,
 ): QueryParameter {

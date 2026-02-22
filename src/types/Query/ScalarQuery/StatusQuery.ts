@@ -1,8 +1,12 @@
-import type { Status } from "../../GameObject/Card/Card.js";
-import type { ScalarCondition } from "../Condition.js";
+import type { BooleanOperation } from "../Condition.js";
 import type { QueryParameter } from "../QueryParameter.js";
 
+// ===================================================================
 /** 位相の条件 */
+export type StatusCondition<T extends QueryParameter> = BooleanOperation<
+    StatusConditionOperand<T>
+>;
+
 export type StatusConditionOperand<T extends QueryParameter> = {
     tapped?: boolean;
     flipped?: boolean;
@@ -10,12 +14,13 @@ export type StatusConditionOperand<T extends QueryParameter> = {
     isPhasedOut?: boolean;
 };
 
+// ===================================================================
 /** 位相のクエリ */
-export type StatusQueryOperand<T extends QueryParameter> = ScalarCondition<
-    Status,
-    T
->;
+export type StatusQuery<T extends QueryParameter> = StatusQueryOperand<T>;
 
+export type StatusQueryOperand<T extends QueryParameter> = {};
+
+// ===================================================================
 export function getQueryParameterOfStatusConditionOperand(
     query: StatusConditionOperand<QueryParameter>,
 ): QueryParameter {

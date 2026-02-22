@@ -1,20 +1,29 @@
 import type { NumericalValue } from "../../Characteristics/Characteristic.js";
 import type { QueryParameter } from "../QueryParameter.js";
-import type { ScalarQuery } from "../ScalarQuery.js";
 import type { CardQuery } from "../SetQuery/CardQuery.js";
 import type { ColorQuery } from "../SetQuery/ColorQuery.js";
 import type { GameObjectQuery } from "../SetQuery/GameObjectQuery.js";
 import type { CounterCondition } from "./CounterOnObjectQuery.js";
+import type { BooleanOperation } from "../Condition.js";
 
+// =================================================================
 /** 数に対して適用する条件 */
+export type NumericalValueCondition<T extends QueryParameter> =
+    BooleanOperation<NumericalValueConditionOperand<T>>;
+
 export type NumericalValueConditionOperand<T extends QueryParameter> =
-    | ScalarQuery<NumericalValue, T>
+    | NumericalValueQuery<T>
     | {
           type: "greater" | "less" | "greaterEqual" | "lessEqual";
-          number: ScalarQuery<NumericalValue, T>;
+          number: NumericalValueQuery<T>;
       };
 
 /**  */
+
+// =================================================================
+export type NumericalValueQuery<T extends QueryParameter> =
+    NumericalValueQueryOperand<T>;
+
 export type NumericalValueReference<T extends QueryParameter> =
     // TODO: GameObject (Spellなど) 対象の数など
     | NumericalValue
@@ -56,14 +65,15 @@ export type NumericalValueQueryOperand<T extends QueryParameter> =
     // 何かの合計値
     | {
           valueType: "total";
-          values: ScalarQuery<NumericalValue, T>[];
+          values: NumericalValueQuery<T>[];
       }
     | {
           valueType: "difference";
-          value1: ScalarQuery<NumericalValue, T>;
-          value2: ScalarQuery<NumericalValue, T>;
+          value1: NumericalValueQuery<T>;
+          value2: NumericalValueQuery<T>;
       };
 
+// =================================================================
 export function getQueryParameterOfNumericalValueQueryOperand(
     arg: NumericalValueQueryOperand<QueryParameter>,
 ): QueryParameter {
